@@ -30,7 +30,8 @@ test('setup never substitutes descriptive text for an agent endpoint and encodes
   const state={parent:'team.eth',label:'operator',key:'agent-endpoint[mcp]',textValue:'https://example.com/mcp',transactions:[]};
   const action=makeProxyAction('resolver',owner,state,10n);
   const factory=decodeFunctionData({abi:factoryAbi,data:action.data});
-  const init=decodeFunctionData({abi:resolverInitAbi,data:factory.args![2]});
+  const initializer=factory.args![2];assert.ok(initializer);
+  const init=decodeFunctionData({abi:resolverInitAbi,data:initializer});
   const text=decodeFunctionData({abi:ensAbi,data:init.args![1][1]});
   assert.equal(text.functionName,'setText');
   assert.equal(text.args![1],'agent-endpoint[mcp]');

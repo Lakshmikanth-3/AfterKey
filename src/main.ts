@@ -2,7 +2,7 @@ import './style.css';
 import { createIcons, ArrowUpRight, ArrowRight, ShieldCheck, KeyRound, ScanLine, Settings2, History, Wallet, ChevronRight, Check, Circle, Plus, X, Download, ExternalLink, RefreshCw, LoaderCircle, LockKeyhole, Layers, AlertTriangle, Copy, LogOut } from 'lucide';
 import { createWalletClient, custom, getAddress, isAddress, zeroAddress, type Address, type Hash } from 'viem';
 import { sepolia } from 'viem/chains';
-import { WORKSPACE_OWNER } from './workspace';
+import { WORKSPACE_OWNER, WORKSPACE_SUBJECT } from './workspace';
 import { DEFAULT_RPC, POSITION_MANAGER, scan, clientFor, same, short, serialize, compareOwner, errorText, type Config, type Snapshot } from './engine';
 
 declare global { interface Window { ethereum?: { request(args:{method:string;params?:unknown[]}):Promise<any>; on?(event:string,fn:(...args:any[])=>void):void } } }
@@ -10,9 +10,10 @@ const app=document.querySelector<HTMLDivElement>('#app')!;
 const icons={ArrowUpRight,ArrowRight,ShieldCheck,KeyRound,ScanLine,Settings2,History,Wallet,ChevronRight,Check,Circle,Plus,X,Download,ExternalLink,RefreshCw,LoaderCircle,LockKeyhole,Layers,AlertTriangle,Copy,LogOut};
 const icon=(name:string,cls='')=>`<i data-lucide="${name}" class="${cls}"></i>`;
 const esc=(s:unknown)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-let config:Config={owner:WORKSPACE_OWNER,subject:'',rpc:DEFAULT_RPC,targets:[]};
+let config:Config={owner:WORKSPACE_OWNER,subject:WORKSPACE_SUBJECT,rpc:DEFAULT_RPC,targets:[]};
 try { const stored=localStorage.getItem('afterkey.config.v1'); if(stored) config={...config,...JSON.parse(stored)}; }catch{}
 if(!config.owner)config.owner=WORKSPACE_OWNER;
+if(!config.subject)config.subject=WORKSPACE_SUBJECT;
 let account:Address|undefined;
 let view:'offboard'|'settings'|'history'='offboard';
 let busy=false,busyText='',error='',notice='';

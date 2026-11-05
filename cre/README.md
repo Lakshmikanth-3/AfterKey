@@ -5,11 +5,11 @@ An authorized external HR/identity system sends a signed HTTP trigger carrying `
 ## Build and activate
 
 1. `npm install` in this directory, then `npm run typecheck`.
-2. Set the owner's public address, the authorized trigger signer's public address and exact ENS resources in `config.production.json`. Zero defaults deliberately prevent activation with an unintended identity.
-3. Authenticate locally using `cre login`, confirm deployment access in your Chainlink account, and link the workflow owner using the official CLI flow. Do not paste private keys into chat or track credentials in Git.
+2. The configured asset owner and authorized trigger signer are the user-supplied address `0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5`. Add exact ENS resources to `config.production.json` when available.
+3. Authenticate locally using `cre login` and confirm private-registry access. This target uses the private registry and does not require wallet key linking or Mainnet gas. Do not paste private keys into chat or track credentials in Git.
 4. Use `cre workflow build . --target production` and `cre workflow deploy . --target production` with your supported registry settings. Deployment requires the user's authenticated account, deployment eligibility and workflow owner setup. CLI may require Bun for TypeScript/WASM builds.
 5. Configure your external system to invoke the returned workflow ID using Chainlink's signed HTTP trigger flow. The workflow accepts only signatures from `authorizedEVMAddress`.
-6. Retain real execution IDs/output for the submission. No simulations or deployment claims are supplied in advance.
+6. The workflow is registered ACTIVE in the private registry; see `deployment.json`. Retain real execution IDs/output after signed triggers. No successful execution is claimed yet. No simulations were run.
 
 The workflow reads at most 20 positions and 10 ENS resources to bound execution cost. It returns `complete: false` when a portfolio exceeds its configured limit. RPC/view errors fail the workflow rather than returning a false clean result. Configured owner role snapshots are included in results so before/after owner checks can be compared. The browser app maintains its separate local scanner and is usable without CRE activation.
 

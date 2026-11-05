@@ -8,4 +8,6 @@
 - No privileged-call or CRE simulations were run.
 - Browser app dependency audit: no reported vulnerabilities at install. The separate CRE SDK dependency advisory is documented in `cre/README.md`.
 
-Pending user-owned environment validation: connect the owner wallet, create/fund Sepolia assets, configure genuine ENSv2 resources, sign revocations, verify before/after evidence, and activate CRE with the user's addresses/account. No live asset-offboarding result or CRE deployment is claimed yet.
+The user-supplied owner address is `0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5`. A read-only Sepolia check found zero ETH and zero Uniswap v3 positions when checked. The CRE workflow was subsequently deployed with this asset owner and authorized trigger address; CLI listing confirms ACTIVE registration in the private registry. See `cre/deployment.json`. Workflow execution has not yet been verified.
+
+Pending user-owned environment validation: provide the departing wallet, connect the owner wallet, create/fund Sepolia assets, configure genuine ENSv2 resources, sign revocations and a CRE HTTP trigger, and verify before/after evidence. No live asset-offboarding result is claimed yet.

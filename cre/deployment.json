@@ -1,0 +1,12 @@
+{
+  "registry": "private",
+  "workflowName": "afterkey-departure-verifier",
+  "workflowId": "00825d4c77b47ec89dca470037a5bfe401e231c0792ebce1b9a27590dc12d065",
+  "registryOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
+  "assetOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "authorizedTriggerAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "registrationStatus": "ACTIVE",
+  "executionVerified": false,
+  "binaryHash": "2b578bf02828a9fa93f30b75a2189ec9ba69cc30317bac738feba33481f551a7",
+  "configHash": "5ae3c7d97cbf4e81e61c6f2b05657c8d9b79457b1cee01772cf96f6107878064"
+}

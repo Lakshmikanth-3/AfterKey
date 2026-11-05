@@ -1,6 +1,7 @@
 production:
   user-workflow:
     workflow-name: "afterkey-departure-verifier"
+    deployment-registry: "private"
   workflow-artifacts:
     workflow-path: "./main.ts"
     config-path: "./config.production.json"

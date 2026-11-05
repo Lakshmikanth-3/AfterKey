@@ -55,7 +55,7 @@ Incomplete scans cannot execute a revocation plan or produce a closed-scope resu
 
 ## Departure automation
 
-`cre/main.ts` implements a separately deployable Chainlink CRE workflow. An authorized external system submits a signed departure/recheck event. CRE independently reads approvals and configured ENS roles at one block and returns a permission-state report. See `cre/README.md`. Activation requires the user's authenticated CRE account and configuration; it is not deployed or claimed live. No CRE simulations are included. The browser form works independently of CRE. Live wallets/test assets must be provided by the user through the setup flow; no live transaction evidence is claimed before actual wallet signatures and receipts exist.
+`cre/main.ts` implements a Chainlink CRE workflow registered ACTIVE in the authenticated organization's private registry. See `cre/deployment.json` for the exact ID and configuration. The asset owner and authorized trigger signer are `0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5`. The private registry uses a separate organization-derived management address; it does not transfer ownership of wallet assets. An authorized external system submits a signed departure/recheck event. CRE reads approvals and configured ENS roles at one block and returns a permission-state report. End-to-end execution has not yet been verified. No CRE simulations are included. The browser form works independently of CRE. Live wallets/test assets must be provided through setup; no live revocation evidence is claimed before actual signatures and receipts exist.
 
 ## References
 

@@ -4,5 +4,6 @@ dist/
 !.env.example
 .openai/*.local.*
 cre/binary.wasm
+cre/binary.wasm.br.b64
 cre/.cre/
 cre/.cre_build_tmp.*

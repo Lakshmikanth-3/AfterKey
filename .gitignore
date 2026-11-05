@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.openai/*.local.*
+cre/binary.wasm
+cre/.cre/
+cre/.cre_build_tmp.*

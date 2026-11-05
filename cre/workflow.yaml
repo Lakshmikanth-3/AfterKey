@@ -1,0 +1,6 @@
+production:
+  user-workflow:
+    workflow-name: "afterkey-departure-verifier"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.production.json"

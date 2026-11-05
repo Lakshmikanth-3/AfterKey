@@ -1,0 +1,117 @@
+{
+  "checkedAt": "2026-11-05T20:35:04.178Z",
+  "method": "Live read-only Universal Resolver and ENSv2 hierarchy calls",
+  "mainnet": {
+    "name": "sepolia-testnet.eth",
+    "chainId": 1,
+    "block": "26351057",
+    "address": "0x99920488E2cA7EDDFc8dC127Dd8067284dFA4a83",
+    "expectedMatch": true,
+    "records": [
+      {
+        "key": "agent-context",
+        "value": null,
+        "status": "missing"
+      },
+      {
+        "key": "agent-endpoint[mcp]",
+        "value": null,
+        "status": "missing"
+      },
+      {
+        "key": "agent-endpoint[a2a]",
+        "value": null,
+        "status": "missing"
+      },
+      {
+        "key": "agent-endpoint[web]",
+        "value": null,
+        "status": "missing"
+      }
+    ],
+    "complete": true
+  },
+  "sepolia": {
+    "name": "sepolia-testnet.eth",
+    "chainId": 11155111,
+    "block": "12071878",
+    "address": null,
+    "expectedMatch": false,
+    "records": [
+      {
+        "key": "agent-context",
+        "value": null,
+        "status": "missing"
+      },
+      {
+        "key": "agent-endpoint[mcp]",
+        "value": null,
+        "status": "missing"
+      },
+      {
+        "key": "agent-endpoint[a2a]",
+        "value": null,
+        "status": "missing"
+      },
+      {
+        "key": "agent-endpoint[web]",
+        "value": null,
+        "status": "missing"
+      }
+    ],
+    "complete": true
+  },
+  "sepoliaNamespace": {
+    "name": "sepolia-testnet.eth",
+    "key": "agent-context",
+    "block": "12071878",
+    "entries": [
+      {
+        "name": "eth",
+        "label": "eth",
+        "registry": "0xB458D6a3a77919449d03e7A6903C26827c1eC43f",
+        "resource": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+        "tokenId": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+        "owner": "0x84D3a426D4E12E955d1DF95db0B24fe26afE39D3",
+        "expiry": "18446744073709551615",
+        "subregistry": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+        "resolver": "0x0000000000000000000000000000000000000000"
+      },
+      {
+        "name": "sepolia-testnet.eth",
+        "label": "sepolia-testnet",
+        "registry": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+        "resource": "53599047994602073287217791449584707693178199104998667228849589846634945052673",
+        "tokenId": "53599047994602073287217791449584707693178199104998667228849589846634945052672",
+        "owner": "0x0000000000000000000000000000000000000000",
+        "expiry": "0",
+        "subregistry": "0x0000000000000000000000000000000000000000",
+        "resolver": "0x0000000000000000000000000000000000000000"
+      }
+    ],
+    "resolver": "0x0000000000000000000000000000000000000000",
+    "resolverVerified": false,
+    "targets": [
+      {
+        "label": "eth · registry",
+        "address": "0xB458D6a3a77919449d03e7A6903C26827c1eC43f",
+        "resource": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+        "kind": "registry",
+        "name": "eth"
+      },
+      {
+        "label": "sepolia-testnet.eth · registry",
+        "address": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+        "resource": "53599047994602073287217791449584707693178199104998667228849589846634945052673",
+        "kind": "registry",
+        "name": "sepolia-testnet.eth"
+      }
+    ],
+    "text": "",
+    "address": null,
+    "recordId": null,
+    "notes": [
+      "No resolver found in the traversed hierarchy."
+    ]
+  }
+}

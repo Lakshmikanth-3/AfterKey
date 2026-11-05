@@ -90,3 +90,6 @@ Registration is not proof of trigger execution. No successful live CRE execution
 The appropriate ENS prize for this from-scratch Sepolia project is **Best Use of ENSv2**. The Continuity-only Existing Project prize is separate and requires mainnet under the supplied rules. Adding every feature in the sponsor brief is not necessary.
 
 See `docs/AI_ATTRIBUTION.md`, `docs/VALIDATION.md`, `docs/DEMO.md`, `docs/transactions.md` and `FEEDBACK.md`. Verify sponsor rules against the current event page before submitting. MIT license; public availability is a separate requirement.
+
+
+ENS resource decisions, agent-record support, live network evidence, and setup steps: [ENS_RESOURCES.md](docs/ENS_RESOURCES.md).

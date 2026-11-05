@@ -15,6 +15,8 @@ The workflow reads at most 20 positions and 10 ENS resources to bound execution 
 
 The return value is a workflow response, not an onchain attestation. CRE activation does not automatically create an HR system, notify another person, or publish a report onchain.
 
+The current verifier source and registered deployment include ENSv2 interface checks, canonical registry resource lookup, name-owner snapshots, effective role bitmaps and optional Uniswap scanning. Export targets from the ENS identity screen and redeploy the configuration after namespace setup. Empty protocol scope cannot return a complete result. `scanUniswap` defaults to true for compatibility when omitted; the browser's export records its selected value explicitly. The currently registered configuration has no ENS targets, so it does not yet cover the user's future namespace.
+
 Dependency audit: the pinned CRE SDK 1.23.0 depends on Zod 3.25.76, which npm flags under GHSA-mrhx-c7xc-m3w5. A forced Zod 4 override is incompatible with the SDK's function schemas. The workflow limits incoming payloads to 16 KB and limits configured collections, but this does not resolve the upstream advisory. Review an upstream SDK fix before activating in a production environment. The independently built browser app does not depend on the CRE SDK or Zod.
 
 References: [HTTP trigger configuration](https://docs.chain.link/cre/guides/workflow/using-triggers/http-trigger/configuration-ts), [EVM view reads](https://docs.chain.link/cre/guides/workflow/using-evm-client/onchain-read-ts), [deployment](https://docs.chain.link/cre/guides/operations/deploying-workflows/overview).

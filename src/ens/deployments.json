@@ -1,0 +1,27 @@
+{
+  "chainId": 11155111,
+  "sourceCommit": "07e55a056f5b6a9c90119f501bdd05714e67dddd",
+  "source": "https://docs.ens.domains/learn/deployments/",
+  "contracts": {
+    "PermissionedResolverImpl": {
+      "address": "0x115eb53f0c60696633855f90b138178fb40b2b2c",
+      "codeHash": "0x02d6c15c6443251e5d3c5acbd971d66057c8e13ee0d0f046d5c65cd27a20b007"
+    },
+    "UserRegistryImpl": {
+      "address": "0x9bd8a88719068d09ecee662f36c0e3856708366a",
+      "codeHash": "0xed6d71bc90b0882fa63ef78a8dddabff2730b4c1cab9eab2ad91fa2aacd269f7"
+    },
+    "VerifiableFactory": {
+      "address": "0xda70306c98e97ece36f997a21368e53298572991",
+      "codeHash": "0x141dc0d5ee8c60ae9b9cce12c870d3babc28719602238ee0f77016a9f1916265"
+    },
+    "UniversalHelper": {
+      "address": "0xd453e5bdb62cc3bea84341b1e306319c8ffd7dfe",
+      "codeHash": "0xd17b5810abdbed29895e6f0b91e887e8ac132a2715ccc76e017eb3705dd392ca"
+    },
+    "RootRegistry": {
+      "address": "0xb458d6a3a77919449d03e7a6903c26827c1ec43f",
+      "codeHash": "0xddb7698fc2857f7a9e726491025fead241791f113a19714149db8cbf87688e98"
+    }
+  }
+}

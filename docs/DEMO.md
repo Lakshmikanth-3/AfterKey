@@ -1,5 +1,7 @@
 # Demo flow — no simulations
 
+For the ENS prize, use `ENS_QUALIFICATION_REVIEW.md`: real subname/profile → key plus root text delegation → key-only revoke → effective permission still active → broad-first offboarding → operator authorization absent and owner/name retained. The ENS identity screen guides actual setup and delegation; a registered parent and wallet signatures are required.
+
 1. Show the owner and departing wallet plus the configured testnet scope.
 2. Explain that a position approval can be removed while operator-wide approval remains.
 3. Scan live state. Show the operator finding and any separately configured ENS findings.

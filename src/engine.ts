@@ -1,5 +1,6 @@
-import { createPublicClient, http, parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type Address, type Hash, type Hex } from 'viem';
+import { createPublicClient, http, fallback, parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type Address, type Hash, type Hex } from 'viem';
 import { sepolia } from 'viem/chains';
+import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, describeRoles, resolverResource, recordRole } from './ens/roles';
 
 export const POSITION_MANAGER: Address = '0x1238536071E1c677A632429e3655c799b22cDA52';
 export const DEFAULT_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
@@ -13,6 +14,11 @@ export const nftAbi = parseAbi([
   'function setApprovalForAll(address operator,bool approved)',
 ]);
 export const eacAbi = parseAbi([
+  'function supportsInterface(bytes4 interfaceId) view returns (bool)',
+  'function getResource(uint256 anyId) view returns (uint256)',
+  'function getOwner(uint256 anyId) view returns (address)',
+  'function getTokenId(uint256 anyId) view returns (uint256)',
+  'function getExpiry(uint256 anyId) view returns (uint64)',
   'function roles(uint256 resource,address account) view returns (uint256)',
   'function hasRoles(uint256 resource,uint256 roleBitmap,address account) view returns (bool)',
   'function revokeRootRoles(uint256 roleBitmap,address account) returns (bool)',
@@ -20,15 +26,15 @@ export const eacAbi = parseAbi([
   'function isApprovedForAll(address owner,address operator) view returns (bool)',
   'function setApprovalForAll(address operator,bool approved)',
 ]);
-export type Target = { label: string; address: Address; resource: string; kind: 'registry' | 'resolver' };
-export type Config = { owner: string; subject: string; rpc: string; targets: Target[] };
+export type Target = { label: string; address: Address; resource: string; kind: 'registry' | 'resolver'; name?:string; recordType?:'text'|'data'|'coin'|'abi'|'interface'; argument?:string };
+export type Config = { owner: string; subject: string; rpc: string; targets: Target[]; scanUniswap?:boolean };
 export type Finding = { id: string; protocol: 'Uniswap v3' | 'ENSv2'; title: string; detail: string; scope: string; broad: boolean; address: Address; fn: 'setApprovalForAll' | 'approve' | 'revokeRootRoles' | 'revokeRoles'; args: readonly unknown[]; data: Hex; executable: boolean; blockedReason?: string };
-export type EnsState = { target: Target; root: bigint; local: bigint; ownerRoot: bigint; ownerLocal: bigint; operator: boolean | null };
+export type EnsState = { target: Target; root: bigint; local: bigint; ownerRoot: bigint; ownerLocal: bigint; operator: boolean | null; registryOwner?:Address; tokenId?:bigint; expiry?:bigint; interfaceVerified?:boolean; effective?:bigint;subjectCanWrite?:boolean;ownerCanWrite?:boolean };
 export type Snapshot = { block: bigint; blockHash: Hash; timestamp: string; config: Config; owner: Address; subject: Address; operator: boolean; positions: { id: bigint; approved: Address; owner: Address }[]; positionCount: bigint; complete: boolean; ens: EnsState[]; findings: Finding[]; errors: string[] };
 export const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 export const errorText = (error: unknown): string => error && typeof error === 'object' && 'shortMessage' in error ? String(error.shortMessage) : error instanceof Error ? error.message : String(error);
 export const short = (s: string) => s.length > 16 ? `${s.slice(0,6)}…${s.slice(-4)}` : s;
-export const clientFor = (rpc: string) => createPublicClient({ chain: sepolia, transport: http(rpc, { timeout: 20000, retryCount: 1 }) });
+export const clientFor = (rpc: string) => createPublicClient({chain:sepolia,transport:rpc===DEFAULT_RPC?fallback([http(DEFAULT_RPC,{timeout:15000,retryCount:0}),http(sepolia.rpcUrls.default.http[0],{timeout:15000,retryCount:0})],{retryCount:0}):http(rpc,{timeout:20000,retryCount:1})});
 export function validateConfig(c: Config): void {
   if (!isAddress(c.owner) || !isAddress(c.subject)) throw new Error('Enter valid owner and departing wallet addresses.');
   if (same(c.owner, c.subject)) throw new Error('The owner and departing wallet must be different.');
@@ -36,11 +42,13 @@ export function validateConfig(c: Config): void {
   const url = new URL(c.rpc);
   if (!['https:', 'http:'].includes(url.protocol)) throw new Error('RPC must be an HTTP or HTTPS endpoint.');
   const seen = new Set<string>();
+  if(c.targets.length>100)throw new Error('At most 100 explicit ENS resources can be scanned at once.');
   for (const t of c.targets) {
     if (!t.label.trim() || !isAddress(t.address) || same(t.address,zeroAddress)) throw new Error('Every ENS target needs a label and valid nonzero contract address.');
     const resource = BigInt(t.resource);
     if (resource <= 0n || resource >= 2n ** 256n) throw new Error('ENS resource must be a nonzero uint256; root is scanned automatically.');
     if (!['registry','resolver'].includes(t.kind)) throw new Error('ENS target kind must be registry or resolver.');
+    if(t.kind==='resolver'&&t.recordType&&t.argument!==undefined&&resolverResource(t.recordType,t.argument)!==resource)throw new Error(`Resolver resource does not match its ${t.recordType} argument: ${t.label}`);
     const key = `${t.address.toLowerCase()}:${resource}`;
     if (seen.has(key)) throw new Error('Remove duplicate ENS contract/resource targets.');
     seen.add(key);
@@ -70,11 +78,11 @@ export function deriveFindings(s: Omit<Snapshot,'findings'>, canRevoke: Record<s
     if(e.root && !roots.has(addr)) {
       roots.add(addr);
       const id=`ens:${addr}:root`;
-      add({id,protocol:'ENSv2',title:'Contract-wide ENS roles survive',detail:'Root roles apply to resources in this contract. Admin roles may allow permissions to be granted again within their supported scope.',scope:e.target.label,broad:true,address:e.target.address,fn:'revokeRootRoles',args:[e.root,s.subject],executable:canRevoke[id] === true,blockedReason:'Owner lacks the required admin roles, or authority could not be verified.'});
+      add({id,protocol:'ENSv2',title:'Contract-wide ENS roles survive',detail:`${describeRoles(e.root,e.target.kind).join(', ')}. ${e.target.kind==='resolver'?'These roles apply across all names served by this resolver.':'These roles apply across this registry.'} Only matching ADMIN roles allow regranting.`,scope:e.target.label,broad:true,address:e.target.address,fn:'revokeRootRoles',args:[e.root,s.subject],executable:canRevoke[id] === true,blockedReason:'Owner lacks the required admin roles, or authority could not be verified.'});
     }
     if(e.local) {
       const id=`ens:${addr}:${BigInt(e.target.resource)}`;
-      add({id,protocol:'ENSv2',title:'Resource-level ENS roles remain',detail:'Remove remaining roles on this specific resource. Registry and resolver permissions are checked separately.',scope:e.target.label,broad:false,address:e.target.address,fn:'revokeRoles',args:[BigInt(e.target.resource),e.local,s.subject],executable:canRevoke[id] === true,blockedReason:'Owner lacks the required admin roles, or authority could not be verified.'});
+      add({id,protocol:'ENSv2',title:'Resource-level ENS roles remain',detail:`${describeRoles(e.local,e.target.kind).join(', ')}. ${e.target.kind==='resolver'?'A resolver argument scope can cover the same key across multiple names; it is not a per-name permission.':'Registry roles may include inherited operator rights; the plan refreshes after broad approvals are removed.'}`,scope:e.target.label,broad:false,address:e.target.address,fn:'revokeRoles',args:[BigInt(e.target.resource),e.local,s.subject],executable:canRevoke[id] === true,blockedReason:'Owner lacks the required admin roles, or authority could not be verified.'});
     }
   }
   return orderFindings(f);
@@ -86,9 +94,19 @@ export async function scan(config: Config): Promise<Snapshot> {
   const owner=getAddress(config.owner),subject=getAddress(config.subject);
   const block=await client.getBlockNumber({cacheTime:0});
   const blockInfo=await client.getBlock({blockNumber:block});
-  const read = (address: Address, abi: typeof nftAbi | typeof eacAbi, functionName: string, args: unknown[]) => client.readContract({address,abi,functionName,args,blockNumber:block} as never) as Promise<any>;
+  const reads=new Map<string,Promise<any>>();
+  const read = (address: Address, abi: typeof nftAbi | typeof eacAbi, functionName: string, args: unknown[]):Promise<any> => {
+    const key=`${address.toLowerCase()}:${functionName}:${serialize(args)}`;
+    if(!reads.has(key))reads.set(key,client.readContract({address,abi,functionName,args,blockNumber:block} as never));
+    return reads.get(key)!;
+  };
   const errors: string[]=[];
-  const [operator,positionCount]=await Promise.all([read(POSITION_MANAGER,nftAbi,'isApprovedForAll',[owner,subject]) as Promise<boolean>,read(POSITION_MANAGER,nftAbi,'balanceOf',[owner]) as Promise<bigint>]);
+  let operator=false,positionCount=0n;
+  if(config.scanUniswap!==false){
+    try{[operator,positionCount]=await Promise.all([read(POSITION_MANAGER,nftAbi,'isApprovedForAll',[owner,subject]) as Promise<boolean>,read(POSITION_MANAGER,nftAbi,'balanceOf',[owner]) as Promise<bigint>]);}
+    catch(error){errors.push(`Uniswap scan incomplete: ${errorText(error)}`);}
+  }
+  if(config.scanUniswap===false&&!config.targets.length)errors.push('No ENS resources configured and Uniswap scanning is disabled. Add an ENS name before drawing a conclusion.');
   const cap=200n;
   const count=Number(positionCount > cap ? cap : positionCount);
   const positions: Snapshot['positions']=[];
@@ -103,14 +121,34 @@ export async function scan(config: Config): Promise<Snapshot> {
   }
   if(positionCount>cap) errors.push('Portfolio exceeds the 200-position scan limit. Coverage is incomplete.');
   const ens: EnsState[]=[];const authority:Record<string,boolean>={};
-  for(const target of config.targets) {
+  const canonicalSeen=new Set<string>();
+  for(const inputTarget of config.targets) {
+    let target=inputTarget;
     try {
       if(!await client.getCode({address:target.address,blockNumber:block})) throw new Error('No contract at this address.');
+      const [isEac,isKind]=await Promise.all([read(target.address,eacAbi,'supportsInterface',[EAC_INTERFACE]),read(target.address,eacAbi,'supportsInterface',[target.kind==='registry'?REGISTRY_INTERFACE:RESOLVER_INTERFACE])]);
+      if(!isEac||!isKind)throw new Error('Unsupported ENSv2 EAC/contract interface. Current deployment ABIs are required.');
+      if(target.kind==='registry')target={...target,resource:String(await read(target.address,eacAbi,'getResource',[BigInt(target.resource)]))};
       const resource=BigInt(target.resource);
+      const canonicalKey=`${target.address.toLowerCase()}:${resource}`;
+      if(canonicalSeen.has(canonicalKey))throw new Error('Duplicate canonical ENS resource. Remove duplicate scopes.');
+      canonicalSeen.add(canonicalKey);
       const [root,local,ownerRoot,ownerLocal]=await Promise.all([read(target.address,eacAbi,'roles',[0n,subject]),read(target.address,eacAbi,'roles',[resource,subject]),read(target.address,eacAbi,'roles',[0n,owner]),read(target.address,eacAbi,'roles',[resource,owner])]) as bigint[];
       let registryOperator: boolean|null=null;
       if(target.kind==='registry') registryOperator=await read(target.address,eacAbi,'isApprovedForAll',[owner,subject]);
-      const e={target,root,local,ownerRoot,ownerLocal,operator:registryOperator};ens.push(e);
+      const e:EnsState={target,root,local,ownerRoot,ownerLocal,operator:registryOperator,interfaceVerified:true,effective:root|local};
+      if(target.kind==='resolver'&&target.recordType){
+        [e.subjectCanWrite,e.ownerCanWrite]=await Promise.all([read(target.address,eacAbi,'hasRoles',[resource,recordRole(target.recordType),subject]),read(target.address,eacAbi,'hasRoles',[resource,recordRole(target.recordType),owner])]);
+      }
+      if(target.kind==='registry'){
+        const [registryOwner,tokenId,expiry]=await Promise.all([read(target.address,eacAbi,'getOwner',[resource]),read(target.address,eacAbi,'getTokenId',[resource]),read(target.address,eacAbi,'getExpiry',[resource])]);
+        e.registryOwner=getAddress(registryOwner);e.tokenId=tokenId;e.expiry=expiry;
+        if(!same(registryOwner,zeroAddress)&&!same(registryOwner,owner)){
+          const otherOperator=await read(target.address,eacAbi,'isApprovedForAll',[registryOwner,subject]);
+          if(otherOperator)errors.push(`${target.label}: subject inherits permissions from another token owner. This workspace cannot revoke that owner's approval.`);
+        }
+      }
+      ens.push(e);
       if(root) authority[`ens:${target.address.toLowerCase()}:root`]=await read(target.address,eacAbi,'hasRoles',[0n,adminMask(root),owner]);
       if(local) authority[`ens:${target.address.toLowerCase()}:${resource}`]=await read(target.address,eacAbi,'hasRoles',[resource,adminMask(local),owner]);
     } catch(error) {errors.push(`${target.label}: ${errorText(error)}`);}
@@ -125,6 +163,8 @@ export function compareOwner(before: Snapshot,after: Snapshot): string[] {
   for(const e of before.ens) {
     const a=after.ens.find(q=>same(q.target.address,e.target.address)&&BigInt(q.target.resource)===BigInt(e.target.resource));
     if(!a || (a.ownerRoot & e.ownerRoot)!==e.ownerRoot || (a.ownerLocal & e.ownerLocal)!==e.ownerLocal) problems.push(`Owner roles changed: ${e.target.label}`);
+    if(e.registryOwner&&(!a?.registryOwner||!same(e.registryOwner,a.registryOwner)))problems.push(`ENS name ownership changed: ${e.target.label}`);
+    if(e.ownerCanWrite===true&&a?.ownerCanWrite!==true)problems.push(`Owner record permission changed: ${e.target.label}`);
   }
   return problems;
 }

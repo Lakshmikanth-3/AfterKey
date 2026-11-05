@@ -1,10 +1,11 @@
 import { HTTPCapability, EVMClient, getNetwork, encodeCallMsg, bytesToHex, handler, blockNumber, protoBigIntToBigint, decodeJson, Runner, type Runtime, type HTTPPayload } from '@chainlink/cre-sdk';
 import { encodeFunctionData, decodeFunctionResult, parseAbi, isAddress, zeroAddress, type Address } from 'viem';
+import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE } from '../src/ens/roles';
 
-type Config={authorizedEVMAddress:string; owner:string; ensTargets:{label:string;address:string;resource:string;kind:'registry'|'resolver'}[];maxPositions:number};
+type Config={authorizedEVMAddress:string; owner:string; ensTargets:{label:string;address:string;resource:string;kind:'registry'|'resolver'}[];maxPositions:number;scanUniswap?:boolean};
 type Departure={eventId:string;event:'departure'|'recheck';subject:string};
 const manager='0x1238536071E1c677A632429e3655c799b22cDA52' as Address;
-const abi=parseAbi(['function balanceOf(address) view returns (uint256)','function tokenOfOwnerByIndex(address,uint256) view returns (uint256)','function ownerOf(uint256) view returns (address)','function getApproved(uint256) view returns (address)','function isApprovedForAll(address,address) view returns (bool)','function roles(uint256,address) view returns (uint256)']);
+const abi=parseAbi(['function balanceOf(address) view returns (uint256)','function tokenOfOwnerByIndex(address,uint256) view returns (uint256)','function ownerOf(uint256) view returns (address)','function getApproved(uint256) view returns (address)','function isApprovedForAll(address,address) view returns (bool)','function roles(uint256,address) view returns (uint256)','function supportsInterface(bytes4) view returns (bool)','function getResource(uint256) view returns (uint256)','function getOwner(uint256) view returns (address)']);
 const eq=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
 function onDeparture(runtime:Runtime<Config>,payload:HTTPPayload):string {
   if(payload.input.length>16000)throw new Error('Departure payload exceeds 16 KB.');
@@ -24,8 +25,9 @@ function onDeparture(runtime:Runtime<Config>,payload:HTTPPayload):string {
     const response=evm.callContract(runtime,{call:encodeCallMsg({from:zeroAddress,to:address,data}),blockNumber:blockNumber(height)}).result();
     return decodeFunctionResult({abi,functionName:fn,data:bytesToHex(response.data)} as never);
   };
-  const operator=read(manager,'isApprovedForAll',[owner,subject]) as boolean;
-  const total=read(manager,'balanceOf',[owner]) as bigint;
+  const uniswapIncluded=runtime.config.scanUniswap!==false;
+  const operator=uniswapIncluded?read(manager,'isApprovedForAll',[owner,subject]) as boolean:false;
+  const total=uniswapIncluded?read(manager,'balanceOf',[owner]) as bigint:0n;
   const limit=BigInt(runtime.config.maxPositions);
   const count=Number(total>limit?limit:total);
   const findings:{protocol:string;kind:string;contract:string;resource?:string;roles?:string;tokenId?:string;label?:string}[]=[];
@@ -43,17 +45,22 @@ function onDeparture(runtime:Runtime<Config>,payload:HTTPPayload):string {
   const seenOperators=new Set<string>();
   const ens=runtime.config.ensTargets.map(target=>{
     const address=target.address as Address,key=address.toLowerCase();
+    if(!read(address,'supportsInterface',[EAC_INTERFACE])||!read(address,'supportsInterface',[target.kind==='registry'?REGISTRY_INTERFACE:RESOLVER_INTERFACE]))throw new Error('Unsupported ENSv2 EAC/contract interface.');
+    const resource=target.kind==='registry'?read(address,'getResource',[BigInt(target.resource)]) as bigint:BigInt(target.resource);
     const root=read(address,'roles',[0n,subject]) as bigint;
-    const local=read(address,'roles',[BigInt(target.resource),subject]) as bigint;
+    const local=read(address,'roles',[resource,subject]) as bigint;
     const ownerRoot=read(address,'roles',[0n,owner]) as bigint;
-    const ownerLocal=read(address,'roles',[BigInt(target.resource),owner]) as bigint;
+    const ownerLocal=read(address,'roles',[resource,owner]) as bigint;
+    const nameOwner=target.kind==='registry'?read(address,'getOwner',[resource]) as string:null;
+    if(nameOwner&&!eq(nameOwner,zeroAddress)&&!eq(nameOwner,owner)&&read(address,'isApprovedForAll',[nameOwner,subject]))throw new Error('Subject inherits registry roles through another name owner; configured owner cannot revoke that approval.');
     const approved=target.kind==='registry'?read(address,'isApprovedForAll',[owner,subject]) as boolean:null;
     if(root&&!seenRoots.has(key)){seenRoots.add(key);findings.push({protocol:'ENSv2',kind:'root-roles',contract:address,roles:String(root),label:target.label});}
     if(local)findings.push({protocol:'ENSv2',kind:'resource-roles',contract:address,resource:target.resource,roles:String(local),label:target.label});
     if(approved&&!seenOperators.has(key)){seenOperators.add(key);findings.push({protocol:'ENSv2',kind:'registry-operator',contract:address,label:target.label});}
-    return {...target,root:String(root),local:String(local),ownerRoot:String(ownerRoot),ownerLocal:String(ownerLocal),operator:approved};
+    return {...target,resource:String(resource),root:String(root),local:String(local),effectiveRoles:String(root|local),ownerRoot:String(ownerRoot),ownerLocal:String(ownerLocal),nameOwner,operator:approved,interfaceVerified:true};
   });
-  const result={source:'Chainlink CRE',method:'permission-state reads',eventId:request.eventId,event:request.event,chainId:11155111,block:String(height),owner,subject,positionCount:String(total),positions,ens,operator,findings,complete:total<=limit,scope:'Uniswap v3 positions and configured ENSv2 resources only'};
+  const scopeConfigured=uniswapIncluded||runtime.config.ensTargets.length>0;
+  const result={source:'Chainlink CRE',method:'permission-state reads',eventId:request.eventId,event:request.event,chainId:11155111,block:String(height),owner,subject,positionCount:String(total),uniswapIncluded,positions,ens,operator,findings,complete:total<=limit&&scopeConfigured,scope:'Explicit ENSv2 resources and optionally Uniswap v3 positions',notes:scopeConfigured?[]:['No protocol scope configured. An empty scope is not an offboarding result.']};
   runtime.log(JSON.stringify({eventId:request.eventId,block:String(height),remainingPaths:findings.length,complete:result.complete}));
   return JSON.stringify(result);
 }

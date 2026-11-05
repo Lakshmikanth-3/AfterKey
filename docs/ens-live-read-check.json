@@ -1,0 +1,14 @@
+{
+  "method": "Read-only live Sepolia checks; no writes or privileged-call simulations",
+  "deploymentCodeCheckedAt": "12071798",
+  "name": "eth",
+  "hierarchyEntries": 1,
+  "resourceVerified": "9765116797790139016836562972326110245461934396900545726927381399153059216270",
+  "roleVerified": "16",
+  "scanBlock": "12071798",
+  "ensTargets": 1,
+  "scanComplete": true,
+  "findings": 0,
+  "errors": [],
+  "qualification": "This checks real protocol integration, not a wallet-signed offboarding demo."
+}

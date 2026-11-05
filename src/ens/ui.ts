@@ -21,9 +21,9 @@ const explorer=(address:string)=>`<a class="contract-link" href="https://sepolia
 function readFields(){
   const field=(id:string)=>document.querySelector<HTMLInputElement>(`#${id}`)?.value.trim();
   nameInput=field('ens-name')??nameInput;keyInput=field('ens-key')??keyInput;
-  const parent=field('ens-parent')??setup.parent,label=field('ens-label')??setup.label,key=field('ens-setup-key')??setup.key;
-  if(parent!==setup.parent||label!==setup.label||key!==setup.key){action=undefined;reviewed=false;}
-  setup.parent=parent;setup.label=label;setup.key=key;persist();
+  const parent=field('ens-parent')??setup.parent,label=field('ens-label')??setup.label,key=field('ens-setup-key')??setup.key,textValue=field('ens-setup-value')??setup.textValue;
+  if(parent!==setup.parent||label!==setup.label||key!==setup.key||textValue!==setup.textValue){action=undefined;reviewed=false;}
+  setup.parent=parent;setup.label=label;setup.key=key;setup.textValue=textValue;persist();
 }
 async function audit(ctx:Context,name=nameInput,key=keyInput){
   inspection=await inspectName(name,ctx.config.rpc,key);authority=undefined;
@@ -50,6 +50,7 @@ export function ensWorkspace(ctx:Context):string{
   ${tab==='setup'?`  <section class="settings-card ens-bootstrap"><div class="section-number">02 / CREATE A REAL ENSv2 WORKSPACE</div><h2>Set up a team or agent identity</h2><p>Use a Sepolia .eth name you own. This flow creates an official Permissioned Resolver and, if needed, a User Registry, connects the registry hierarchy, and registers your operator’s subname. Every change requires your wallet signature.</p>
   <div class="settings-links"><a href="https://sepolia.app.ens.domains/" target="_blank" rel="noreferrer">Register a Sepolia .eth name ↗</a><a href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia" target="_blank" rel="noreferrer">Get test ETH ↗</a></div>
   <div class="ens-input-row"><label>Your owned parent<input id="ens-parent" placeholder="your-team.eth" value="${esc(setup.parent)}" ${locked?'readonly':''}/></label><label>Operator subname label<input id="ens-label" value="${esc(setup.label)}" ${locked?'readonly':''}/></label><label>Delegated text key<input id="ens-setup-key" value="${esc(setup.key)}" ${locked?'readonly':''}/></label></div>
+  <label class="initial-record">Initial text value<textarea id="ens-setup-value" rows="3" placeholder="Your agent’s context, description, or actual endpoint URL" ${locked?'readonly':''}>${esc(setup.textValue??(setup.key==='description'?'Managed by AfterKey. Access is delegated through ENSv2 EAC.':''))}</textarea></label>
   <div class="ens-setup-status">${setup.resolver?`<div><span>Permissioned Resolver</span>${explorer(setup.resolver)}</div>`:''}${setup.registry?`<div><span>Subname registry</span>${explorer(setup.registry)}</div>`:''}${setup.registered?`<div class="ens-ready">✓ Namespace setup checked: ${esc(setup.label)}.${esc(setup.parent)}</div>`:''}</div>
   <div class="ens-controls"><button class="button" id="ens-prepare" ${ctx.busy?'disabled':''}>${setup.registered?'Recheck namespace setup':'Prepare next setup transaction'}</button>${locked?'<button class="text-button" id="ens-reset">Start another setup</button>':''}</div>
   ${action?`<div class="ens-action"><h3>${esc(action.label)}</h3><p>${esc(action.explanation)}</p><details><summary>Review transaction destination and calldata</summary><code class="calldata">To: ${action.to}<br/>Data: ${action.data}</code></details><label class="review-check"><input type="checkbox" id="ens-review" ${reviewed?'checked':''}/><span>I reviewed this Sepolia change. The owner remains ${short(ctx.config.owner)}.</span></label><button class="button primary" id="ens-execute" ${ctx.busy||!reviewed?'disabled':''}>Sign this setup transaction</button></div>`:''}

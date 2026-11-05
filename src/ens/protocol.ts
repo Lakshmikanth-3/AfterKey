@@ -1,3 +1,4 @@
+import { validAgentUrl } from './agent-records';
 import { encodeFunctionData, decodeFunctionResult, getAddress, keccak256, stringToHex, namehash, toHex, zeroAddress, parseEventLogs, type Address, type Hash, type Hex, type TransactionReceipt } from 'viem';
 import { normalize, packetToBytes } from 'viem/ens';
 import deployments from './deployments.json';
@@ -13,7 +14,7 @@ export const dns=(name:string)=>toHex(packetToBytes(normalize(name)));
 export const labelId=(label:string)=>BigInt(keccak256(stringToHex(label)));
 export type NameEntry={name:string;label:string;registry:Address;resource:bigint;tokenId:bigint;owner:Address;expiry:bigint;subregistry:Address;resolver:Address};
 export type NameInspection={name:string;key:string;block:bigint;entries:NameEntry[];resolver:Address;resolverVerified:boolean;targets:Target[];text:string;address:Address|null;recordId:bigint|null;notes:string[]};
-export type SetupState={parent:string;label:string;key:string;owner?:Address;registry?:Address;resolver?:Address;resolverSalt?:string;registrySalt?:string;registrationExpiry?:string;attached?:boolean;registered?:boolean;transactions:{label:string;hash:Hash}[]};
+export type SetupState={parent:string;label:string;key:string;textValue?:string;owner?:Address;registry?:Address;resolver?:Address;resolverSalt?:string;registrySalt?:string;registrationExpiry?:string;attached?:boolean;registered?:boolean;transactions:{label:string;hash:Hash}[]};
 export type SetupAction={id:string;label:string;explanation:string;to:Address;data:Hex;implementation?:Address};
 
 async function read(client:Client,address:Address,functionName:string,args:readonly unknown[],block:bigint):Promise<any>{
@@ -76,13 +77,19 @@ export function mergeTargets(existing:Target[],added:Target[]):Target[]{
   for(const t of added)map.set(`${t.address.toLowerCase()}:${BigInt(t.resource)}`,t);
   return [...map.values()];
 }
+export function setupRecordValue(state:Pick<SetupState,'key'|'textValue'>):string{
+  const value=state.textValue??(state.key==='description'?'Managed by AfterKey. Access is delegated through ENSv2 EAC.':'');
+  if(!state.key.trim()||!value.trim())throw new Error('Enter the text key and an actual initial record value.');
+  if(/^agent-endpoint\[.*\]$/.test(state.key)&&!validAgentUrl(value))throw new Error('Agent endpoint records require an HTTP, HTTPS, or IPFS URL.');
+  return value;
+}
 export function makeProxyAction(kind:'resolver'|'registry',owner:Address,state:SetupState,salt:bigint):SetupAction{
   const childName=normalize(`${state.label}.${state.parent}`);
   let data:Hex;
   if(kind==='resolver'){
     const calls=[
       encodeFunctionData({abi:ensAbi,functionName:'setAddress',args:[dns(childName),60n,owner]}),
-      encodeFunctionData({abi:ensAbi,functionName:'setText',args:[dns(childName),state.key,'Managed by AfterKey. Access is delegated through ENSv2 EAC.']}),
+      encodeFunctionData({abi:ensAbi,functionName:'setText',args:[dns(childName),state.key,setupRecordValue(state)]}),
     ];
     data=encodeFunctionData({abi:resolverInitAbi,functionName:'initialize',args:[[{account:owner,roleBitmap:RESOLVER_OWNER_ROLES}],calls]});
   }else data=encodeFunctionData({abi:registryInitAbi,functionName:'initialize',args:[[{account:owner,roleBitmap:REGISTRY_OWNER_ROLES}]]});

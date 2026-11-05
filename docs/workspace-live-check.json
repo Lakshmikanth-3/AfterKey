@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-05T21:09:12.991Z",
+  "method": "Two live read-only permission and identity snapshots; no transactions were submitted",
+  "name": "manager.eth",
+  "key": "agent-context",
+  "beforeBlock": "12072047",
+  "afterBlock": "12072048",
+  "complete": true,
+  "identityChecks": [
+    {
+      "label": "eth · registry",
+      "identity": {
+        "kind": "registry",
+        "name": "eth",
+        "resolver": "0x0000000000000000000000000000000000000000",
+        "subregistry": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4"
+      },
+      "owner": "0x84D3a426D4E12E955d1DF95db0B24fe26afE39D3",
+      "expiry": "18446744073709551615"
+    },
+    {
+      "label": "manager.eth · registry",
+      "identity": {
+        "kind": "registry",
+        "name": "manager.eth",
+        "resolver": "0x09a2FCd5E78798B8Fa5193495aeD611a3EB5ab49",
+        "subregistry": "0x0000000000000000000000000000000000000000"
+      },
+      "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+      "expiry": "1825469328"
+    },
+    {
+      "label": "manager.eth · text:agent-context",
+      "identity": {
+        "kind": "resolver",
+        "name": "manager.eth",
+        "recordId": "1",
+        "textKey": "agent-context",
+        "textValue": "",
+        "ethAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5"
+      },
+      "operatorCanWrite": false,
+      "ownerCanWrite": true
+    }
+  ],
+  "changes": [],
+  "findings": 0,
+  "errors": [],
+  "signedOffboardingVerified": false
+}

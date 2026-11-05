@@ -4,7 +4,7 @@
 
 AfterKey is a strong conceptual fit for **Best Use of ENSv2**: remove a departing operator's ability to edit or redirect a team's ENS identity while retaining the owner's name, profile and permissions. EAC is the mechanism being audited, not a cosmetic name lookup.
 
-The implementation now supports an ENS-first flow. **Prize qualification is not yet established**: a user-owned namespace must be registered/configured and exercised with live grants/revocations, the public repository link must work, and judges must be able to open the demo.
+The implementation now supports an ENS-first flow. **Prize qualification is not yet established**: the registered owner-controlled `manager.eth` namespace must be configured and exercised with live grants/revocations, the public repository link must work, and judges must be able to open the demo.
 
 ## Requirement mapping
 
@@ -75,3 +75,13 @@ First finish live evidence and public access. Then prioritize multi-operator off
 - https://github.com/ensdomains/contracts-v2/tree/07e55a056f5b6a9c90119f501bdd05714e67dddd
 
 The default repository branch did not match the documented deployed resolver model when inspected. The integration follows the deployment-linked revision rather than mixing both versions.
+
+
+## Latest local improvements
+
+- `manager.eth` is registered on ENSv2 Sepolia to the configured owner; the operator subnamespace and signed offboarding evidence still need completion.
+- Operate identity supports reviewed real text updates signed by either the configured owner or departing operator, with live authorization and fresh resolver/calldata checks before submission.
+- Permission snapshots now capture registry resolver/subregistry pointers and selected resolver text, ETH address and record bundle at the same read block. Post-confirmation comparisons also detect expiry changes. Required capture failures make reads incomplete; legacy scopes without metadata are shown as uncaptured.
+- Why access survives shows reported contract-wide roles, resource roles and registry operator approval. Inconsistent effective authorization blocks a complete report; arbitrary custom inheritance is not exhaustively attributed.
+- A shared-bundle notice covers configured names only. Unknown aliases and unconfigured records remain outside coverage.
+- Follow [the real transaction runbook](ENS_DEMO_RUNBOOK.md). Two unchanged read-only snapshots are saved in `workspace-live-check.json`; signed offboarding remains unverified.

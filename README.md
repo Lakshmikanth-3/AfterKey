@@ -93,3 +93,5 @@ See `docs/AI_ATTRIBUTION.md`, `docs/VALIDATION.md`, `docs/DEMO.md`, `docs/transa
 
 
 ENS resource decisions, agent-record support, live network evidence, and setup steps: [ENS_RESOURCES.md](docs/ENS_RESOURCES.md).
+
+Real ENS operator workflow and submission steps: [ENS_DEMO_RUNBOOK.md](docs/ENS_DEMO_RUNBOOK.md).

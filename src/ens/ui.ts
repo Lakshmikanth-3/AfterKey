@@ -1,3 +1,5 @@
+import { operatorWorkspace, bindOperatorWorkspace } from './operator-ui';
+import type { RecordWrite } from './operator';
 import { agentWorkspace, bindAgentWorkspace } from './agent-ui';
 import { getAddress, encodeFunctionData, type Address, type TransactionReceipt } from 'viem';
 import { normalize } from 'viem/ens';
@@ -7,15 +9,15 @@ import { ensAbi } from './abi';
 import { SET_TEXT, describeRoles, resolverResource } from './roles';
 import { inspectName, mergeTargets, nextSetupAction, recordSetupReceipt, delegationAction, verifyDeployments, equal, type NameInspection, type SetupAction, type SetupState } from './protocol';
 
-type Context={config:Config;busy:boolean;task:(label:string,action:()=>Promise<void>)=>Promise<void>;render:()=>void;setTargets:(targets:Target[])=>void;offboard:()=>void;send:(action:SetupAction)=>Promise<TransactionReceipt>};
+type Context={config:Config;busy:boolean;task:(label:string,action:()=>Promise<void>)=>Promise<void>;render:()=>void;setTargets:(targets:Target[])=>void;offboard:()=>void;send:(action:SetupAction)=>Promise<TransactionReceipt>;sendRecord:(write:RecordWrite)=>Promise<TransactionReceipt>};
 const esc=(value:unknown)=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-const fresh=():SetupState=>({parent:'',label:'treasury-agent',key:'description',transactions:[]});
+const fresh=():SetupState=>({parent:'manager.eth',label:'treasury-agent',key:'description',transactions:[]});
 let setup:SetupState=fresh();
 try{const saved=localStorage.getItem('afterkey.ensSetup.v1');if(saved)setup={...setup,...JSON.parse(saved)};}catch{}
-let nameInput='',keyInput='description',inspection:NameInspection|undefined,action:SetupAction|null|undefined;
+let nameInput='manager.eth',keyInput='description',inspection:NameInspection|undefined,action:SetupAction|null|undefined;
 let authority:{root:bigint;local:bigint;effective:boolean;owner:boolean}|undefined;
 let reviewed=false,testAccepted=false,message='';
-let tab:'audit'|'setup'|'agents'='audit';
+let tab:'audit'|'setup'|'operate'|'agents'='audit';
 const persist=()=>localStorage.setItem('afterkey.ensSetup.v1',serialize(setup));
 const explorer=(address:string)=>`<a class="contract-link" href="https://sepolia.etherscan.io/address/${address}" target="_blank" rel="noreferrer">${esc(address)} ↗</a>`;
 function readFields(){
@@ -42,8 +44,9 @@ async function audit(ctx:Context,name=nameInput,key=keyInput){
 export function ensWorkspace(ctx:Context):string{
   const locked=Boolean(setup.registry||setup.resolver);
   return `<div class="simple-heading"><div class="eyebrow">ENSv2 / IDENTITY & ACCESS</div><h1>Offboard the operator.<br/>Keep the identity<span>.</span></h1><p>Find surviving permissions. Remove operator access. Keep your team’s name and records.</p></div>
-  <div class="ens-tabs" role="tablist" aria-label="ENS workspace">${(['audit','setup','agents'] as const).map(t=>`<button role="tab" aria-selected="${tab===t}" data-ens-tab="${t}" ${ctx.busy?'disabled':''}>${t==='audit'?'Audit permissions':t==='setup'?'Set up namespace':'Agent records'}</button>`).join('')}</div>
+  <div class="ens-tabs" role="tablist" aria-label="ENS workspace">${(['audit','setup','operate','agents'] as const).map(t=>`<button role="tab" aria-selected="${tab===t}" data-ens-tab="${t}" ${ctx.busy?'disabled':''}>${t==='audit'?'Audit permissions':t==='setup'?'Set up namespace':t==='operate'?'Operate identity':'Agent records'}</button>`).join('')}</div>
   ${tab==='agents'?agentWorkspace(ctx):''}
+  ${tab==='operate'?operatorWorkspace({...ctx,setOperatorScope:()=>{}}):''}
   ${tab==='audit'?`  <section class="settings-card"><div class="section-number">01 / DISCOVER FROM A REAL NAME</div><h2>Audit an ENS namespace</h2><p>Enter a registered Sepolia name. Addresses, current registry resources and the nearest resolver are read from the live hierarchy.</p><div class="ens-input-row"><label>ENS name<input id="ens-name" placeholder="treasury-agent.your-team.eth" value="${esc(nameInput)}" ${ctx.busy?'disabled':''}/></label><label>Text key<input id="ens-key" value="${esc(keyInput)}" ${ctx.busy?'disabled':''}/></label><button class="button primary" id="ens-discover" ${ctx.busy?'disabled':''}>Discover live ENS paths →</button></div>
   ${inspection?inspectionView(ctx):'<p class="muted-note">Sepolia audit. Resolver permissions can affect every name served by the same instance.</p>'}</section>
   `:''}
@@ -68,6 +71,7 @@ function inspectionView(ctx:Context):string{
 }
 export function bindEnsWorkspace(ctx:Context):void{
   bindAgentWorkspace(ctx);
+  bindOperatorWorkspace({...ctx,setOperatorScope:(name,key)=>{tab='audit';nameInput=name;keyInput=key;void ctx.task('Auditing the operated ENS identity',async()=>{validateConfig(ctx.config);await audit(ctx,name,key);});}});
   document.querySelectorAll<HTMLButtonElement>('[data-ens-tab]').forEach(button=>button.onclick=()=>{readFields();tab=button.dataset.ensTab as typeof tab;ctx.render();});
   const on=(id:string,fn:()=>void)=>{const e=document.getElementById(id);if(e)e.onclick=fn;};
   on('ens-discover',()=>{readFields();void ctx.task('Discovering the ENSv2 hierarchy and permissions',async()=>{validateConfig(ctx.config);await audit(ctx);});});

@@ -1,3 +1,4 @@
+import { prepareRecordWrite, sameRecordWrite, type RecordWrite } from './ens/operator';
 import './style.css';
 import './design.css';
 import { createIcons, ArrowUpRight, ArrowRight, ShieldCheck, KeyRound, ScanLine, Settings2, History, Wallet, ChevronRight, Check, Circle, Plus, X, Download, ExternalLink, RefreshCw, LoaderCircle, LockKeyhole, Layers, AlertTriangle, Copy, LogOut } from 'lucide';
@@ -53,7 +54,7 @@ function offboardView(){
 function resultsView(){
   if(!current)return '';
   return `${current.errors.length?`<div class="coverage-error"><b>Some reads could not be completed</b>${current.errors.map(e=>`<p>${esc(e)}</p>`).join('')}</div>`:''}
-  ${verified?`<div class="verification ${current.findings.length||!current.complete||ownerProblems.length?'partial':'passed'}">${icon(current.findings.length||!current.complete||ownerProblems.length?'alert-triangle':'shield-check')}<div><h3>${current.complete&&!current.findings.length&&!ownerProblems.length?'Configured access paths closed':'Verification needs attention'}</h3><p>${current.findings.length} paths remain. ${ownerProblems.length?esc(ownerProblems.join(' ')):'Owner ownership and recorded role checks retained.'} Permission-state verification at block ${current.block}.</p></div></div>`:''}
+  ${verified?`<div class="verification ${current.findings.length||!current.complete||ownerProblems.length?'partial':'passed'}">${icon(current.findings.length||!current.complete||ownerProblems.length?'alert-triangle':'shield-check')}<div><h3>${current.complete&&!current.findings.length&&!ownerProblems.length?'Configured access paths closed':'Verification needs attention'}</h3><p>${current.findings.length} paths remain. ${ownerProblems.length?esc(ownerProblems.join(' ')):'Owner ownership, recorded role checks and captured identity values retained.'} Permission-state verification at block ${current.block}.</p></div></div>`:''}
   ${current.ens.some(e=>e.target.recordType)?`<section class="ens-state-checks"><h3>Live ENS authorization · block ${current.block}</h3>${current.ens.filter(e=>e.target.recordType).map(e=>`<div><span>${esc(e.target.label)}</span><b>Departing wallet: ${e.subjectCanWrite===true?'role active':e.subjectCanWrite===false?'role absent':'unknown'}</b><b>Owner: ${e.ownerCanWrite===true?'role active':e.ownerCanWrite===false?'role absent':'unknown'}</b></div>`).join('')}<p>Read through hasRoles on the live resolver. This checks authorization state, not a simulated record write.</p></section>`:''}
   ${current.findings.map(f=>`<article class="finding"><div class="finding-top"><span class="protocol-label"><b class="protocol-dot ${f.protocol==='Uniswap v3'?'uni':'ens'}"><img src="/brands/${f.protocol==='Uniswap v3'?'uniswap':'ens'}.svg" alt=""/></b>${f.protocol}</span><span class="severity ${f.broad?'broad':''}">${f.broad?'BROAD ACCESS':'DIRECT ACCESS'}</span></div><div class="finding-body"><div><h3>${esc(f.title)}</h3><p>${esc(f.detail)}</p></div><label class="select-path" title="Include in revocation"><input type="checkbox" data-select="${esc(f.id)}" ${selected.has(f.id)?'checked':''} ${!f.executable||busy?'disabled':''}/><span class="sr-only">Select ${esc(f.title)}</span></label></div><div class="finding-foot"><span>${icon('layers')}${esc(f.scope)}</span><a href="https://sepolia.etherscan.io/address/${f.address}" target="_blank" rel="noreferrer">${short(f.address)} ${icon('arrow-up-right')}</a></div>${!f.executable?`<p class="blocked">${icon('alert-triangle')}${esc(f.blockedReason)}</p>`:''}</article>`).join('')}
   ${!current.findings.length?`<div class="clean-state">${icon('shield-check')}<h3>${current.complete?'No access paths found in this scope':'No findings from completed reads'}</h3><p>${current.complete?'No operator approvals or configured ENS roles were found for this wallet.':'Resolve the read errors before drawing a conclusion.'}</p></div>`:''}
@@ -69,7 +70,7 @@ function historyView(){const reports=storedReports();return `<div class="simple-
 function capture(){const owner=document.querySelector<HTMLInputElement>('#owner'),subject=document.querySelector<HTMLInputElement>('#subject');if(owner)config.owner=owner.value.trim();if(subject)config.subject=subject.value.trim();const rpc=document.querySelector<HTMLInputElement>('#rpc');if(rpc)config.rpc=rpc.value.trim();document.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-target]').forEach(el=>{const i=Number(el.dataset.target);(config.targets[i] as any)[el.dataset.field!]=el.value.trim();});persist();}
 async function task(label:string,action:()=>Promise<void>){if(busy)return;busy=true;busyText=label;error='';notice='';render();try{await action();}catch(e){error=errorText(e);}finally{busy=false;render();}}
 async function connect(){if(!window.ethereum)throw new Error('No browser wallet found. Open AfterKey in a browser with MetaMask or another Ethereum wallet extension.');const accounts=await window.ethereum.request({method:'eth_requestAccounts'});if(!accounts[0])throw new Error('No wallet account selected.');account=getAddress(accounts[0]);if(!config.owner)config.owner=account;persist();}
-async function ensureSigner(){if(!account)await connect();if(!same(account!,config.owner))throw new Error('Switch your wallet to the configured asset owner before signing.');if(!window.ethereum)throw new Error('Wallet disconnected.');const accounts=await window.ethereum.request({method:'eth_accounts'});if(!accounts[0]||!same(accounts[0],config.owner))throw new Error('The active wallet account changed. Reconnect the owner.');const chain=Number(await window.ethereum.request({method:'eth_chainId'}));if(chain!==sepolia.id)await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xaa36a7'}]});if(Number(await window.ethereum.request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Select Ethereum Sepolia in your wallet.');return createWalletClient({chain:sepolia,transport:custom(window.ethereum),account:getAddress(config.owner)});}
+async function ensureSigner(expected=config.owner){if(!account)await connect();if(!same(account!,expected))throw new Error(`Switch your wallet to the reviewed signer ${short(expected)} before signing.`);if(!window.ethereum)throw new Error('Wallet disconnected.');const accounts=await window.ethereum.request({method:'eth_accounts'});if(!accounts[0]||!same(accounts[0],expected))throw new Error('The active wallet account differs from the reviewed signer. Reconnect that account.');const chain=Number(await window.ethereum.request({method:'eth_chainId'}));if(chain!==sepolia.id)await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xaa36a7'}]});if(Number(await window.ethereum.request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Select Ethereum Sepolia in your wallet.');return createWalletClient({chain:sepolia,transport:custom(window.ethereum),account:getAddress(expected)});}
 async function execute(){
   capture();
   const signer=await ensureSigner();
@@ -124,10 +125,18 @@ function bind(){
 }
 window.ethereum?.on?.('accountsChanged',(accounts:string[])=>{account=accounts[0]?getAddress(accounts[0]):undefined;reviewed=false;if(!busy)render();});
 window.ethereum?.on?.('chainChanged',()=>{reviewed=false;if(!busy)render();});
-function ensContext(){return {config,busy,task,render,setTargets:(targets:Config['targets'])=>{config.targets=targets;persist();clearScan();},offboard:()=>{view='offboard';render();},send:sendEnsAction};}
-async function sendEnsAction(action:SetupAction){
-  const signer=await ensureSigner();busyText=`Awaiting signature: ${action.label}`;render();
-  const hash=await signer.sendTransaction({to:action.to,data:action.data,account:getAddress(config.owner),chain:sepolia});
+function ensContext(){return {config,busy,task,render,setTargets:(targets:Config['targets'])=>{config.targets=targets;persist();clearScan();},offboard:()=>{view='offboard';render();},send:sendEnsAction,sendRecord};}
+async function sendRecord(reviewed:RecordWrite){
+  if(!same(reviewed.actor,config.owner)&&!same(reviewed.actor,config.subject))throw new Error('Record signer must be the configured owner or departing operator.');
+  await ensureSigner(reviewed.actor);
+  const fresh=await prepareRecordWrite(reviewed,config.rpc);
+  if(!sameRecordWrite(reviewed,fresh))throw new Error('Resolver or record action changed. Prepare and review the update again.');
+  clearScan();
+  return sendEnsAction(fresh,reviewed.actor);
+}
+async function sendEnsAction(action:SetupAction,expected=config.owner){
+  const signer=await ensureSigner(expected);busyText=`Awaiting signature: ${action.label}`;render();
+  const hash=await signer.sendTransaction({to:action.to,data:action.data,account:getAddress(expected),chain:sepolia});
   const tx={label:action.label,hash,status:'pending' as 'pending'|'confirmed'|'failed'};transactions.push(tx);
   busyText=`Waiting for confirmation: ${action.label}`;render();
   const receipt=await clientFor(config.rpc).waitForTransactionReceipt({hash,confirmations:1});

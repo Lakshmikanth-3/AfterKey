@@ -1,3 +1,5 @@
+import { ensAbi } from './ens/abi';
+import { readIdentity, identityChanges, assertExplainedAuthorization, type IdentityState } from './ens/preservation';
 import { createPublicClient, http, fallback, parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type Address, type Hash, type Hex } from 'viem';
 import { sepolia } from 'viem/chains';
 import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, describeRoles, resolverResource, recordRole } from './ens/roles';
@@ -29,7 +31,7 @@ export const eacAbi = parseAbi([
 export type Target = { label: string; address: Address; resource: string; kind: 'registry' | 'resolver'; name?:string; recordType?:'text'|'data'|'coin'|'abi'|'interface'; argument?:string };
 export type Config = { owner: string; subject: string; rpc: string; targets: Target[]; scanUniswap?:boolean };
 export type Finding = { id: string; protocol: 'Uniswap v3' | 'ENSv2'; title: string; detail: string; scope: string; broad: boolean; address: Address; fn: 'setApprovalForAll' | 'approve' | 'revokeRootRoles' | 'revokeRoles'; args: readonly unknown[]; data: Hex; executable: boolean; blockedReason?: string };
-export type EnsState = { target: Target; root: bigint; local: bigint; ownerRoot: bigint; ownerLocal: bigint; operator: boolean | null; registryOwner?:Address; tokenId?:bigint; expiry?:bigint; interfaceVerified?:boolean; effective?:bigint;subjectCanWrite?:boolean;ownerCanWrite?:boolean };
+export type EnsState = { target: Target; root: bigint; local: bigint; ownerRoot: bigint; ownerLocal: bigint; operator: boolean | null; registryOwner?:Address; tokenId?:bigint; expiry?:bigint; interfaceVerified?:boolean; effective?:bigint;subjectCanWrite?:boolean;ownerCanWrite?:boolean;identity?:IdentityState };
 export type Snapshot = { block: bigint; blockHash: Hash; timestamp: string; config: Config; owner: Address; subject: Address; operator: boolean; positions: { id: bigint; approved: Address; owner: Address }[]; positionCount: bigint; complete: boolean; ens: EnsState[]; findings: Finding[]; errors: string[] };
 export const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 export const errorText = (error: unknown): string => error && typeof error === 'object' && 'shortMessage' in error ? String(error.shortMessage) : error instanceof Error ? error.message : String(error);
@@ -95,7 +97,7 @@ export async function scan(config: Config): Promise<Snapshot> {
   const block=await client.getBlockNumber({cacheTime:0});
   const blockInfo=await client.getBlock({blockNumber:block});
   const reads=new Map<string,Promise<any>>();
-  const read = (address: Address, abi: typeof nftAbi | typeof eacAbi, functionName: string, args: unknown[]):Promise<any> => {
+  const read = (address: Address, abi: typeof nftAbi | typeof eacAbi | typeof ensAbi, functionName: string, args: unknown[]):Promise<any> => {
     const key=`${address.toLowerCase()}:${functionName}:${serialize(args)}`;
     if(!reads.has(key))reads.set(key,client.readContract({address,abi,functionName,args,blockNumber:block} as never));
     return reads.get(key)!;
@@ -140,6 +142,9 @@ export async function scan(config: Config): Promise<Snapshot> {
       if(target.kind==='resolver'&&target.recordType){
         [e.subjectCanWrite,e.ownerCanWrite]=await Promise.all([read(target.address,eacAbi,'hasRoles',[resource,recordRole(target.recordType),subject]),read(target.address,eacAbi,'hasRoles',[resource,recordRole(target.recordType),owner])]);
       }
+      e.identity=await readIdentity(target,(address,fn,args)=>read(address,ensAbi,fn,args));
+      if(e.subjectCanWrite!==undefined)assertExplainedAuthorization(root,local,recordRole(target.recordType!),e.subjectCanWrite);
+      if(e.ownerCanWrite!==undefined)assertExplainedAuthorization(ownerRoot,ownerLocal,recordRole(target.recordType!),e.ownerCanWrite);
       if(target.kind==='registry'){
         const [registryOwner,tokenId,expiry]=await Promise.all([read(target.address,eacAbi,'getOwner',[resource]),read(target.address,eacAbi,'getTokenId',[resource]),read(target.address,eacAbi,'getExpiry',[resource])]);
         e.registryOwner=getAddress(registryOwner);e.tokenId=tokenId;e.expiry=expiry;
@@ -165,6 +170,8 @@ export function compareOwner(before: Snapshot,after: Snapshot): string[] {
     if(!a || (a.ownerRoot & e.ownerRoot)!==e.ownerRoot || (a.ownerLocal & e.ownerLocal)!==e.ownerLocal) problems.push(`Owner roles changed: ${e.target.label}`);
     if(e.registryOwner&&(!a?.registryOwner||!same(e.registryOwner,a.registryOwner)))problems.push(`ENS name ownership changed: ${e.target.label}`);
     if(e.ownerCanWrite===true&&a?.ownerCanWrite!==true)problems.push(`Owner record permission changed: ${e.target.label}`);
+    if(e.identity)problems.push(...identityChanges(e.identity,a?.identity).map(change=>`${change}: ${e.target.label}`));
+    if(e.expiry!==undefined&&e.expiry!==a?.expiry)problems.push(`ENS expiry changed: ${e.target.label}`);
   }
   return problems;
 }

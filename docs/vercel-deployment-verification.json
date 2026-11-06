@@ -1,0 +1,92 @@
+{
+  "checkedAt": "2026-11-06T10:08:04.756Z",
+  "source": "Unauthenticated HTTPS requests and browser UI inspection",
+  "url": "https://afterkey.vercel.app",
+  "deploymentId": "dpl_86fN5qUYUwBy3iF6cYmCowQQ8ehj",
+  "deploymentUrl": "https://afterkey-871hfhri3-lakshmikanth27csb-1279s-projects.vercel.app",
+  "sourceCommit": "7994f6b49c0069e900cc932df415bc34da692414",
+  "runtime": "Node.js 22.x",
+  "verified": true,
+  "checks": [
+    {
+      "path": "/",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/assets/index-CoN1XlxE.js",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/assets/index-DG_mlzLj.css",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/logo.svg",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/api/cre-trigger",
+      "method": "POST",
+      "status": 400,
+      "expected": 400,
+      "passed": true
+    },
+    {
+      "path": "/api/cre-trigger",
+      "method": "GET",
+      "status": 405,
+      "expected": 405,
+      "passed": true
+    },
+    {
+      "path": "/.env",
+      "method": "GET",
+      "status": 404,
+      "expected": 404,
+      "passed": true
+    },
+    {
+      "path": "/GENERAL_INST.md",
+      "method": "GET",
+      "status": 404,
+      "expected": 404,
+      "passed": true
+    }
+  ],
+  "browser": {
+    "ens": {
+      "block": "12075839",
+      "name": "treasury-agent.manager.eth",
+      "operatorCanEdit": false,
+      "ownerCanEdit": true,
+      "text": "Treasury operations context — revision 2."
+    },
+    "uniswap": {
+      "block": "12075847",
+      "positions": [
+        "234145",
+        "234146"
+      ],
+      "portfolioApproval": false,
+      "individualApprovalsAbsent": true
+    },
+    "cre": {
+      "recordedStatus": "SUCCESS",
+      "executionId": "f42d1d27-6bcf-4689-b290-d4d533f83729",
+      "workflowId": "008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76"
+    }
+  },
+  "scopeNote": "These checks verify public app/asset delivery, live read-only views and relay rejection policy. No fresh owner-signed CRE request was sent from the Vercel origin. The successful CRE execution and owner transaction receipts are separate evidence."
+}

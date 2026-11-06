@@ -8,6 +8,12 @@ AfterKey discovers surviving ENSv2 permissions for a departing wallet, prepares 
 
 Live application: **https://afterkey.vercel.app**. Source: https://github.com/Lakshmikanth-3/AfterKey. The Vercel app is publicly accessible, includes the signed CRE relay, and reads real Sepolia state. The earlier Sites deployment remains private by the owner’s choice. [Deployment checks](docs/vercel-deployment-verification.json).
 
+## Configuration review extension
+
+The new **Change review** workspace stages ENS configuration, shows known shared-record dependencies, requests a version-bound CRE report, and lets the owner activate that exact version for registered Uniswap LP consumers. Contracts reject stale versions and unauthorized recipient changes. [Implementation, setup and proof boundaries](docs/configuration-releases.md).
+
+**Status:** implemented locally; new gate/consumer deployment and live CRE report delivery still require verification. The archived receipts below demonstrate the existing offboarding flow, not this extension.
+
 ## Verify the implementation
 
 | Evidence | Open it |

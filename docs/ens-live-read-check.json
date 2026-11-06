@@ -1,6 +1,6 @@
 {
   "method": "Read-only live Sepolia checks; no writes or privileged-call simulations",
-  "deploymentCodeCheckedAt": "12076795",
+  "deploymentCodeCheckedAt": "12076920",
   "name": "treasury-agent.manager.eth",
   "hierarchyEntries": 3,
   "factoryProvenanceChecked": true,
@@ -8,7 +8,7 @@
   "registryImplementation": "0x9BD8a88719068D09ecee662f36C0E3856708366a",
   "resourceVerified": "9765116797790139016836562972326110245461934396900545726927381399153059216270",
   "roleVerified": "16",
-  "scanBlock": "12076795",
+  "scanBlock": "12076920",
   "ensTargets": 4,
   "scanComplete": true,
   "findings": 0,

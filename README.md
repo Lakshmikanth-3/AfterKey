@@ -18,6 +18,7 @@ Live application: **https://afterkey.vercel.app**. Source: https://github.com/La
 | Chainlink external-case verification | [Authenticated execution proof](docs/cre-execution-proof.json): successful HTTP run `f42d1d27-6bcf-4689-b290-d4d533f83729`, [completed GitHub case](https://github.com/Lakshmikanth-3/AfterKey/issues/2), and [nine departure checks](docs/cre-departure-verification.json) |
 | Chainlink scheduled monitoring | [Archived scheduled proof](docs/cre-scheduled-execution-proof.json): successful run `4a9f683b-50a0-4645-873d-d838400d21b6`, Sepolia block 12074459; [approval-event proof](docs/cre-approval-event-proof.json) |
 | Actual ENSv2 workspace | [Permissioned Resolver](https://sepolia.etherscan.io/address/0x6161ada4D10a529940B90b078B4F9A8d3679c8f8), [subname registry](https://sepolia.etherscan.io/address/0x26560685235D2d7861afF80866E8C1846d14420D) |
+| Live ENSv2 deployment verification | [Factory provenance, current implementations and permission scan](docs/ens-live-read-check.json), [security review](docs/ENS_SECURITY_REVIEW.md) |
 | Official Uniswap integration | [Sepolia v3 position manager](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52), [six reviewed operations](src/uniswap/positions.ts#L36) |
 
 ## Sponsor requirement mapping
@@ -48,7 +49,7 @@ These code links pin the reviewed source so their line numbers remain stable:
 | Exact mined transaction and retained position state | [Receipt validation](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/transactions.ts#L14), [live verification](docs/uniswap-security-verification.json), [security review](docs/UNISWAP_SECURITY_REVIEW.md) |
 | Required feedback submission | [FEEDBACK.md](FEEDBACK.md), [saved form confirmation](docs/uniswap-feedback-confirmation.png) |
 
-Still required for the participant's final entry: attach the real demo video, include the public repository and [live app](https://afterkey.vercel.app) links in the ETHGlobal showcase, select the Uniswap prize and submit. This repository does not prove the participant-dashboard submission is complete.
+Still required for the participant's final entry: attach the real demo video, include the public repository and [live app](https://afterkey.vercel.app) links in the ETHGlobal showcase, select **ENS — Best Use of ENSv2** and **Uniswap — Build with Uniswap**, then submit. This repository does not prove the participant-dashboard submission is complete.
 
 ## Architecture
 

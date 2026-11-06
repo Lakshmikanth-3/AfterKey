@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-11-06T22:54:05.759Z",
+  "name": "afterkey-release.manager.eth",
+  "block": "12079641",
+  "leaf": {
+    "name": "afterkey-release.manager.eth",
+    "label": "afterkey-release",
+    "registry": "0x26560685235D2d7861afF80866E8C1846d14420D",
+    "resource": "90681088248447892153637206393035616171279624458628780918949532157778040193024",
+    "tokenId": "90681088248447892153637206393035616171279624458628780918949532157778040193024",
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "expiry": "1825541573",
+    "subregistry": "0x0000000000000000000000000000000000000000",
+    "resolver": "0xd629d7De9c72684d27682Ed3C503283314906c24"
+  },
+  "resolver": "0xd629d7De9c72684d27682Ed3C503283314906c24",
+  "resolverVerified": true,
+  "ownerDataRoles": true
+}

@@ -1,0 +1,147 @@
+{
+  "checkedAt": "2026-11-06T03:58:59.886Z",
+  "sourceFile": "afterkey-evidence-1793937396451.json",
+  "sourceSha256": "6d5d31889426b19342344821664da584ddb6791ddefbbb48d0c12493fb5f1c23",
+  "beforeBlock": "12074041",
+  "afterBlock": "12074046",
+  "passed": true,
+  "checks": [
+    {
+      "check": "Sepolia chain matches evidence",
+      "pass": true
+    },
+    {
+      "check": "Known workspace wallets retained",
+      "pass": true
+    },
+    {
+      "check": "Configured scope unchanged",
+      "pass": true
+    },
+    {
+      "check": "before: canonical block hash and timestamp",
+      "pass": true
+    },
+    {
+      "check": "before: all configured scopes present and reads complete",
+      "pass": true
+    },
+    {
+      "check": "before: eth · registry roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "before: eth · registry ownership, expiry and operator",
+      "pass": true
+    },
+    {
+      "check": "before: manager.eth · registry roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "before: manager.eth · registry ownership, expiry and operator",
+      "pass": true
+    },
+    {
+      "check": "before: treasury-agent.manager.eth · registry roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "before: treasury-agent.manager.eth · registry ownership, expiry and operator",
+      "pass": true
+    },
+    {
+      "check": "before: treasury-agent.manager.eth · text:agent-context roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "before: effective record authorization",
+      "pass": true
+    },
+    {
+      "check": "before: owner can revoke reported root roles",
+      "pass": true
+    },
+    {
+      "check": "before: remaining path count matches recorded roles",
+      "pass": true
+    },
+    {
+      "check": "after: canonical block hash and timestamp",
+      "pass": true
+    },
+    {
+      "check": "after: all configured scopes present and reads complete",
+      "pass": true
+    },
+    {
+      "check": "after: eth · registry roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "after: eth · registry ownership, expiry and operator",
+      "pass": true
+    },
+    {
+      "check": "after: manager.eth · registry roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "after: manager.eth · registry ownership, expiry and operator",
+      "pass": true
+    },
+    {
+      "check": "after: treasury-agent.manager.eth · registry roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "after: treasury-agent.manager.eth · registry ownership, expiry and operator",
+      "pass": true
+    },
+    {
+      "check": "after: treasury-agent.manager.eth · text:agent-context roles and captured identity",
+      "pass": true
+    },
+    {
+      "check": "after: effective record authorization",
+      "pass": true
+    },
+    {
+      "check": "after: remaining path count matches recorded roles",
+      "pass": true
+    },
+    {
+      "check": "Mined revocation matches reviewed calldata, owner and snapshot interval",
+      "pass": true
+    },
+    {
+      "check": "Captured owner control, records and pointers retained",
+      "pass": true
+    },
+    {
+      "check": "Configured permissions absent after recorded revocation",
+      "pass": true
+    },
+    {
+      "check": "Verified export includes a mined revocation and a later snapshot",
+      "pass": true
+    }
+  ],
+  "ownerChanges": [],
+  "receipts": [
+    {
+      "hash": "0xbe002b4c04dc64da5ab12fde4c449f25010bc78fc3044f86dd46c29849e7f241",
+      "status": "success",
+      "block": "12074044",
+      "from": "0x2ce812cf03d1f252c940aff954e15d5e49bbedd5",
+      "to": "0x6161ada4d10a529940b90b078b4f9a8d3679c8f8",
+      "functionName": "revokeRootRoles",
+      "args": [
+        "16",
+        "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4"
+      ],
+      "url": "https://sepolia.etherscan.io/tx/0xbe002b4c04dc64da5ab12fde4c449f25010bc78fc3044f86dd46c29849e7f241"
+    }
+  ],
+  "scope": "The configured ENS resources only. Uniswap and Chainlink execution were not included in this export."
+}

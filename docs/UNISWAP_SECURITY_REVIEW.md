@@ -49,3 +49,11 @@ AfterKey does not supply a Zod schema to `Runner.newRunner`. Its own public rela
 ## Scope limits
 
 One-confirmation receipt checks establish canonical inclusion at the instant checked, not permanent finality. Fresh review cannot eliminate changes after signing or mempool races. Broad-first cleanup uses separate owner-signed transactions and is not atomic. Public RPC responses remain a trust dependency. Local browser exports can be edited and should be checked against transaction hashes and chain state. Unknown contracts, permits, other wallets and unconfigured ENS resources remain outside coverage. Liquidity withdrawal is implemented and tested but was not executed as part of this preservation proof.
+
+## Current ENS/CRE release consumer audit
+
+The prior owner-held-NFT statements above describe the historical offboarding proof. Currently both NFTs are deposited in replacement consumers: see [live readiness](uniswap-release-readiness.json). Active configuration and new consumer collections are pending.
+
+The new `verifyReleaseCollectionLogs` check binds official manager and consumer event sources, NFT, owner recipient, digest/epoch and raw amounts. The UI verifies these after an exact successful transaction receipt. Missing, duplicate, forged-source and mismatched events fail verification. Zero amounts are explicitly reported as execution without earned fees. An independent `scripts/verify-release-collection.ts` also checks canonical inclusion, runtime, configured gate/manager, active signer/treasury and adjacent-block custody/liquidity/range preservation. Same-block concurrent activity limits attribution.
+
+No deployed Solidity or CRE binary change is required for these collection-proof improvements. There is no new NFT/deposit/deployment request from this audit. Continue the existing CRE report and activation sequence, then collect once per consumer. The feedback confirmation remains the earlier authorized submission; the form is not being resubmitted.

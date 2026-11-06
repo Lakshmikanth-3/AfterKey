@@ -1,11 +1,12 @@
 import { HTTPCapability, CronCapability, handler, logTriggerConfig, bytesToHex, protoBigIntToBigint, decodeJson, Runner, type Runtime, type HTTPPayload, type CronPayload, type EVMLog } from '@chainlink/cre-sdk';
-import { isAddress, zeroAddress, toEventSelector, pad } from 'viem';
+import { isAddress, zeroAddress, toEventSelector, pad, sha256, stringToHex } from 'viem';
 import { POSITION_MANAGER } from '../src/uniswap/contracts';
 import { compareSnapshots, type Config } from './model';
 import { readState, evmClient } from './reader';
 import { readDepartureCase } from './external-case';
 import { validateCasePolicy } from './case-policy';
 import type { Workflow } from '@chainlink/cre-sdk';
+import { evidenceLogFrames } from '../src/cre/chunks';
 const eq=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
 type Request={eventId:string;event:'departure'|'recheck'|'verify';subject:string;beforeBlock?:string;issueNumber?:number};
 function result(runtime:Runtime<Config>,trigger:string,eventId:string,beforeBlock?:string,departureCase?:unknown,triggerContext?:unknown){
@@ -15,7 +16,12 @@ function result(runtime:Runtime<Config>,trigger:string,eventId:string,beforeBloc
   const changes=before?compareSnapshots(before,after):[];
   const permissionStateVerified=after.complete&&after.findings.length===0;
   const output={schemaVersion:2,source:'Chainlink CRE',trigger,eventId,triggerContext:triggerContext??null,chainId:11155111,departureCase:departureCase??null,before:before??null,after,preservation:before?{checked:true,changes,passed:before.complete&&after.complete&&!changes.length}:{checked:false},permissionStateVerified,ownerSignedRevocationsVerified:false,status:!after.complete||(before&&!before.complete)?'incomplete':changes.length?'assets_changed':after.findings.length?'access_remaining':before?'permissions_absent_assets_preserved':'permissions_absent'};
-  const encoded=JSON.stringify(output);runtime.log(encoded);return encoded;
+  const encoded=JSON.stringify(output);
+  // CLI/platform log fields are truncated. Frame the output in short, hash-bound chunks.
+  const frames=evidenceLogFrames(encoded),digest=sha256(stringToHex(encoded)),total=frames.length;
+  runtime.log(JSON.stringify({source:'AfterKey CRE summary',eventId,trigger,block:after.block,complete:after.complete,remainingPaths:after.findings.length,digest,total}));
+  for(const frame of frames)runtime.log(frame);
+  return encoded;
 }
 function onHttp(runtime:Runtime<Config>,payload:HTTPPayload):string{
   if(payload.input.length>16000)throw new Error('Request exceeds 16 KB.');

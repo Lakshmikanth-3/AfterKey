@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import { privateKeyToAccount } from 'viem/accounts';
 import { recoverMessageAddress, sha256, stringToHex, toHex } from 'viem';
 import { canonicalJson, triggerSigningRequest, finishTriggerJwt } from '../src/cre/auth';
+import { evidenceLogFrames } from '../src/cre/chunks';
+test('structured CRE evidence survives the one-kilobyte log limit, including Unicode',()=>{
+  const encoded=JSON.stringify({text:'Identity 🔑 人'.repeat(300)}),frames=evidenceLogFrames(encoded);
+  assert.ok(frames.length>1);
+  assert.ok(frames.every(f=>new TextEncoder().encode(f).length<1024));
+  const chunks=frames.map(f=>JSON.parse(f));
+  assert.equal(chunks.map(c=>c.content).join(''),encoded);
+  assert.ok(chunks.every(c=>c.digest===sha256(stringToHex(encoded))));
+});
 test('CRE JWT hashes recursively sorted exact request and normalizes wallet recovery byte',async()=>{
   // Public unit-test key derived in memory, never a user wallet or network transaction.
   const account=privateKeyToAccount(toHex(1n,{size:32}));

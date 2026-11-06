@@ -14,3 +14,9 @@ test('CRE read batches deduplicate exact scope, forbid writes and never accept p
   const partial=new ViewBatch(()=>encodeFunctionResult({abi:aggregate,functionName:'aggregate3',result:[]}));assert.throws(()=>partial.warm([c]),/Incomplete/);
   assert.throws(()=>batch.read({...c,args:[1n,address]}),/not batched/);
 });
+test('larger portfolios split view payloads below the live 5 KB limit',()=>{
+  let calls=0;
+  const batch=new ViewBatch((_to,data)=>{calls++;assert.ok((data.length-2)/2<=4400);const d=decodeFunctionData({abi:aggregate,data});return encodeFunctionResult({abi:aggregate,functionName:'aggregate3',result:d.args![0].map(()=>({success:true,returnData:encodeFunctionResult({abi,functionName:'roles',result:16n})}))});});
+  batch.warm(Array.from({length:50},(_,i)=>({address,fn:'roles',args:[BigInt(i),address],abi})));
+  assert.ok(calls>1);assert.equal(batch.read({address,fn:'roles',args:[49n,address],abi}),16n);
+});

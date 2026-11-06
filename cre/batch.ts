@@ -14,8 +14,12 @@ export class ViewBatch {
       if(!fn||fn.type!=='function'||!['view','pure'].includes(fn.stateMutability))throw new Error('CRE batching accepts declared view/pure functions only.');
       return {target:c.address,allowFailure:false,callData:encodeFunctionData({abi:c.abi,functionName:c.fn,args:c.args} as never)};
     });
-    const data=encodeFunctionData({abi:multicallAbi,functionName:'aggregate3',args:[inputs]});
-    const results=decodeFunctionResult({abi:multicallAbi,functionName:'aggregate3',data:this.call(MULTICALL3,data)});
+    // Stay below CRE's 5 KB read-request limit, including protobuf overhead.
+    const results:{success:boolean;returnData:Hex}[]=[];
+    let pending:typeof inputs=[];
+    const encode=(items:typeof inputs)=>encodeFunctionData({abi:multicallAbi,functionName:'aggregate3',args:[items]});
+    const flush=()=>{if(!pending.length)return;results.push(...decodeFunctionResult({abi:multicallAbi,functionName:'aggregate3',data:this.call(MULTICALL3,encode(pending))}));pending=[];};
+    for(const input of inputs){if((encode([...pending,input]).length-2)/2>4400)flush();if((encode([input]).length-2)/2>4400)throw new Error('A view argument exceeds the CRE read payload bound.');pending.push(input);}flush();
     if(results.length!==unique.length)throw new Error('Incomplete batched view response.');
     results.forEach((r,i)=>{if(!r.success)throw new Error('A required contract read failed.');const c=unique[i];this.cache.set(key(c),decodeFunctionResult({abi:c.abi,functionName:c.fn,data:r.returnData} as never));});
   }

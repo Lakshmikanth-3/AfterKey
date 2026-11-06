@@ -28,7 +28,7 @@ The earlier accepted HTTP request failed because `User-Agent` was not an allowed
 
 ## Validation and scope
 
-**58 unit tests passed.** TypeScript, both hosting builds and Worker artifact-serving checks passed. CRE typecheck passed; WASM compilation previously passed for the unchanged deployed CRE source. Unit fixtures are policy checks, separate from execution evidence. The [security review](UNISWAP_SECURITY_REVIEW.md) records the fixes and remaining upstream dependency warning.
+**59 unit tests passed.** TypeScript, both hosting builds and Worker artifact-serving checks passed. CRE typecheck passed; WASM compilation previously passed for the unchanged deployed CRE source. Unit fixtures are policy checks, separate from execution evidence. The [security review](UNISWAP_SECURITY_REVIEW.md) records the fixes and remaining upstream dependency warning.
 
 Coverage is the configured four ENS resources and two discovered Uniswap NFTs at recorded blocks. Unknown contracts, unconfigured permissions and other wallets are outside this report. Optional owner liquidity withdrawal is implemented and tested, but has not been live executed and is unnecessary for this preservation proof. No further grants, mints or revocations are needed for the demonstrated lifecycle.
 

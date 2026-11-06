@@ -49,7 +49,7 @@ These code links pin the reviewed source so their line numbers remain stable:
 | Exact mined transaction and retained position state | [Receipt validation](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/transactions.ts#L14), [live verification](docs/uniswap-security-verification.json), [security review](docs/UNISWAP_SECURITY_REVIEW.md) |
 | Required feedback submission | [FEEDBACK.md](FEEDBACK.md), [saved form confirmation](docs/uniswap-feedback-confirmation.png) |
 
-Still required for the participant's final entry: attach the real demo video, include the public repository and [live app](https://afterkey.vercel.app) links in the ETHGlobal showcase, select **ENS — Best Use of ENSv2** and **Uniswap — Build with Uniswap**, then submit. This repository does not prove the participant-dashboard submission is complete.
+Still required for the participant's final entry: record the real demo video using the [timed narration](docs/DEMO.md#final-2-minute-narration), paste the [prepared showcase package](docs/SHOWCASE.md), select **ENS — Best Use of ENSv2**, **Uniswap — Build with Uniswap** and **Chainlink — Best workflow with CRE**, then submit. This repository does not prove the participant-dashboard submission is complete.
 
 ## Architecture
 

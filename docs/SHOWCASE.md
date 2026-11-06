@@ -1,4 +1,42 @@
-# Showcase draft
+# ETHGlobal showcase package
+
+Use the text in **Paste-ready fields** in the participant dashboard. The proof and sponsor answers below are final and match the public implementation.
+
+## Paste-ready fields
+
+**Project name**
+
+AfterKey
+
+**Tagline**
+
+Offboard the operator. Keep the identity.
+
+**Short description**
+
+AfterKey finds onchain permissions that survive employee offboarding, prepares owner-reviewed revocations, and proves that the team's ENS identity and Uniswap positions remain intact. ENSv2 provides hierarchical identity and scoped access, while Chainlink CRE independently connects a completed GitHub departure case to historical and current Sepolia state.
+
+**Live demo**
+
+https://afterkey.vercel.app
+
+**Source code**
+
+https://github.com/Lakshmikanth-3/AfterKey
+
+**Primary technologies**
+
+ENSv2, Enhanced Access Control, Permissioned Resolver, Permissioned Registry, Uniswap v3, Chainlink CRE, viem, TypeScript, Vite, Vercel, Sepolia
+
+**Prize selections — maximum three**
+
+1. ENS — Best Use of ENSv2
+2. Uniswap Foundation — Build with Uniswap
+3. Chainlink — Best workflow with CRE
+
+**AI disclosure**
+
+AI assisted with implementation, debugging, documentation and test generation. The repository includes the product requirements, AI attribution and implementation evidence. All claimed sponsor integrations were exercised against real Sepolia state or authenticated Chainlink CRE executions; privileged wallet operations were reviewed and signed by the project owner.
 
 ## Project
 
@@ -8,7 +46,7 @@ AfterKey helps a team remove a departing operator's onchain permissions without 
 
 Source: https://github.com/Lakshmikanth-3/AfterKey
 
-Application: https://afterkey.vercel.app — public app and signed CRE relay verified. The demo video and ETHGlobal showcase submission have not yet been published.
+Application: https://afterkey.vercel.app — public app and signed CRE relay verified.
 
 ## How it works
 
@@ -43,4 +81,27 @@ Record the real application and narrate these steps. The completed lifecycle alr
 
 Apply to ENS **Best Use of ENSv2**, Uniswap **Build with Uniswap**, and Chainlink **Best workflow with CRE**, subject to the event dashboard's eligibility. This project does not claim CCIP integration or a mainnet Continuity integration.
 
-The public demo and Uniswap developer form are complete; [form confirmation](uniswap-feedback-confirmation.png). Before final submission, attach the real video and submit the showcase through the participant dashboard. The published Chainlink CRE prize requirements do not list a separate feedback form: https://ethglobal.com/events/mumbai/prizes .
+The public demo and Uniswap developer form are complete; [form confirmation](uniswap-feedback-confirmation.png). The published Chainlink CRE prize requirements do not list a separate feedback form: https://ethglobal.com/events/mumbai/prizes .
+
+## Sponsor-answer copy
+
+### ENS — Best Use of ENSv2
+
+AfterKey makes ENSv2 the identity and access-control layer, not a display-name feature. It follows the live hierarchy to `treasury-agent.manager.eth`, verifies the official Permissioned Registry and Permissioned Resolver implementations, reads Enhanced Access Control roles, distinguishes key-scoped from resolver-wide authority, and prepares broad-first revocations. Ten Sepolia receipts and 30 historical checks show that the operator loses the configured access paths while the name, owner, address and records remain with the team.
+
+### Uniswap Foundation — Build with Uniswap
+
+AfterKey reads real Uniswap v3 position NFTs from the official Sepolia NonfungiblePositionManager and treats individual approval and portfolio-wide approval as independent offboarding paths. The demonstrated lifecycle minted positions 234145 and 234146, delegated an operator, allowed collection only to the owner, exposed surviving portfolio access after a narrow revoke, then removed the final approval. Fourteen historical checks confirm that ownership, liquidity, pair, fee tier and tick range were preserved. `FEEDBACK.md` is public and the required developer form was submitted.
+
+### Chainlink — Best workflow with CRE
+
+Chainlink CRE independently joins an external HR-style departure signal with onchain authorization state. A completed, labeled GitHub issue identifies the departing wallet; owner-signed HTTP authorization, scheduled monitoring and Uniswap approval-event triggers execute the deployed workflow. The successful departure run validates issue 2, compares baseline block 12075512 with final block 12075653 and returns `permissions_absent_assets_preserved`. CRE verifies the outcome but never holds the owner key or signs revocations.
+
+## Final dashboard checklist
+
+- [ ] Upload or link the real 2–4 minute demo video.
+- [ ] Paste the live demo and public GitHub URLs exactly as shown above.
+- [ ] Select the three sponsor prizes listed above; do not select Continuity-only variants.
+- [ ] Include the AI disclosure.
+- [ ] Preview every external link.
+- [ ] Submit before the event deadline and save the public showcase URL.

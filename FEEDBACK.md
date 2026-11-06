@@ -14,4 +14,4 @@ An initial batched mint consumed the supplied gas and failed inside the batch. A
 
 AfterKey now fixes collection recipients to the team owner, requires explicit withdrawal minimums/deadlines, and verifies financial position state during offboarding. Optional withdrawal has unit coverage but was not used in the live preservation demo.
 
-Public feedback link for the required [developer form](https://developers.uniswap.org/hackathon-feedback): https://github.com/Lakshmikanth-3/AfterKey/blob/main/FEEDBACK.md . Technical answers are prepared; form submission is not yet confirmed.
+Public feedback link for the required [developer form](https://developers.uniswap.org/hackathon-feedback): https://github.com/Lakshmikanth-3/AfterKey/blob/main/FEEDBACK.md . The form was submitted on November 6, 2026 with the public feedback link and explicit user consent. The page confirmed “Thanks for sharing your feedback.” [Submission confirmation](docs/uniswap-feedback-confirmation.png).

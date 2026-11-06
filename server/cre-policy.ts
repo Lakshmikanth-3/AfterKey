@@ -1,7 +1,7 @@
 import { recoverMessageAddress, bytesToHex, sha256, stringToHex } from 'viem';
-import deployment from '../cre/deployment.json';
-import production from '../cre/config.production.json';
-import { canonicalJson } from '../src/cre/auth';
+import deployment from '../cre/deployment.json' with { type: 'json' };
+import production from '../cre/config.production.json' with { type: 'json' };
+import { canonicalJson } from '../src/cre/auth.js';
 
 export type TriggerPolicy = { workflowId: string; subject: string; owner: string };
 const decode = (value: string) => Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));

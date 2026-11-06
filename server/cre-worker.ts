@@ -1,5 +1,5 @@
-import { CRE_GATEWAY } from '../src/cre/auth';
-import { validateSignedTrigger, type TriggerPolicy } from './cre-policy';
+import { CRE_GATEWAY } from '../src/cre/auth.js';
+import { validateSignedTrigger, type TriggerPolicy } from './cre-policy.js';
 
 async function boundedText(stream: ReadableStream<Uint8Array> | null, limit: number): Promise<string> {
   if (!stream) return '';

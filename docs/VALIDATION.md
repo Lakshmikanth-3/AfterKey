@@ -2,7 +2,7 @@
 
 ## Implementation checks
 
-- `npm test`: **58 tests passed**, including independent approvals, ENS scopes, identity/financial preservation, exact mined transaction intent, strict token minimums, metadata failure, stale review detection, wallet discovery, signed request digests, expiry, log framing, pinned-block recovery and Worker relay bounds.
+- `npm test`: **61 tests passed**, including independent approvals, ENS scopes, identity/financial preservation, exact mined transaction intent, strict token minimums, metadata failure, stale review detection, wallet discovery, signed request digests, expiry, event-specific relay validation, semantic departure-proof binding, log framing, pinned-block recovery and Worker relay bounds.
 - `npm run build`: TypeScript plus browser/Worker compilation and built-artifact checks passed. The Worker serves emitted assets, rejects unknown paths, and returns HTTP 400 for unsigned CRE requests.
 - `npm run typecheck` and WASM compilation in `cre/` passed for the deployed workflow source.
 - [GitHub validation run](https://github.com/Lakshmikanth-3/AfterKey/actions/runs/42200112055) passed for source `7994f6b49c0069e900cc932df415bc34da692414`, including tests, both hosting builds and CRE typecheck.
@@ -20,7 +20,7 @@ The [Uniswap security review](UNISWAP_SECURITY_REVIEW.md) records the resource-g
 | Uniswap offboarding | [14 checks](uniswap-offboarding-verification.json) verify narrow-only removal, surviving portfolio authority, final owner-signed revocation at 12075584, retained positions/ENS identity and operator preparation denial |
 | CRE scheduled monitoring | [Authenticated archived run](cre-scheduled-execution-proof.json), version 2, block 12074459 |
 | CRE approval event | [12 checks](cre-approval-event-proof.json), version 2, block 12075512, exact grant transaction/log reference |
-| CRE GitHub departure | [Authenticated successful run](cre-execution-proof.json), version 3, eight collector checks; [nine semantic checks](cre-departure-verification.json), baseline 12075512 to 12075653, zero findings and preservation passed |
+| CRE GitHub departure | [Authenticated successful run](cre-execution-proof.json), version 3, 18 strict scope/outcome checks; [nine semantic checks](cre-departure-verification.json), baseline 12075512 to 12075653, zero findings and preservation passed |
 
 Current workflow: `008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76`. Current verified execution: `f42d1d27-6bcf-4689-b290-d4d533f83729`. The current workflow metadata and its source/configuration hashes are in [deployment metadata](../cre/deployment.json). Older scheduled/event evidence retains its original deployment identity.
 

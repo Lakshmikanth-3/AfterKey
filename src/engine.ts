@@ -1,12 +1,13 @@
 import { ensAbi } from './ens/abi';
 import { POSITION_MANAGER, positionAbi, positionEconomics, economicChanges, type PositionEconomics } from './uniswap/contracts';
 import { readIdentity, identityChanges, assertExplainedAuthorization, type IdentityState } from './ens/preservation';
-import { createPublicClient, http, fallback, parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type Address, type Hash, type Hex } from 'viem';
+import { parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type Address, type Hash, type Hex } from 'viem';
 import { sepolia } from 'viem/chains';
 import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, describeRoles, resolverResource, recordRole } from './ens/roles';
+import { clientFor, isBlockUnavailable, BLOCK_READ_MESSAGE } from './rpc';
 
 export { POSITION_MANAGER } from './uniswap/contracts';
-export const DEFAULT_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
+export { DEFAULT_RPC, clientFor } from './rpc';
 export const nftAbi = parseAbi([
   'function ownerOf(uint256 tokenId) view returns (address)',
   'function balanceOf(address owner) view returns (uint256)',
@@ -35,9 +36,8 @@ export type Finding = { id: string; protocol: 'Uniswap v3' | 'ENSv2'; title: str
 export type EnsState = { target: Target; root: bigint; local: bigint; ownerRoot: bigint; ownerLocal: bigint; operator: boolean | null; registryOwner?:Address; tokenId?:bigint; expiry?:bigint; interfaceVerified?:boolean; effective?:bigint;subjectCanWrite?:boolean;ownerCanWrite?:boolean;identity?:IdentityState };
 export type Snapshot = { block: bigint; blockHash: Hash; timestamp: string; config: Config; owner: Address; subject: Address; operator: boolean; positions: { id: bigint; approved: Address; owner: Address; economics?:PositionEconomics }[]; positionCount: bigint; complete: boolean; ens: EnsState[]; findings: Finding[]; errors: string[] };
 export const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
-export const errorText = (error: unknown): string => error && typeof error === 'object' && 'shortMessage' in error ? String(error.shortMessage) : error instanceof Error ? error.message : String(error);
+export const errorText = (error: unknown): string => isBlockUnavailable(error) ? BLOCK_READ_MESSAGE : error && typeof error === 'object' && 'shortMessage' in error ? String(error.shortMessage) : error instanceof Error ? error.message : String(error);
 export const short = (s: string) => s.length > 16 ? `${s.slice(0,6)}…${s.slice(-4)}` : s;
-export const clientFor = (rpc: string) => createPublicClient({chain:sepolia,transport:rpc===DEFAULT_RPC?fallback([http(DEFAULT_RPC,{timeout:15000,retryCount:0}),http(sepolia.rpcUrls.default.http[0],{timeout:15000,retryCount:0})],{retryCount:0}):http(rpc,{timeout:20000,retryCount:1})});
 export function validateConfig(c: Config): void {
   if (!isAddress(c.owner) || !isAddress(c.subject)) throw new Error('Enter valid owner and departing wallet addresses.');
   if (same(c.owner, c.subject)) throw new Error('The owner and departing wallet must be different.');

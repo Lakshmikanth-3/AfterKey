@@ -1,0 +1,30 @@
+{
+  "source": "Independent Sepolia RPC",
+  "observedBlock": "12079518",
+  "deposit": {
+    "hash": "0x78b805440243d28037b4322894a6385e9b7fff9eefef6b9979c4c045ece49bb1",
+    "block": "12079516",
+    "decoded": {
+      "functionName": "safeTransferFrom",
+      "args": [
+        "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "0x11420a3B7625d844e14B9146Bc10f9A37d1198C6",
+        "234146"
+      ]
+    }
+  },
+  "consumers": [
+    {
+      "address": "0xE39E7177928DB8d03753c44EFb1b6E33597b5B9B",
+      "tokenId": "234145",
+      "custodian": "0xE39E7177928DB8d03753c44EFb1b6E33597b5B9B",
+      "deposited": true
+    },
+    {
+      "address": "0x11420a3B7625d844e14B9146Bc10f9A37d1198C6",
+      "tokenId": "234146",
+      "custodian": "0x11420a3B7625d844e14B9146Bc10f9A37d1198C6",
+      "deposited": true
+    }
+  ]
+}

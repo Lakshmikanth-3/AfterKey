@@ -1,0 +1,76 @@
+{
+  "source": "Independent Sepolia RPC",
+  "transactions": [
+    {
+      "transactionHash": "0xe0b13523866944048e2f08225fb15fa26326ba9d364876ca9305e0ec19652f47",
+      "block": "12079480",
+      "blockHash": "0xb24988afc0a2677fb89e8cc0ed0973ae7705470af5b993a23a56aea5de34a9c4",
+      "from": "0x2ce812cf03d1f252c940aff954e15d5e49bbedd5",
+      "to": "0x96100054c7ffec8b9a0a52d78e254c07e127196a",
+      "functionName": "registerConsumer",
+      "args": [
+        "0xE39E7177928DB8d03753c44EFb1b6E33597b5B9B"
+      ],
+      "status": "success"
+    },
+    {
+      "transactionHash": "0x98ae95783df9adefc5f1f14297bd394b360d7b207611e49e56cd54d6714b646f",
+      "block": "12079484",
+      "blockHash": "0xbe609d684ec0a81999e2f572d7ad457529fdf573f95a07c59c218129c9f60ae6",
+      "from": "0x2ce812cf03d1f252c940aff954e15d5e49bbedd5",
+      "to": "0x1238536071e1c677a632429e3655c799b22cda52",
+      "functionName": "safeTransferFrom",
+      "args": [
+        "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "0xE39E7177928DB8d03753c44EFb1b6E33597b5B9B",
+        "234145"
+      ],
+      "status": "success"
+    }
+  ],
+  "currentState": {
+    "gate": "0x96100054C7ffec8B9a0a52d78e254C07E127196a",
+    "block": "12079489",
+    "now": "1794003780",
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "epoch": "0",
+    "coverage": "0x51f7756fb7a76eda19e7c6d6d5c4bf5fa8513f7fe2deebb22fb38c4b3aedd925",
+    "activeDigest": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "active": [
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0"
+    ],
+    "checkedDigest": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "checkedUntil": "0",
+    "checkedPassed": false,
+    "paused": false,
+    "checkedEpoch": "0",
+    "checkedCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "activeCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "consumers": [
+      {
+        "address": "0xE39E7177928DB8d03753c44EFb1b6E33597b5B9B",
+        "tokenId": "234145",
+        "custodian": "0xE39E7177928DB8d03753c44EFb1b6E33597b5B9B",
+        "deposited": true
+      }
+    ],
+    "resolver": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+    "dns": "0x0e74726561737572792d6167656e74076d616e616765720365746800",
+    "identityValid": true,
+    "workflowId": "0x008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76",
+    "workflowOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
+    "forwarder": "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
+    "candidateError": "Publish a valid candidate in the ENS data record first.",
+    "issues": [
+      "Publish a valid candidate in the ENS data record first."
+    ]
+  },
+  "secondPosition": {
+    "tokenId": "234146",
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5"
+  },
+  "status": "First consumer registered and holds NFT 234145. Second consumer and CRE deployment remain pending."
+}

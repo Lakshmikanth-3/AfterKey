@@ -1,0 +1,30 @@
+{
+  "deployment": {
+    "kind": "consumer",
+    "address": "0xe39e7177928db8d03753c44efb1b6e33597b5b9b",
+    "transactionHash": "0xa808a2a217f10977b9f156653ab3d3e0d84163f484bd622b2fe96380d6aff41e",
+    "block": "12079368",
+    "args": [
+      "0x96100054C7ffec8B9a0a52d78e254C07E127196a",
+      "234145"
+    ]
+  },
+  "checks": {
+    "sepolia": true,
+    "success": true,
+    "canonical": true,
+    "owner": true,
+    "creation": true,
+    "constructor": true,
+    "address": true,
+    "block": true,
+    "runtime": true,
+    "gate": true,
+    "manager": true,
+    "token": true
+  },
+  "observedBlock": "12079376",
+  "registered": false,
+  "custodian": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "deposited": false
+}

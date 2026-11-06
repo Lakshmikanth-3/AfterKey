@@ -1,6 +1,6 @@
 {
   "source": "Independent Sepolia RPC reads",
-  "checkedAt": "2026-11-06T21:16:14.870Z",
+  "checkedAt": "2026-11-06T22:47:28.569Z",
   "deployment": {
     "gate": "0x96100054c7ffec8b9a0a52d78e254c07e127196a",
     "transactionHash": "0xe0835f3a170536c89538aad74390c00d3311b960c78dcbb9b7895ccacbbe3ea8",
@@ -20,11 +20,11 @@
   },
   "currentState": {
     "gate": "0x96100054C7ffec8B9a0a52d78e254C07E127196a",
-    "block": "12079162",
-    "now": "1793999772",
+    "block": "12079609",
+    "now": "1794005244",
     "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
-    "epoch": "0",
-    "coverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "epoch": "1",
+    "coverage": "0xd2332a965df20b3c4b3d8a42ad59e7a8bdf114e825f97a07e83768dbe8a19e12",
     "activeDigest": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "active": [
       "0x0000000000000000000000000000000000000000",
@@ -39,11 +39,24 @@
     "checkedEpoch": "0",
     "checkedCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "activeCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "consumers": [],
+    "consumers": [
+      {
+        "address": "0xE39E7177928DB8d03753c44EFb1b6E33597b5B9B",
+        "tokenId": "234145",
+        "custodian": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "deposited": false
+      },
+      {
+        "address": "0x11420a3B7625d844e14B9146Bc10f9A37d1198C6",
+        "tokenId": "234146",
+        "custodian": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "deposited": false
+      }
+    ],
     "resolver": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
     "dns": "0x0e74726561737572792d6167656e74076d616e616765720365746800",
     "identityValid": true,
-    "workflowId": "0x008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76",
+    "workflowId": "0x00995a8e43b33f54021e48cd0180eb2dadf4c21e3684b945920228a6ad8a44dc",
     "workflowOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
     "forwarder": "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
     "candidateError": "Publish a valid candidate in the ENS data record first.",

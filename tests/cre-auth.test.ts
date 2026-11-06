@@ -12,6 +12,15 @@ test('structured CRE evidence survives the one-kilobyte log limit, including Uni
   assert.equal(chunks.map(c=>c.content).join(''),encoded);
   assert.ok(chunks.every(c=>c.digest===sha256(stringToHex(encoded))));
 });
+
+test('CRE output agreement ignores object key order but preserves values and array order',()=>{
+  const a={trigger:'http:departure',departureCase:{repository:'team/app',issueNumber:2},after:{positions:[{tokenId:'1',owner:'owner'},{tokenId:'2',owner:'owner'}]}};
+  const b={after:{positions:[{owner:'owner',tokenId:'1'},{owner:'owner',tokenId:'2'}]},departureCase:{issueNumber:2,repository:'team/app'},trigger:'http:departure'};
+  assert.notEqual(JSON.stringify(a),JSON.stringify(b));
+  assert.equal(canonicalJson(a),canonicalJson(b));
+  assert.notEqual(canonicalJson(a),canonicalJson({...b,departureCase:{...b.departureCase,issueNumber:3}}));
+  assert.notEqual(canonicalJson(a),canonicalJson({...b,after:{positions:[...b.after.positions].reverse()}}));
+});
 test('CRE JWT hashes recursively sorted exact request and normalizes wallet recovery byte',async()=>{
   // Public unit-test key derived in memory, never a user wallet or network transaction.
   const account=privateKeyToAccount(toHex(1n,{size:32}));

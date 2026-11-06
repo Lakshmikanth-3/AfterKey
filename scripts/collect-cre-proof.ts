@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { sha256, stringToHex } from 'viem';
+import { canonicalJson } from '../src/cre/auth';
 const root=resolve(import.meta.dirname,'..');
 const deployment=JSON.parse(readFileSync(resolve(root,'cre/deployment.json'),'utf8'));
 const config=JSON.parse(readFileSync(resolve(root,'cre/config.production.json'),'utf8'));
@@ -25,7 +26,9 @@ function visit(v:unknown){
 visit(logs);
 for(const [digest,parts] of chunks){const total=chunkTotals.get(digest)!;if(parts.size!==total)continue;const encoded=Array.from({length:total},(_,i)=>parts.get(i)).join('');if(sha256(stringToHex(encoded))!==digest)throw new Error('CRE output digest mismatch.');const output=JSON.parse(encoded);if(output.source==='Chainlink CRE'&&output.schemaVersion===2&&output.after?.block)outputs.push(output);}
 const output=outputs[0]??null;
-const agrees=outputs.length>0&&outputs.every(p=>JSON.stringify(p)===JSON.stringify(output));
+// Consensus-returned object fields may be serialized in different key orders by
+// different nodes. Compare their values canonically; arrays retain their order.
+const agrees=outputs.length>0&&outputs.every(p=>canonicalJson(p)===canonicalJson(output));
 const deploymentTime=Date.parse(deployment.deployedAt||'');
 const scope=output?.after;
 const checks={executionSucceeded:status.status==='SUCCESS',workflowMatches:status.workflowName===deployment.workflowName,currentDeployment:Number.isFinite(deploymentTime)&&Date.parse(status.startedAt)>=deploymentTime,structuredOutputPresent:!!output,loggedOutputsAgree:agrees,walletsMatch:scope?.owner?.toLowerCase()===config.owner.toLowerCase()&&scope?.subject?.toLowerCase()===config.subject.toLowerCase(),ensScopeMatches:scope?.ens?.length===config.ensTargets.length&&config.ensTargets.every((t:any)=>scope.ens.some((e:any)=>e.address.toLowerCase()===t.address.toLowerCase()&&e.resource===t.resource)),uniswapScopeMatches:scope?.uniswapIncluded===(config.scanUniswap!==false)};

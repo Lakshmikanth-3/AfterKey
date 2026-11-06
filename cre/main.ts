@@ -1,75 +1,54 @@
-import { HTTPCapability, EVMClient, getNetwork, encodeCallMsg, bytesToHex, handler, blockNumber, protoBigIntToBigint, decodeJson, Runner, type Runtime, type HTTPPayload } from '@chainlink/cre-sdk';
-import { encodeFunctionData, decodeFunctionResult, parseAbi, isAddress, zeroAddress, type Address } from 'viem';
-import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE } from '../src/ens/roles';
-
-type Config={authorizedEVMAddress:string; owner:string; ensTargets:{label:string;address:string;resource:string;kind:'registry'|'resolver'}[];maxPositions:number;scanUniswap?:boolean};
-type Departure={eventId:string;event:'departure'|'recheck';subject:string};
-const manager='0x1238536071E1c677A632429e3655c799b22cDA52' as Address;
-const abi=parseAbi(['function balanceOf(address) view returns (uint256)','function tokenOfOwnerByIndex(address,uint256) view returns (uint256)','function ownerOf(uint256) view returns (address)','function getApproved(uint256) view returns (address)','function isApprovedForAll(address,address) view returns (bool)','function roles(uint256,address) view returns (uint256)','function supportsInterface(bytes4) view returns (bool)','function getResource(uint256) view returns (uint256)','function getOwner(uint256) view returns (address)']);
+import { HTTPCapability, CronCapability, handler, logTriggerConfig, bytesToHex, protoBigIntToBigint, decodeJson, Runner, type Runtime, type HTTPPayload, type CronPayload, type EVMLog } from '@chainlink/cre-sdk';
+import { isAddress, zeroAddress, toEventSelector, pad } from 'viem';
+import { POSITION_MANAGER } from '../src/uniswap/contracts';
+import { compareSnapshots, type Config } from './model';
+import { readState, evmClient } from './reader';
+import { readDepartureCase } from './external-case';
+import { validateCasePolicy } from './case-policy';
+import type { Workflow } from '@chainlink/cre-sdk';
 const eq=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
-function onDeparture(runtime:Runtime<Config>,payload:HTTPPayload):string {
-  if(payload.input.length>16000)throw new Error('Departure payload exceeds 16 KB.');
-  const request=decodeJson(payload.input) as unknown as Departure;
-  if(!request||typeof request!=='object'||typeof request.eventId!=='string'||typeof request.subject!=='string')throw new Error('Invalid departure payload.');
-  if(!request.eventId||request.eventId.length>128||!['departure','recheck'].includes(request.event))throw new Error('Invalid departure event.');
-  if(!isAddress(request.subject)||eq(request.subject,zeroAddress)||eq(request.subject,runtime.config.owner))throw new Error('Invalid departing wallet.');
-  const network=getNetwork({chainFamily:'evm',chainSelectorName:'ethereum-testnet-sepolia'});
-  if(!network)throw new Error('Sepolia not supported by the selected CRE network.');
-  const evm=new EVMClient(network.chainSelector.selector);
-  const header=evm.headerByNumber(runtime,{}).result();
-  if(!header.header?.blockNumber)throw new Error('No block header returned.');
-  const height=protoBigIntToBigint(header.header.blockNumber);
-  const owner=runtime.config.owner as Address,subject=request.subject as Address;
-  const read=(address:Address,fn:string,args:readonly unknown[]):any=>{
-    const data=encodeFunctionData({abi,functionName:fn,args} as never);
-    const response=evm.callContract(runtime,{call:encodeCallMsg({from:zeroAddress,to:address,data}),blockNumber:blockNumber(height)}).result();
-    return decodeFunctionResult({abi,functionName:fn,data:bytesToHex(response.data)} as never);
-  };
-  const uniswapIncluded=runtime.config.scanUniswap!==false;
-  const operator=uniswapIncluded?read(manager,'isApprovedForAll',[owner,subject]) as boolean:false;
-  const total=uniswapIncluded?read(manager,'balanceOf',[owner]) as bigint:0n;
-  const limit=BigInt(runtime.config.maxPositions);
-  const count=Number(total>limit?limit:total);
-  const findings:{protocol:string;kind:string;contract:string;resource?:string;roles?:string;tokenId?:string;label?:string}[]=[];
-  if(operator)findings.push({protocol:'Uniswap v3',kind:'operator-wide',contract:manager});
-  const positions:{tokenId:string;owner:string;approved:string}[]=[];
-  for(let i=0;i<count;i++){
-    const id=read(manager,'tokenOfOwnerByIndex',[owner,BigInt(i)]) as bigint;
-    const approved=read(manager,'getApproved',[id]) as string;
-    const actualOwner=read(manager,'ownerOf',[id]) as string;
-    if(!eq(actualOwner,owner))throw new Error('Position ownership mismatch.');
-    positions.push({tokenId:String(id),owner:actualOwner,approved});
-    if(eq(approved,subject))findings.push({protocol:'Uniswap v3',kind:'token-approval',contract:manager,tokenId:String(id)});
+type Request={eventId:string;event:'departure'|'recheck'|'verify';subject:string;beforeBlock?:string;issueNumber?:number};
+function result(runtime:Runtime<Config>,trigger:string,eventId:string,beforeBlock?:string,departureCase?:unknown){
+  const after=readState(runtime);
+  if(beforeBlock!==undefined&&(typeof beforeBlock!=='string'||!/^\d+$/.test(beforeBlock)||BigInt(beforeBlock)<=0n||BigInt(beforeBlock)>=BigInt(after.block)))throw new Error('Baseline must be a positive Sepolia block before the current snapshot.');
+  const before=beforeBlock?readState(runtime,BigInt(beforeBlock)):undefined;
+  const changes=before?compareSnapshots(before,after):[];
+  const permissionStateVerified=after.complete&&after.findings.length===0;
+  const output={schemaVersion:2,source:'Chainlink CRE',trigger,eventId,chainId:11155111,departureCase:departureCase??null,before:before??null,after,preservation:before?{checked:true,changes,passed:before.complete&&after.complete&&!changes.length}:{checked:false},permissionStateVerified,ownerSignedRevocationsVerified:false,status:!after.complete?'incomplete':changes.length?'assets_changed':after.findings.length?'access_remaining':before?'permissions_absent_assets_preserved':'permissions_absent'};
+  const encoded=JSON.stringify(output);runtime.log(encoded);return encoded;
+}
+function onHttp(runtime:Runtime<Config>,payload:HTTPPayload):string{
+  if(payload.input.length>16000)throw new Error('Request exceeds 16 KB.');
+  const request=decodeJson(payload.input) as unknown as Request;
+  if(!request||typeof request.eventId!=='string'||!request.eventId||request.eventId.length>128||!['departure','recheck','verify'].includes(request.event)||typeof request.subject!=='string'||!eq(request.subject,runtime.config.subject))throw new Error('Invalid event or subject outside the deployed workspace.');
+  if(request.event==='verify'&&!request.beforeBlock)throw new Error('Verification requires a beforeBlock baseline.');
+  let departureCase:unknown;
+  if(request.event==='departure'){
+    if(!runtime.config.github)throw new Error('Configure a GitHub case source before using the departure trigger.');
+    const issueNumber=request.issueNumber??runtime.config.github.issueNumber;
+    if(!Number.isSafeInteger(issueNumber)||!issueNumber||issueNumber<1)throw new Error('A positive GitHub departure issue number is required.');
+    departureCase=readDepartureCase(runtime,runtime.config.github,issueNumber,request.subject);
   }
-  const seenRoots=new Set<string>();
-  const seenOperators=new Set<string>();
-  const ens=runtime.config.ensTargets.map(target=>{
-    const address=target.address as Address,key=address.toLowerCase();
-    if(!read(address,'supportsInterface',[EAC_INTERFACE])||!read(address,'supportsInterface',[target.kind==='registry'?REGISTRY_INTERFACE:RESOLVER_INTERFACE]))throw new Error('Unsupported ENSv2 EAC/contract interface.');
-    const resource=target.kind==='registry'?read(address,'getResource',[BigInt(target.resource)]) as bigint:BigInt(target.resource);
-    const root=read(address,'roles',[0n,subject]) as bigint;
-    const local=read(address,'roles',[resource,subject]) as bigint;
-    const ownerRoot=read(address,'roles',[0n,owner]) as bigint;
-    const ownerLocal=read(address,'roles',[resource,owner]) as bigint;
-    const nameOwner=target.kind==='registry'?read(address,'getOwner',[resource]) as string:null;
-    if(nameOwner&&!eq(nameOwner,zeroAddress)&&!eq(nameOwner,owner)&&read(address,'isApprovedForAll',[nameOwner,subject]))throw new Error('Subject inherits registry roles through another name owner; configured owner cannot revoke that approval.');
-    const approved=target.kind==='registry'?read(address,'isApprovedForAll',[owner,subject]) as boolean:null;
-    if(root&&!seenRoots.has(key)){seenRoots.add(key);findings.push({protocol:'ENSv2',kind:'root-roles',contract:address,roles:String(root),label:target.label});}
-    if(local)findings.push({protocol:'ENSv2',kind:'resource-roles',contract:address,resource:target.resource,roles:String(local),label:target.label});
-    if(approved&&!seenOperators.has(key)){seenOperators.add(key);findings.push({protocol:'ENSv2',kind:'registry-operator',contract:address,label:target.label});}
-    return {...target,resource:String(resource),root:String(root),local:String(local),effectiveRoles:String(root|local),ownerRoot:String(ownerRoot),ownerLocal:String(ownerLocal),nameOwner,operator:approved,interfaceVerified:true};
-  });
-  const scopeConfigured=uniswapIncluded||runtime.config.ensTargets.length>0;
-  const result={source:'Chainlink CRE',method:'permission-state reads',eventId:request.eventId,event:request.event,chainId:11155111,block:String(height),owner,subject,positionCount:String(total),uniswapIncluded,positions,ens,operator,findings,complete:total<=limit&&scopeConfigured,scope:'Explicit ENSv2 resources and optionally Uniswap v3 positions',notes:scopeConfigured?[]:['No protocol scope configured. An empty scope is not an offboarding result.']};
-  runtime.log(JSON.stringify({eventId:request.eventId,block:String(height),remainingPaths:findings.length,complete:result.complete}));
-  return JSON.stringify(result);
+  return result(runtime,`http:${request.event}`,request.eventId,request.beforeBlock,departureCase);
+}
+function onCron(runtime:Runtime<Config>,payload:CronPayload):string{
+  return result(runtime,'cron:monitor',`monitor:${payload.scheduledExecutionTime?.seconds??'scheduled'}`);
+}
+function onApproval(runtime:Runtime<Config>,log:EVMLog):string{
+  if(log.removed)throw new Error('Approval log was removed by a reorganization.');
+  if(!eq(bytesToHex(log.address),POSITION_MANAGER)||!log.blockNumber)throw new Error('Unexpected approval event.');
+  return result(runtime,'evm:approval',`${bytesToHex(log.txHash)}:${log.index}`,undefined,{transactionHash:bytesToHex(log.txHash),eventBlock:String(protoBigIntToBigint(log.blockNumber))});
 }
 function initWorkflow(config:Config){
-  for(const address of [config.owner,config.authorizedEVMAddress])if(!isAddress(address)||eq(address,zeroAddress))throw new Error('Set owner and authorizedEVMAddress to valid nonzero public addresses before deployment.');
-  if(!Number.isInteger(config.maxPositions)||config.maxPositions<1||config.maxPositions>20)throw new Error('maxPositions must be 1–20 to bound CRE execution cost.');
-  if(!Array.isArray(config.ensTargets)||config.ensTargets.length>10)throw new Error('At most 10 ENS targets are supported per workflow.');
-  for(const target of config.ensTargets){if(!isAddress(target.address)||eq(target.address,zeroAddress)||BigInt(target.resource)<=0n||BigInt(target.resource)>=2n**256n||!['registry','resolver'].includes(target.kind))throw new Error('Invalid configured ENS target.');}
-  const http=new HTTPCapability();
-  return [handler(http.trigger({authorizedKeys:[{type:'KEY_TYPE_ECDSA_EVM',publicKey:config.authorizedEVMAddress}]}),onDeparture)];
+  for(const a of [config.owner,config.subject,config.authorizedEVMAddress])if(!isAddress(a)||eq(a,zeroAddress))throw new Error('Use valid nonzero workspace addresses.');
+  if(eq(config.owner,config.subject))throw new Error('Owner and operator must differ.');
+  if(!Number.isInteger(config.maxPositions)||config.maxPositions<1||config.maxPositions>20)throw new Error('maxPositions must be 1–20.');
+  if(!Array.isArray(config.ensTargets)||config.ensTargets.length>10)throw new Error('At most 10 ENS targets supported.');
+  for(const t of config.ensTargets)if(!isAddress(t.address)||eq(t.address,zeroAddress)||BigInt(t.resource)<=0n||BigInt(t.resource)>=2n**256n||!['registry','resolver'].includes(t.kind))throw new Error('Invalid ENS target.');
+  if(config.github)validateCasePolicy(config.github);
+  const triggers:Array<Workflow<Config>[number]>=[handler(new HTTPCapability().trigger({authorizedKeys:[{type:'KEY_TYPE_ECDSA_EVM',publicKey:config.authorizedEVMAddress}]}),onHttp)];
+  if(config.monitorSchedule){if(!/^0 \*\/(5|10|15|30) \* \* \* \*$/.test(config.monitorSchedule))throw new Error('Monitor schedule must run every 5, 10, 15 or 30 minutes.');triggers.push(handler(new CronCapability().trigger({schedule:config.monitorSchedule}),onCron));}
+  if(config.watchApprovals&&config.scanUniswap!==false)triggers.push(handler(evmClient().logTrigger(logTriggerConfig({addresses:[POSITION_MANAGER],topics:[[toEventSelector('Approval(address,address,uint256)'),toEventSelector('ApprovalForAll(address,address,bool)')],[pad(config.owner as `0x${string}`)]],confidence:'SAFE'})),onApproval));
+  return triggers;
 }
 export async function main(){const runner=await Runner.newRunner<Config>();await runner.run(initWorkflow);}

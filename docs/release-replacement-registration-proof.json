@@ -1,0 +1,19 @@
+{
+  "confirmedBlock": "12079662",
+  "transactionHash": "0xc9c7f0f6046bfe11066799dd90a923e2e622d99838402bb6fbe5f62f3558ed52",
+  "action": {
+    "functionName": "registerConsumer",
+    "args": [
+      "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd"
+    ]
+  },
+  "observedBlock": "12079664",
+  "consumers": [
+    {
+      "address": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "tokenId": "234145",
+      "custodian": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+      "deposited": false
+    }
+  ]
+}

@@ -16,3 +16,22 @@ test('relay verifies wallet authorization, exact digest, expiry and deployed sco
   await assert.rejects(()=>validateSignedTrigger(r.body,authorization,1050,{...policy,workflowId:'b'.repeat(64)}),/deployed workflow/);
   await assert.rejects(()=>validateSignedTrigger(r.body,'',1050,policy),/Missing/);
 });
+test('relay rejects malformed event-specific input before paying for a CRE execution',async()=>{
+  const account=privateKeyToAccount(toHex(2n,{size:32})),subject='0x2222222222222222222222222222222222222222',workflowId='c'.repeat(64);
+  const policy={owner:account.address,subject,workflowId};
+  async function signed(input:any){
+    const request=triggerSigningRequest(workflowId,input,account.address,1000,crypto.randomUUID());
+    const signature=await account.signMessage({message:request.signingInput});
+    return {request,authorization:`Bearer ${finishTriggerJwt(request.signingInput,signature)}`};
+  }
+  for(const [input,message] of [
+    [{eventId:'case-2',event:'verify',subject},/baseline/],
+    [{eventId:'case-2',event:'recheck',subject,beforeBlock:'0'},/baseline/],
+    [{eventId:'case-2',event:'departure',subject,issueNumber:1.5},/issue number/],
+    [{eventId:'case-2',event:'recheck',subject,issueNumber:2},/only valid for departure/],
+    [{eventId:'case-2',event:'recheck',subject,unexpected:true},/unsupported input/]
+  ] as const){
+    const {request,authorization}=await signed(input);
+    await assert.rejects(()=>validateSignedTrigger(request.body,authorization,1050,policy),message);
+  }
+});

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-06T09:31:53.269Z",
+  "checkedAt": "2026-11-06T14:14:24.686Z",
   "source": "Authenticated CRE CLI execution status and logs",
   "workflowId": "008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76",
   "executionId": "f42d1d27-6bcf-4689-b290-d4d533f83729",
@@ -12,7 +12,17 @@
     "loggedOutputsAgree": true,
     "walletsMatch": true,
     "ensScopeMatches": true,
-    "uniswapScopeMatches": true
+    "uniswapScopeMatches": true,
+    "departureTrigger": true,
+    "departureCaseValid": true,
+    "baselinePresent": true,
+    "beforeAccessPresent": true,
+    "afterAccessAbsent": true,
+    "preservationPassed": true,
+    "positionCoverage": true,
+    "permissionStateVerified": true,
+    "finalStatus": true,
+    "walletPairMatches": true
   },
   "status": {
     "status": "SUCCESS",

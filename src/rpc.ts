@@ -6,6 +6,13 @@ const blockReads = new Set(['eth_getBlockByNumber', 'eth_getBlockByHash', 'eth_c
 const blockLookups = new Set(['eth_getBlockByNumber', 'eth_getBlockByHash']);
 export const BLOCK_READ_MESSAGE = 'The Sepolia RPC cannot serve this block yet. Please try the read again in a moment.';
 
+export function validateRpcEndpoint(rpc: string): void {
+  let url: URL;
+  try { url = new URL(rpc); } catch { throw new Error('Enter a valid RPC URL.'); }
+  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) throw new Error('Use HTTPS for a remote RPC. HTTP is allowed only for a local loopback endpoint.');
+}
+
 class BlockUnavailableError extends Error {
   constructor() { super(BLOCK_READ_MESSAGE); this.name = 'BlockUnavailableError'; }
 }
@@ -49,7 +56,9 @@ export function blockAwareTransport(transport: Transport, retryDelay = 350): Tra
   };
 }
 
-export const clientFor = (rpc: string) => createPublicClient({
+export const clientFor = (rpc: string) => {
+  validateRpcEndpoint(rpc);
+  return createPublicClient({
   chain: sepolia,
   transport: rpc === DEFAULT_RPC
     ? fallback([
@@ -57,4 +66,5 @@ export const clientFor = (rpc: string) => createPublicClient({
       blockAwareTransport(http(sepolia.rpcUrls.default.http[0], { timeout: 15000, retryCount: 0 })),
     ], { retryCount: 0 })
     : blockAwareTransport(http(rpc, { timeout: 20000, retryCount: 1 })),
-});
+  });
+};

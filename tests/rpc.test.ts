@@ -2,8 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPublicClient, custom, fallback, parseAbi } from 'viem';
 import { sepolia } from 'viem/chains';
-import { blockAwareTransport, isBlockUnavailable, BLOCK_READ_MESSAGE } from '../src/rpc';
+import { blockAwareTransport, isBlockUnavailable, BLOCK_READ_MESSAGE, validateRpcEndpoint, clientFor } from '../src/rpc';
 import { errorText } from '../src/engine';
+
+test('remote RPCs require HTTPS while local development permits loopback HTTP', () => {
+  for (const url of ['https://rpc.example.org', 'http://localhost:8545', 'http://127.0.0.1:8545', 'http://[::1]:8545']) assert.doesNotThrow(() => validateRpcEndpoint(url));
+  for (const url of ['http://rpc.example.org/key-secret', 'http://localhost.evil.org', 'file:///private', 'not-a-url']) {
+    assert.throws(() => clientFor(url), error => !String(error).includes('key-secret'));
+  }
+});
 
 test('a null block header is retried at the same number before public fallback', async () => {
   const requests: unknown[] = [];

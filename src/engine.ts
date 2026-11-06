@@ -4,7 +4,7 @@ import { readIdentity, identityChanges, assertExplainedAuthorization, type Ident
 import { parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type Address, type Hash, type Hex } from 'viem';
 import { sepolia } from 'viem/chains';
 import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, describeRoles, resolverResource, recordRole } from './ens/roles';
-import { clientFor, isBlockUnavailable, BLOCK_READ_MESSAGE } from './rpc';
+import { clientFor, isBlockUnavailable, BLOCK_READ_MESSAGE, validateRpcEndpoint } from './rpc';
 
 export { POSITION_MANAGER } from './uniswap/contracts';
 export { DEFAULT_RPC, clientFor } from './rpc';
@@ -42,8 +42,7 @@ export function validateConfig(c: Config): void {
   if (!isAddress(c.owner) || !isAddress(c.subject)) throw new Error('Enter valid owner and departing wallet addresses.');
   if (same(c.owner, c.subject)) throw new Error('The owner and departing wallet must be different.');
   if (same(c.owner, zeroAddress) || same(c.subject, zeroAddress)) throw new Error('The zero address cannot be an owner or departing wallet.');
-  const url = new URL(c.rpc);
-  if (!['https:', 'http:'].includes(url.protocol)) throw new Error('RPC must be an HTTP or HTTPS endpoint.');
+  validateRpcEndpoint(c.rpc);
   const seen = new Set<string>();
   if(c.targets.length>100)throw new Error('At most 100 explicit ENS resources can be scanned at once.');
   for (const t of c.targets) {

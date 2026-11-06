@@ -1,3 +1,6 @@
+import {releaseWorkspace,bindReleaseWorkspace} from './releases/ui';
+import releaseGateArtifact from './releases/ENSReleaseGate.json';
+import releaseConsumerArtifact from './releases/ReleaseLPVault.json';
 import { evidenceReport, type EvidenceTransaction } from './evidence';
 import { waitForReviewedReceipt, type ReviewedCall } from './transactions';
 import { walletDiscovery, selectWallet, type WalletProvider, type WalletChoice } from './wallet';
@@ -35,7 +38,7 @@ if(!config.owner)config.owner=WORKSPACE_OWNER;
 if(!config.subject)config.subject=WORKSPACE_SUBJECT;
 if(config.scanUniswap===undefined)config.scanUniswap=false;
 let account:Address|undefined;
-let view:'ens'|'uniswap'|'guarded'|'cre'|'offboard'|'settings'|'history'='ens';
+let view:'releases'|'ens'|'uniswap'|'guarded'|'cre'|'offboard'|'settings'|'history'='releases';
 let busy=false,busyText='',error='',notice='';
 let before:Snapshot|undefined, current:Snapshot|undefined;
 let reviewed=false, verified=false, ownerProblems:string[]=[];
@@ -47,12 +50,12 @@ function download(name:string,data:unknown){const url=URL.createObjectURL(new Bl
 function report(){return evidenceReport({before,after:current,transactions,ownerProblems,verified});}
 function clearScan(){before=undefined;current=undefined;verified=false;reviewed=false;ownerProblems=[];selected.clear();transactions=[];}
 function render(){
-  app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['ens','uniswap','cre','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='ens'?'ENS identity':v==='uniswap'?'Uniswap':v==='cre'?'Chainlink':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?`${esc(selectedWallet?.name||'Wallet')} · ${short(account)}`:'Connect wallet'}</button></div><div class="shell"><main>
+  app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['releases','ens','uniswap','cre','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='releases'?'Change review':v==='ens'?'ENS identity':v==='uniswap'?'Uniswap':v==='cre'?'Chainlink':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?`${esc(selectedWallet?.name||'Wallet')} · ${short(account)}`:'Connect wallet'}</button></div><div class="shell"><main>
   ${error?`<div role="alert" class="banner danger">${icon('alert-triangle')}<span>${esc(error)}</span><button data-dismiss="error" aria-label="Dismiss error">${icon('x')}</button></div>`:''}
   ${notice?`<div role="status" class="banner">${icon('check')}<span>${esc(notice)}</span><button data-dismiss="notice" aria-label="Dismiss notification">${icon('x')}</button></div>`:''}
-  ${view==='ens'?ensWorkspace(ensContext()):view==='uniswap'?uniswapWorkspace(uniswapContext()):view==='guarded'?guardedWorkspace(guardedContext()):view==='cre'?creWorkspace(creContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
+  ${view==='releases'?releaseWorkspace(releaseContext()):view==='ens'?ensWorkspace(ensContext()):view==='uniswap'?uniswapWorkspace(uniswapContext()):view==='guarded'?guardedWorkspace(guardedContext()):view==='cre'?creWorkspace(creContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
   <footer><span>${icon('lock-keyhole')} Your keys stay in your wallet. Every transaction needs your signature.</span><div class="brand-strip"><a href="https://ens.domains" target="_blank" rel="noreferrer"><img src="/brands/ens.svg" alt="ENS"/><span>ENSv2</span></a><a href="https://chain.link/cross-chain/cre" target="_blank" rel="noreferrer"><img src="/brands/chainlink.svg" alt="Chainlink"/><span>CRE</span></a><a href="https://uniswap.org" target="_blank" rel="noreferrer"><img src="/brands/uniswap.svg" alt="Uniswap"/><span>Uniswap</span></a></div></footer></main></div>${busy?`<div class="working" role="status">${icon('loader-circle','spin')}<span>${esc(busyText)}</span></div>`:''}`;
-  createIcons({icons});bind();bindEnsWorkspace(ensContext());bindUniswapWorkspace(uniswapContext());bindCreWorkspace(creContext());bindGuardedWorkspace(guardedContext());
+  createIcons({icons});bind();bindReleaseWorkspace(releaseContext());bindEnsWorkspace(ensContext());bindUniswapWorkspace(uniswapContext());bindCreWorkspace(creContext());bindGuardedWorkspace(guardedContext());
   if(view==='uniswap'){
     const tabs=document.querySelector('.ens-tabs');
     if(tabs){const button=document.createElement('button');button.textContent='Protected LP';button.disabled=busy;button.onclick=()=>{view='guarded';render();};tabs.append(button);}
@@ -224,3 +227,18 @@ async function sendEnsAction(action:SetupAction,expected=config.owner){
 render();
 
 window.addEventListener('scroll',()=>document.querySelector('.topnav')?.classList.toggle('scrolled',window.scrollY>50),{passive:true});
+
+function releaseContext(){return {config,busy,render,task,send:sendEnsAction,deploy:deployRelease,sign:async(message:string,expected:string)=>{const signer=await ensureSigner(expected);return signer.signMessage({message,account:getAddress(expected)});}};}
+async function deployRelease(kind:'gate'|'consumer',args:unknown[]){
+  const artifact=kind==='gate'?releaseGateArtifact:releaseConsumerArtifact;
+  const data=encodeDeployData({abi:artifact.abi,bytecode:artifact.bytecode as `0x${string}`,args});
+  const signer=await ensureSigner(config.owner),c=clientFor(config.rpc);
+  await c.estimateGas({account:getAddress(config.owner),data});
+  const hash=await signer.sendTransaction({account:getAddress(config.owner),chain:sepolia,data});
+  const receipt=await c.waitForTransactionReceipt({hash,confirmations:1});
+  const tx=await c.getTransaction({hash:receipt.transactionHash});
+  const header=await c.getBlock({blockNumber:receipt.blockNumber});
+  if(receipt.status!=='success'||!receipt.contractAddress||tx.to!==null||!same(tx.from,config.owner)||tx.input!==data||tx.value!==0n||header.hash!==receipt.blockHash||tx.blockHash!==receipt.blockHash)throw new Error('Deployment differs from reviewed contract.');
+  download(`afterkey-release-${kind}-${receipt.blockNumber}.json`,{kind,address:receipt.contractAddress,transactionHash:receipt.transactionHash,block:receipt.blockNumber,args});
+  return receipt;
+}

@@ -6,7 +6,7 @@ type Input={before?:Snapshot;after?:Snapshot;transactions:EvidenceTransaction[];
 export function evidenceReport(input:Input){
   const {before,after,transactions,verified}=input;
   const ownerProblems=[...new Set([...input.ownerProblems,...(before&&after?compareOwner(before,after):[])])];
-  const scope=(s:Snapshot)=>JSON.stringify({uniswap:s.config.scanUniswap!==false,targets:s.config.targets.map(t=>[t.address.toLowerCase(),BigInt(t.resource).toString(),t.kind,t.name??'',t.recordType??'',t.argument??'']).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))});
+  const scope=(s:Snapshot)=>JSON.stringify({uniswap:s.config.scanUniswap!==false,guardedVaults:(s.config.guardedVaults??[]).map(a=>a.toLowerCase()).sort(),targets:s.config.targets.map(t=>[t.address.toLowerCase(),BigInt(t.resource).toString(),t.kind,t.name??'',t.recordType??'',t.argument??'']).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))});
   const comparable=Boolean(before?.complete&&after?.complete&&after.block>=before.block&&before.owner.toLowerCase()===after.owner.toLowerCase()&&before.subject.toLowerCase()===after.subject.toLowerCase()&&scope(before)===scope(after));
   const uniswapIncluded=Boolean(after&&after.config.scanUniswap!==false);
   const matches=(t:EvidenceTransaction,f:Snapshot['findings'][number])=>t.intentVerified===true&&t.status==='confirmed'&&t.from?.toLowerCase()===before?.owner.toLowerCase()&&t.value===0n&&t.functionName===f.fn&&t.to?.toLowerCase()===f.address.toLowerCase()&&t.data?.toLowerCase()===f.data.toLowerCase();
@@ -17,7 +17,7 @@ export function evidenceReport(input:Input){
   const redact=(s:Snapshot|undefined)=>s?{...s,config:{...s.config,rpc:'[not exported]'}}:undefined;
   return {product:'AfterKey',version:2,chainId:11155111,createdAt:new Date().toISOString(),status,
     method:confirmedRevocations.length?'Live permission reads with confirmed revocation transactions recorded.':'Live permission-state reads. No confirmed revocation transaction is included.',
-    coverage:`Explicitly configured ENSv2 contract/resources${uniswapIncluded?' and Uniswap v3 position-manager approvals':''}. Unconfigured resources, alternate wallets and signatures are outside coverage.`,
+    coverage:`Explicitly configured ENSv2 contract/resources${uniswapIncluded?' and Uniswap v3 position-manager approvals':''}${after?.config.guardedVaults?.length?' plus protected LP vault mandates':''}. Unconfigured resources, alternate wallets and signatures are outside coverage.`,
     protocols:{ensResourceCount:after?.config.targets.length??0,uniswapIncluded,chainlinkExecutionIncluded:false},
     permissionStateVerified,confirmedRevocationCount:confirmedRevocations.length,
     signedOffboardingVerified:permissionStateVerified&&matchedPaths>0&&matchedPaths===before?.findings.length,

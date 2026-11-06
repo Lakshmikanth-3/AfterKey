@@ -5,6 +5,7 @@ import { parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type 
 import { sepolia } from 'viem/chains';
 import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, describeRoles, resolverResource, recordRole } from './ens/roles';
 import { clientFor, isBlockUnavailable, BLOCK_READ_MESSAGE, validateRpcEndpoint } from './rpc';
+import { vaultAbi, vaultContinuity, type VaultState } from './guarded/model';
 
 export { POSITION_MANAGER } from './uniswap/contracts';
 export { DEFAULT_RPC, clientFor } from './rpc';
@@ -16,6 +17,7 @@ export const nftAbi = parseAbi([
   'function isApprovedForAll(address owner,address operator) view returns (bool)',
   'function approve(address spender,uint256 tokenId)',
   'function setApprovalForAll(address operator,bool approved)',
+  'function setPaused(bool paused)',
 ]);
 export const eacAbi = parseAbi([
   'function supportsInterface(bytes4 interfaceId) view returns (bool)',
@@ -31,10 +33,10 @@ export const eacAbi = parseAbi([
   'function setApprovalForAll(address operator,bool approved)',
 ]);
 export type Target = { label: string; address: Address; resource: string; kind: 'registry' | 'resolver'; name?:string; recordType?:'text'|'data'|'coin'|'abi'|'interface'; argument?:string };
-export type Config = { owner: string; subject: string; rpc: string; targets: Target[]; scanUniswap?:boolean };
-export type Finding = { id: string; protocol: 'Uniswap v3' | 'ENSv2'; title: string; detail: string; scope: string; broad: boolean; address: Address; fn: 'setApprovalForAll' | 'approve' | 'revokeRootRoles' | 'revokeRoles'; args: readonly unknown[]; data: Hex; executable: boolean; blockedReason?: string };
+export type Config = { owner: string; subject: string; rpc: string; targets: Target[]; scanUniswap?:boolean; guardedVaults?:string[] };
+export type Finding = { id: string; protocol: 'Uniswap v3' | 'ENSv2'; title: string; detail: string; scope: string; broad: boolean; address: Address; fn: 'setApprovalForAll' | 'approve' | 'revokeRootRoles' | 'revokeRoles' | 'setPaused'; args: readonly unknown[]; data: Hex; executable: boolean; blockedReason?: string };
 export type EnsState = { target: Target; root: bigint; local: bigint; ownerRoot: bigint; ownerLocal: bigint; operator: boolean | null; registryOwner?:Address; tokenId?:bigint; expiry?:bigint; interfaceVerified?:boolean; effective?:bigint;subjectCanWrite?:boolean;ownerCanWrite?:boolean;identity?:IdentityState };
-export type Snapshot = { block: bigint; blockHash: Hash; timestamp: string; config: Config; owner: Address; subject: Address; operator: boolean; positions: { id: bigint; approved: Address; owner: Address; economics?:PositionEconomics }[]; positionCount: bigint; complete: boolean; ens: EnsState[]; findings: Finding[]; errors: string[] };
+export type Snapshot = { block: bigint; blockHash: Hash; timestamp: string; config: Config; owner: Address; subject: Address; operator: boolean; positions: { id: bigint; approved: Address; owner: Address; economics?:PositionEconomics }[]; positionCount: bigint; complete: boolean; ens: EnsState[]; findings: Finding[]; errors: string[]; guarded?:{state:VaultState;economics:PositionEconomics}[] };
 export const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 export const errorText = (error: unknown): string => isBlockUnavailable(error) ? BLOCK_READ_MESSAGE : error && typeof error === 'object' && 'shortMessage' in error ? String(error.shortMessage) : error instanceof Error ? error.message : String(error);
 export const short = (s: string) => s.length > 16 ? `${s.slice(0,6)}…${s.slice(-4)}` : s;
@@ -43,6 +45,7 @@ export function validateConfig(c: Config): void {
   if (same(c.owner, c.subject)) throw new Error('The owner and departing wallet must be different.');
   if (same(c.owner, zeroAddress) || same(c.subject, zeroAddress)) throw new Error('The zero address cannot be an owner or departing wallet.');
   validateRpcEndpoint(c.rpc);
+  if(c.guardedVaults&&(!Array.isArray(c.guardedVaults)||c.guardedVaults.length>4||c.guardedVaults.some(a=>!isAddress(a)||same(a,zeroAddress))||new Set(c.guardedVaults.map(a=>a.toLowerCase())).size!==c.guardedVaults.length))throw new Error('Use at most four unique protected vault addresses.');
   const seen = new Set<string>();
   if(c.targets.length>100)throw new Error('At most 100 explicit ENS resources can be scanned at once.');
   for (const t of c.targets) {
@@ -66,6 +69,7 @@ export function orderFindings(findings: Finding[]): Finding[] {
 }
 export function deriveFindings(s: Omit<Snapshot,'findings'>, canRevoke: Record<string,boolean> = {}): Finding[] {
   const f: Finding[] = [];
+  for(const {state:v} of s.guarded??[])if(v.subjectCanCollect)f.push({id:`vault:${v.address.toLowerCase()}`,protocol:'Uniswap v3',title:'Protected LP mandate remains active',detail:'The departing wallet can collect to the treasury. Pause this vault to contain access; then revoke ENS roles or replace the operator.',scope:`Protected position #${v.tokenId}`,broad:true,address:getAddress(v.address),fn:'setPaused',args:[true],data:encodeFunctionData({abi:vaultAbi,functionName:'setPaused',args:[true]}),executable:true});
   const add = (item: Omit<Finding,'data'>) => {
     const {blockedReason,...finding}=item;
     f.push({...finding,...(!item.executable&&blockedReason?{blockedReason}:{}),data:encodeFunctionData({abi:item.protocol === 'Uniswap v3' ? nftAbi : eacAbi,functionName:item.fn,args:item.args} as never)});
@@ -111,7 +115,7 @@ export async function scan(config: Config): Promise<Snapshot> {
     try{[operator,positionCount]=await Promise.all([read(POSITION_MANAGER,nftAbi,'isApprovedForAll',[owner,subject]) as Promise<boolean>,read(POSITION_MANAGER,nftAbi,'balanceOf',[owner]) as Promise<bigint>]);}
     catch(error){errors.push(`Uniswap scan incomplete: ${errorText(error)}`);}
   }
-  if(config.scanUniswap===false&&!config.targets.length)errors.push('No ENS resources configured and Uniswap scanning is disabled. Add an ENS name before drawing a conclusion.');
+  if(config.scanUniswap===false&&!config.targets.length&&!config.guardedVaults?.length)errors.push('No ENS resources configured and Uniswap scanning is disabled. Add an ENS name before drawing a conclusion.');
   const cap=200n;
   const count=Number(positionCount > cap ? cap : positionCount);
   const positions: Snapshot['positions']=[];
@@ -161,11 +165,23 @@ export async function scan(config: Config): Promise<Snapshot> {
       if(local) authority[`ens:${target.address.toLowerCase()}:${resource}`]=await read(target.address,eacAbi,'hasRoles',[resource,adminMask(local),owner]);
     } catch(error) {errors.push(`${target.label}: ${errorText(error)}`);}
   }
-  const s={block,blockHash:blockInfo.hash,timestamp:new Date(Number(blockInfo.timestamp)*1000).toISOString(),config:structuredClone(config),owner,subject,operator,positions,positionCount,ens,complete:errors.length===0,errors};
+  const guarded:NonNullable<Snapshot['guarded']>=[];
+  for(const address of config.guardedVaults??[]){
+    try{
+      const {readVault}=await import('./guarded/client');
+      const {state}=await readVault(config,address,block);
+      if(!same(state.custodian,address))throw new Error('Protected NFT is outside its configured vault.');
+      const raw=await client.readContract({address:POSITION_MANAGER,abi:positionAbi,functionName:'positions',args:[BigInt(state.tokenId)],blockNumber:block});
+      guarded.push({state,economics:positionEconomics(raw)});
+    }catch(error){errors.push(`Protected vault ${address}: ${errorText(error)}`);}
+  }
+  const s={block,blockHash:blockInfo.hash,timestamp:new Date(Number(blockInfo.timestamp)*1000).toISOString(),config:structuredClone(config),owner,subject,operator,positions,positionCount,ens,guarded,complete:errors.length===0,errors};
   return {...s,findings:deriveFindings(s,authority)};
 }
 export function compareOwner(before: Snapshot,after: Snapshot): string[] {
   const problems:string[]=[];
+  if((before.guarded??[]).length!==(after.guarded??[]).length)problems.push('Protected vault coverage changed.');
+  for(const p of before.guarded??[]){const q=after.guarded?.find(q=>same(q.state.address,p.state.address));if(!q){problems.push(`Protected vault missing: ${p.state.address}`);continue;}problems.push(...vaultContinuity(p.state,q.state),...economicChanges(p.economics,q.economics));}
   if(!same(before.owner,after.owner)||!same(before.subject,after.subject)) problems.push('Wallet pair changed.');
   if(before.positionCount!==after.positionCount || before.positions.some(p=>!after.positions.some(q=>p.id===q.id && same(q.owner,p.owner)))) problems.push('Position ownership changed between checks.');
   for(const p of before.positions)if(p.economics)problems.push(...economicChanges(p.economics,after.positions.find(q=>q.id===p.id)?.economics).map(change=>`${change}: #${p.id}`));

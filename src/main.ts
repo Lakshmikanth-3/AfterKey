@@ -16,6 +16,10 @@ import creDeployment from '../cre/deployment.json';
 import { uniswapWorkspace, bindUniswapWorkspace } from './uniswap/ui';
 import { preparePositionAction, samePositionAction, type PositionAction } from './uniswap/positions';
 import { creWorkspace, bindCreWorkspace } from './cre/ui';
+import { guardedWorkspace, bindGuardedWorkspace, type VaultRequest } from './guarded/ui';
+import { prepareVaultAction, prepareVaultDeployment, readVault } from './guarded/client';
+import vaultArtifact from './guarded/artifact.json';
+import { encodeDeployData } from 'viem';
 
 declare global { interface Window { ethereum?:WalletProvider } }
 const wallets=walletDiscovery(window,()=>window.ethereum);
@@ -31,7 +35,7 @@ if(!config.owner)config.owner=WORKSPACE_OWNER;
 if(!config.subject)config.subject=WORKSPACE_SUBJECT;
 if(config.scanUniswap===undefined)config.scanUniswap=false;
 let account:Address|undefined;
-let view:'ens'|'uniswap'|'cre'|'offboard'|'settings'|'history'='ens';
+let view:'ens'|'uniswap'|'guarded'|'cre'|'offboard'|'settings'|'history'='ens';
 let busy=false,busyText='',error='',notice='';
 let before:Snapshot|undefined, current:Snapshot|undefined;
 let reviewed=false, verified=false, ownerProblems:string[]=[];
@@ -46,9 +50,17 @@ function render(){
   app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['ens','uniswap','cre','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='ens'?'ENS identity':v==='uniswap'?'Uniswap':v==='cre'?'Chainlink':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?`${esc(selectedWallet?.name||'Wallet')} · ${short(account)}`:'Connect wallet'}</button></div><div class="shell"><main>
   ${error?`<div role="alert" class="banner danger">${icon('alert-triangle')}<span>${esc(error)}</span><button data-dismiss="error" aria-label="Dismiss error">${icon('x')}</button></div>`:''}
   ${notice?`<div role="status" class="banner">${icon('check')}<span>${esc(notice)}</span><button data-dismiss="notice" aria-label="Dismiss notification">${icon('x')}</button></div>`:''}
-  ${view==='ens'?ensWorkspace(ensContext()):view==='uniswap'?uniswapWorkspace(uniswapContext()):view==='cre'?creWorkspace(creContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
+  ${view==='ens'?ensWorkspace(ensContext()):view==='uniswap'?uniswapWorkspace(uniswapContext()):view==='guarded'?guardedWorkspace(guardedContext()):view==='cre'?creWorkspace(creContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
   <footer><span>${icon('lock-keyhole')} Your keys stay in your wallet. Every transaction needs your signature.</span><div class="brand-strip"><a href="https://ens.domains" target="_blank" rel="noreferrer"><img src="/brands/ens.svg" alt="ENS"/><span>ENSv2</span></a><a href="https://chain.link/cross-chain/cre" target="_blank" rel="noreferrer"><img src="/brands/chainlink.svg" alt="Chainlink"/><span>CRE</span></a><a href="https://uniswap.org" target="_blank" rel="noreferrer"><img src="/brands/uniswap.svg" alt="Uniswap"/><span>Uniswap</span></a></div></footer></main></div>${busy?`<div class="working" role="status">${icon('loader-circle','spin')}<span>${esc(busyText)}</span></div>`:''}`;
-  createIcons({icons});bind();bindEnsWorkspace(ensContext());bindUniswapWorkspace(uniswapContext());bindCreWorkspace(creContext());
+  createIcons({icons});bind();bindEnsWorkspace(ensContext());bindUniswapWorkspace(uniswapContext());bindCreWorkspace(creContext());bindGuardedWorkspace(guardedContext());
+  if(view==='uniswap'){
+    const tabs=document.querySelector('.ens-tabs');
+    if(tabs){const button=document.createElement('button');button.textContent='Protected LP';button.disabled=busy;button.onclick=()=>{view='guarded';render();};tabs.append(button);}
+  }
+  if(view==='guarded'){
+    const tabs=document.querySelector('.ens-tabs');
+    if(tabs){const button=document.createElement('button');button.textContent='Wallet positions';button.disabled=busy;button.onclick=()=>{view='uniswap';render();};tabs.prepend(button);}
+  }
 }
 function offboardView(){
   const stage=verified?4:transactions.length?3:current?2:1;
@@ -66,6 +78,7 @@ function resultsView(){
   return `${current.errors.length?`<div class="coverage-error"><b>Some reads could not be completed</b>${current.errors.map(e=>`<p>${esc(e)}</p>`).join('')}</div>`:''}
   ${verified?`<div class="verification ${current.findings.length||!current.complete||ownerProblems.length?'partial':'passed'}">${icon(current.findings.length||!current.complete||ownerProblems.length?'alert-triangle':'shield-check')}<div><h3>${current.complete&&!current.findings.length&&!ownerProblems.length?'Configured permissions absent':'Verification needs attention'}</h3><p>${current.findings.length} paths remain. ${ownerProblems.length?esc(ownerProblems.join(' ')):'Owner ownership, recorded role checks and captured identity values retained.'} Permission-state verification at block ${current.block}.</p></div></div>`:''}
   ${accessEvidence(current,verified?before:undefined)}
+  ${current.guarded?.length?`<section class="ens-state-checks"><h3>Protected LP coverage · block ${current.block}</h3>${current.guarded.map(({state:v})=>`<div><a href="https://sepolia.etherscan.io/address/${v.address}" target="_blank" rel="noreferrer">Position #${esc(v.tokenId)} · ${short(v.address)} ↗</a><b>Departing operator: ${v.subjectCanCollect?'can collect':'denied'}</b><b>Epoch ${esc(v.epoch)} · ${v.paused?'paused':'unpaused'}</b></div>`).join('')}<p>Vault custody and position economics are included in the before/after checks.</p></section>`:''}
   ${current.ens.some(e=>e.target.recordType)?`<section class="ens-state-checks"><h3>Live ENS authorization · block ${current.block}</h3>${current.ens.filter(e=>e.target.recordType).map(e=>`<div><span>${esc(e.target.label)}</span><b>Departing wallet: ${e.subjectCanWrite===true?'role active':e.subjectCanWrite===false?'role absent':'unknown'}</b><b>Owner: ${e.ownerCanWrite===true?'role active':e.ownerCanWrite===false?'role absent':'unknown'}</b></div>`).join('')}<p>Read through hasRoles on the live resolver. This checks authorization state, not a simulated record write.</p></section>`:''}
   ${current.findings.map(f=>`<article class="finding"><div class="finding-top"><span class="protocol-label"><b class="protocol-dot ${f.protocol==='Uniswap v3'?'uni':'ens'}"><img src="/brands/${f.protocol==='Uniswap v3'?'uniswap':'ens'}.svg" alt=""/></b>${f.protocol}</span><span class="severity ${f.broad?'broad':''}">${f.broad?'BROAD ACCESS':'DIRECT ACCESS'}</span></div><div class="finding-body"><div><h3>${esc(f.title)}</h3><p>${esc(f.detail)}</p></div><label class="select-path" title="Include in revocation"><input type="checkbox" data-select="${esc(f.id)}" ${selected.has(f.id)?'checked':''} ${!f.executable||busy?'disabled':''}/><span class="sr-only">Select ${esc(f.title)}</span></label></div><div class="finding-foot"><span>${icon('layers')}${esc(f.scope)}</span><a href="https://sepolia.etherscan.io/address/${f.address}" target="_blank" rel="noreferrer">${short(f.address)} ${icon('arrow-up-right')}</a></div>${!f.executable?`<p class="blocked">${icon('alert-triangle')}${esc(f.blockedReason)}</p>`:''}</article>`).join('')}
   ${!current.findings.length?`<div class="clean-state">${icon('shield-check')}<h3>${current.complete?'No access paths found in this scope':'No findings from completed reads'}</h3><p>${current.complete?'No operator approvals or configured ENS roles were found for this wallet.':'Resolve the read errors before drawing a conclusion.'}</p></div>`:''}
@@ -158,6 +171,27 @@ function bind(){
 function ensContext(){return {config,busy,task,render,setTargets:(targets:Config['targets'])=>{config.targets=targets;persist();clearScan();},offboard:()=>{view='offboard';render();},send:sendEnsAction,sendRecord};}
 function uniswapContext(){return {config,busy,task,render,send:sendPositionAction,offboard:()=>{config.scanUniswap=true;persist();clearScan();view='offboard';render();}};}
 function creContext(){return {config,busy,task,render,sign:async(message:string,expected:string)=>{const signer=await ensureSigner(expected);return signer.signMessage({message,account:getAddress(expected)});},offboard:()=>{view='offboard';render();}};}
+function guardedContext(){return {config,busy,task,render,deployVault,sendVault,trackVault:(address:string)=>{config.guardedVaults=[...new Set([...(config.guardedVaults??[]).map(a=>a.toLowerCase()),address.toLowerCase()])];persist();clearScan();}};}
+async function deployVault(name:string,id:string,reviewedArgs:string){
+  const deployment=await prepareVaultDeployment(config,name,id);
+  if(serialize(deployment.args)!==reviewedArgs)throw new Error('Deployment bindings changed; check and review again.');
+  const data=encodeDeployData({abi:vaultArtifact.abi,bytecode:vaultArtifact.bytecode as `0x${string}`,args:deployment.args});
+  const signer=await ensureSigner(config.owner),c=clientFor(config.rpc);
+  await c.estimateGas({account:getAddress(config.owner),data});
+  const hash=await signer.sendTransaction({account:getAddress(config.owner),chain:sepolia,data});
+  notice=`Vault deployment submitted: ${hash}`;render();
+  const receipt=await c.waitForTransactionReceipt({hash,confirmations:1});
+  const [tx,header]=await Promise.all([c.getTransaction({hash:receipt.transactionHash}),c.getBlock({blockNumber:receipt.blockNumber})]);
+  if(receipt.status!=='success'||!receipt.contractAddress||tx.to!==null||!same(tx.from,config.owner)||tx.input!==data||tx.value!==0n||tx.blockHash!==receipt.blockHash||header.hash!==receipt.blockHash)throw new Error('Deployment receipt does not match the reviewed constructor.');
+  await readVault(config,receipt.contractAddress);
+  notice=`Vault deployed: ${receipt.contractAddress}`;return receipt;
+}
+async function sendVault(request:VaultRequest,reviewed:{to:string;actor:string;data:string}){
+  const fresh=await prepareVaultAction(config,request.address,request.operation,request.operator,request.expiry);
+  if(fresh.data!==reviewed.data||!same(fresh.to,reviewed.to)||!same(fresh.actor,reviewed.actor))throw new Error('Operation, destination or signer changed; review again.');
+  const c=clientFor(config.rpc);await c.call({account:getAddress(fresh.actor),to:fresh.to,data:fresh.data});
+  return sendEnsAction(fresh,fresh.actor);
+}
 async function sendPositionAction(action:PositionAction){
   await ensureSigner(action.actor);
   const fresh=await preparePositionAction(config,action.request);

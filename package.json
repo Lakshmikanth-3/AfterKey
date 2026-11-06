@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "start": "tsx server/serve.ts",
     "build": "tsc --noEmit && vite build",
     "test": "tsx --test tests/*.test.ts",
     "verify:ens": "node --env-file-if-exists=.env --import tsx scripts/verify-ens.ts",

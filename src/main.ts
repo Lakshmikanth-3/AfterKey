@@ -150,11 +150,11 @@ function ensContext(){return {config,busy,task,render,setTargets:(targets:Config
 function uniswapContext(){return {config,busy,task,render,send:sendPositionAction,offboard:()=>{config.scanUniswap=true;persist();clearScan();view='offboard';render();}};}
 function creContext(){return {config,busy,task,render,sign:async(message:string,expected:string)=>{const signer=await ensureSigner(expected);return signer.signMessage({message,account:getAddress(expected)});},offboard:()=>{view='offboard';render();}};}
 async function sendPositionAction(action:PositionAction){
-  const signer=await ensureSigner(action.actor);
+  await ensureSigner(action.actor);
   const fresh=await preparePositionAction(config,action.request);
   if(!samePositionAction(action,fresh))throw new Error('Position state or operation changed. Prepare and review it again.');
   // Revalidate the selected provider after RPC reads and immediately before opening its signature prompt.
-  await ensureSigner(action.actor);clearScan();
+  const signer=await ensureSigner(action.actor);clearScan();
   busyText=`Awaiting signature: ${action.label}`;render();
   const hash=await signer.sendTransaction({to:fresh.to,data:fresh.data,account:fresh.actor,chain:sepolia});
   const tx:EvidenceTransaction={label:fresh.label,hash,to:fresh.to,status:'pending'};transactions.push(tx);

@@ -24,7 +24,7 @@ export function finishTriggerJwt(signingInput:string,signature:Hex):string {
 }
 export async function submitTrigger(request:ReturnType<typeof triggerSigningRequest>,signature:Hex,workflowId:string){
   if(Math.floor(Date.now()/1000)>=request.expiresAt)throw new Error('CRE authorization expired. Prepare a new request.');
-  const response=await fetch(CRE_GATEWAY,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${finishTriggerJwt(request.signingInput,signature)}`},body:request.body,signal:AbortSignal.timeout(30000)});
+  const response=await fetch('/api/cre-trigger',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${finishTriggerJwt(request.signingInput,signature)}`},body:request.body,signal:AbortSignal.timeout(40000)});
   const data=await response.json();
   if(!response.ok||data.error)throw new Error(`CRE gateway: ${data.error?.message||response.status}. Check execution history before retrying.`);
   const r=data.result;

@@ -27,12 +27,14 @@ All collection and withdrawal recipients remain fixed to the owner. ERC-721 appr
 
 ## Validation
 
-- **58 tests passed** with `npm test`.
+- **58 tests passed** with `npm test`. [GitHub CI](https://github.com/Lakshmikanth-3/AfterKey/actions/runs/42212652889) passed for source `05668da9855ca60b890d671127fcfa915166858c`.
 - `npm run build` passed TypeScript, browser/Worker compilation and artifact-serving checks.
 - `npm run build:vercel` passed TypeScript and the Vercel browser build.
 - `npm run typecheck` in `cre/` passed. The deployed CRE source and workflow identity were not changed by this review.
 - [Read-only verification](uniswap-security-verification.json) at block **12076345** found NFTs **234145** and **234146** retained by the owner, with individual approvals zero and portfolio approval absent.
 - The new verifier checked the actual [final revocation](https://sepolia.etherscan.io/tx/0x2a4ca9ba41a8fe0d11f8d8eeba69a9a50dee27841b80e8c0905366e5032671f8), block **12075584**, against the exact expected `setApprovalForAll(operator, false)` call. No fresh transaction was sent.
+
+The [Vercel security deployment](uniswap-security-deployment.json) serves the updated bundle at [afterkey.vercel.app](https://afterkey.vercel.app). Public root/assets return 200, `.env` returns 404, and unsigned relay POST/GET return 400/405. Browser verification at block **12076376** displayed both retained positions and absent approvals. Changing the RPC cleared the cached portfolio; the original public RPC was restored and the live read repeated successfully. No wallet transaction was sent.
 
 Older exported receipts are historical evidence. Missing exact-call fields are not silently upgraded to verified receipts. A fully signed coverage claim is deliberately conservative when one broad revocation also removes inherited paths.
 

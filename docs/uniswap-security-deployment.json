@@ -1,0 +1,67 @@
+{
+  "checkedAt": "2026-11-06T11:48:55.620Z",
+  "url": "https://afterkey.vercel.app",
+  "deploymentId": "dpl_7rA2KNVjBjs3BfRVsqekwiXcK7XX",
+  "deploymentUrl": "https://afterkey-jb4v6b3ml-lakshmikanth27csb-1279s-projects.vercel.app",
+  "sourceCommit": "05668da9855ca60b890d671127fcfa915166858c",
+  "ci": "https://github.com/Lakshmikanth-3/AfterKey/actions/runs/42212652889",
+  "checks": [
+    {
+      "path": "/",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/assets/index-CrnApffn.js",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/logo.svg",
+      "method": "GET",
+      "status": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "path": "/.env",
+      "method": "GET",
+      "status": 404,
+      "expected": 404,
+      "passed": true
+    },
+    {
+      "path": "/api/cre-trigger",
+      "method": "GET",
+      "status": 405,
+      "expected": 405,
+      "passed": true
+    },
+    {
+      "path": "/api/cre-trigger",
+      "method": "POST",
+      "status": 400,
+      "expected": 400,
+      "passed": true
+    }
+  ],
+  "updatedBundleVerified": true,
+  "passed": true,
+  "browserChecks": {
+    "portfolioBlock": "12076376",
+    "positionIds": [
+      "234145",
+      "234146"
+    ],
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "individualApprovals": "zero",
+    "portfolioApproval": false,
+    "workspaceRpcChangeClearsCachedPortfolio": true,
+    "originalRpcRestored": true,
+    "walletTransactionsSent": 0
+  }
+}

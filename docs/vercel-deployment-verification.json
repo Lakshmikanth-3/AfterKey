@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-11-06T10:08:04.756Z",
+  "checkedAt": "2026-11-06T13:28:02.379Z",
   "source": "Unauthenticated HTTPS requests and browser UI inspection",
   "url": "https://afterkey.vercel.app",
-  "deploymentId": "dpl_86fN5qUYUwBy3iF6cYmCowQQ8ehj",
-  "deploymentUrl": "https://afterkey-871hfhri3-lakshmikanth27csb-1279s-projects.vercel.app",
-  "sourceCommit": "7994f6b49c0069e900cc932df415bc34da692414",
+  "deploymentId": "dpl_6hTNwk9598ruzPpLaLpf6BiaGVnL",
+  "deploymentUrl": "https://afterkey-6jxpfmbqg-lakshmikanth27csb-1279s-projects.vercel.app",
+  "sourceCommit": "731b32d99a3e4023e8de71b85d9749ec4b25e5a6",
   "runtime": "Node.js 22.x",
   "verified": true,
   "checks": [
@@ -16,7 +16,7 @@
       "passed": true
     },
     {
-      "path": "/assets/index-CoN1XlxE.js",
+      "path": "/assets/index-CQhooeee.js",
       "method": "GET",
       "status": 200,
       "expected": 200,

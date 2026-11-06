@@ -1,10 +1,11 @@
 import { ensAbi } from './ens/abi';
+import { POSITION_MANAGER, positionAbi, positionEconomics, economicChanges, type PositionEconomics } from './uniswap/contracts';
 import { readIdentity, identityChanges, assertExplainedAuthorization, type IdentityState } from './ens/preservation';
 import { createPublicClient, http, fallback, parseAbi, getAddress, isAddress, encodeFunctionData, zeroAddress, type Address, type Hash, type Hex } from 'viem';
 import { sepolia } from 'viem/chains';
 import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, describeRoles, resolverResource, recordRole } from './ens/roles';
 
-export const POSITION_MANAGER: Address = '0x1238536071E1c677A632429e3655c799b22cDA52';
+export { POSITION_MANAGER } from './uniswap/contracts';
 export const DEFAULT_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 export const nftAbi = parseAbi([
   'function ownerOf(uint256 tokenId) view returns (address)',
@@ -32,7 +33,7 @@ export type Target = { label: string; address: Address; resource: string; kind: 
 export type Config = { owner: string; subject: string; rpc: string; targets: Target[]; scanUniswap?:boolean };
 export type Finding = { id: string; protocol: 'Uniswap v3' | 'ENSv2'; title: string; detail: string; scope: string; broad: boolean; address: Address; fn: 'setApprovalForAll' | 'approve' | 'revokeRootRoles' | 'revokeRoles'; args: readonly unknown[]; data: Hex; executable: boolean; blockedReason?: string };
 export type EnsState = { target: Target; root: bigint; local: bigint; ownerRoot: bigint; ownerLocal: bigint; operator: boolean | null; registryOwner?:Address; tokenId?:bigint; expiry?:bigint; interfaceVerified?:boolean; effective?:bigint;subjectCanWrite?:boolean;ownerCanWrite?:boolean;identity?:IdentityState };
-export type Snapshot = { block: bigint; blockHash: Hash; timestamp: string; config: Config; owner: Address; subject: Address; operator: boolean; positions: { id: bigint; approved: Address; owner: Address }[]; positionCount: bigint; complete: boolean; ens: EnsState[]; findings: Finding[]; errors: string[] };
+export type Snapshot = { block: bigint; blockHash: Hash; timestamp: string; config: Config; owner: Address; subject: Address; operator: boolean; positions: { id: bigint; approved: Address; owner: Address; economics?:PositionEconomics }[]; positionCount: bigint; complete: boolean; ens: EnsState[]; findings: Finding[]; errors: string[] };
 export const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 export const errorText = (error: unknown): string => error && typeof error === 'object' && 'shortMessage' in error ? String(error.shortMessage) : error instanceof Error ? error.message : String(error);
 export const short = (s: string) => s.length > 16 ? `${s.slice(0,6)}…${s.slice(-4)}` : s;
@@ -118,9 +119,9 @@ export async function scan(config: Config): Promise<Snapshot> {
   for(let offset=0;offset<count;offset+=10) {
     const batch=await Promise.allSettled(Array.from({length:Math.min(10,count-offset)},async (_,i)=>{
       const id:bigint=await read(POSITION_MANAGER,nftAbi,'tokenOfOwnerByIndex',[owner,BigInt(offset+i)]);
-      const [approved,currentOwner]=await Promise.all([read(POSITION_MANAGER,nftAbi,'getApproved',[id]),read(POSITION_MANAGER,nftAbi,'ownerOf',[id])]);
+      const [approved,currentOwner,raw]=await Promise.all([read(POSITION_MANAGER,nftAbi,'getApproved',[id]),read(POSITION_MANAGER,nftAbi,'ownerOf',[id]),client.readContract({address:POSITION_MANAGER,abi:positionAbi,functionName:'positions',args:[id],blockNumber:block})]);
       if(!same(currentOwner,owner)) throw new Error(`Position #${id} ownership mismatch.`);
-      return {id,approved:getAddress(approved),owner:getAddress(currentOwner)};
+      return {id,approved:getAddress(approved),owner:getAddress(currentOwner),economics:positionEconomics(raw)};
     }));
     for(const r of batch) if(r.status==='fulfilled') positions.push(r.value); else errors.push(`Position read failed: ${errorText(r.reason)}`);
   }
@@ -168,6 +169,7 @@ export function compareOwner(before: Snapshot,after: Snapshot): string[] {
   const problems:string[]=[];
   if(!same(before.owner,after.owner)||!same(before.subject,after.subject)) problems.push('Wallet pair changed.');
   if(before.positionCount!==after.positionCount || before.positions.some(p=>!after.positions.some(q=>p.id===q.id && same(q.owner,p.owner)))) problems.push('Position ownership changed between checks.');
+  for(const p of before.positions)if(p.economics)problems.push(...economicChanges(p.economics,after.positions.find(q=>q.id===p.id)?.economics).map(change=>`${change}: #${p.id}`));
   for(const e of before.ens) {
     const a=after.ens.find(q=>same(q.target.address,e.target.address)&&BigInt(q.target.resource)===BigInt(e.target.resource));
     if(!a || (a.ownerRoot & e.ownerRoot)!==e.ownerRoot || (a.ownerLocal & e.ownerLocal)!==e.ownerLocal) problems.push(`Owner roles changed: ${e.target.label}`);

@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-11-06T09:32:40.579Z",
+  "executionId": "f42d1d27-6bcf-4689-b290-d4d533f83729",
+  "workflowId": "008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76",
+  "verified": true,
+  "checks": {
+    "authenticatedExecutionVerified": true,
+    "departureTrigger": true,
+    "correctCase": true,
+    "baselineMatches": true,
+    "beforeAccessPresent": true,
+    "afterAccessAbsent": true,
+    "preservationPassed": true,
+    "positionCoverage": true,
+    "finalStatus": true
+  },
+  "executionProof": "cre-execution-proof.json",
+  "ownerReceiptProof": "uniswap-offboarding-verification.json",
+  "scopeNote": "CRE verifies the external departure case and preserved state. Owner-signed revocation is established separately by the actual Sepolia receipt."
+}

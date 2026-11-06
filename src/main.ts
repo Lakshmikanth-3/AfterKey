@@ -1,3 +1,4 @@
+import { walletDiscovery, selectWallet, type WalletProvider, type WalletChoice } from './wallet';
 import { accessEvidence } from './ens/evidence-ui';
 import { prepareRecordWrite, sameRecordWrite, type RecordWrite } from './ens/operator';
 import './style.css';
@@ -11,7 +12,10 @@ import { ensWorkspace, bindEnsWorkspace } from './ens/ui';
 import type { SetupAction } from './ens/protocol';
 import creDeployment from '../cre/deployment.json';
 
-declare global { interface Window { ethereum?: { request(args:{method:string;params?:unknown[]}):Promise<any>; on?(event:string,fn:(...args:any[])=>void):void } } }
+declare global { interface Window { ethereum?:WalletProvider } }
+const wallets=walletDiscovery(window,()=>window.ethereum);
+let selectedWallet:WalletChoice|undefined;
+let unbindWallet:()=>void=()=>{};
 const app=document.querySelector<HTMLDivElement>('#app')!;
 const icons={ArrowUpRight,ArrowRight,ShieldCheck,KeyRound,ScanLine,Settings2,History,Wallet,ChevronRight,Check,Circle,Plus,X,Download,ExternalLink,RefreshCw,LoaderCircle,LockKeyhole,Layers,AlertTriangle,Copy,LogOut};
 const icon=(name:string,cls='')=>`<i data-lucide="${name}" class="${cls}"></i>`;
@@ -34,7 +38,7 @@ function download(name:string,data:unknown){const url=URL.createObjectURL(new Bl
 function report(){return {product:'AfterKey',version:1,chainId:sepolia.id,method:'Live permission reads after confirmed transactions. No privileged-call simulations.',createdAt:new Date().toISOString(),coverage:'Uniswap v3 position-manager approvals and explicitly configured ENSv2 contract/resources. Alternate wallets, signatures, unknown contracts and unconfigured resources are outside coverage.',before,after:current,transactions,ownerProblems,verified};}
 function clearScan(){before=undefined;current=undefined;verified=false;reviewed=false;ownerProblems=[];selected.clear();transactions=[];}
 function render(){
-  app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['ens','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='ens'?'ENS identity':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?short(account):'Connect wallet'}</button></div><div class="shell"><main>
+  app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['ens','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='ens'?'ENS identity':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?`${esc(selectedWallet?.name||'Wallet')} · ${short(account)}`:'Connect wallet'}</button></div><div class="shell"><main>
   ${error?`<div role="alert" class="banner danger">${icon('alert-triangle')}<span>${esc(error)}</span><button data-dismiss="error" aria-label="Dismiss error">${icon('x')}</button></div>`:''}
   ${notice?`<div role="status" class="banner">${icon('check')}<span>${esc(notice)}</span><button data-dismiss="notice" aria-label="Dismiss notification">${icon('x')}</button></div>`:''}
   ${view==='ens'?ensWorkspace(ensContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
@@ -71,8 +75,21 @@ function settingsView(){return `<div class="simple-heading"><div class="eyebrow"
 function historyView(){const reports=storedReports();return `<div class="simple-heading"><div class="eyebrow">A RECORD OF WHAT CHANGED</div><h1>Activity & reports<span>.</span></h1><p>Permission-state evidence saved in this browser. Export a report to keep a copy.</p></div><section class="history-card">${reports.length?reports.map((r,i)=>`<div class="history-row">${icon('shield-check')}<div><h3>${short(r.after?.subject||'Unknown wallet')}</h3><p>${esc(new Date(r.createdAt).toLocaleString())} · Block ${esc(r.after?.block)} · ${r.after?.findings?.length??'?'} remaining paths</p></div><span class="chip">${r.verified&&!r.ownerProblems?.length&&!r.after?.findings?.length&&r.after?.complete?'SCOPE CLOSED':'RECHECK RECORDED'}</span><button class="button" data-report="${i}" aria-label="Download report">${icon('download')}</button></div>`).join(''):`<div class="clean-state">${icon('history')}<h3>Your evidence trail starts here.</h3><p>Run a scan and recheck permissions to save your first report.</p><button class="button" data-view="offboard">Open offboarding ${icon('arrow-right')}</button></div>`}</section>`;}
 function capture(){const owner=document.querySelector<HTMLInputElement>('#owner'),subject=document.querySelector<HTMLInputElement>('#subject');if(owner)config.owner=owner.value.trim();if(subject)config.subject=subject.value.trim();const rpc=document.querySelector<HTMLInputElement>('#rpc');if(rpc)config.rpc=rpc.value.trim();document.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-target]').forEach(el=>{const i=Number(el.dataset.target);(config.targets[i] as any)[el.dataset.field!]=el.value.trim();});persist();}
 async function task(label:string,action:()=>Promise<void>){if(busy)return;busy=true;busyText=label;error='';notice='';render();try{await action();}catch(e){error=errorText(e);}finally{busy=false;render();}}
-async function connect(){if(!window.ethereum)throw new Error('No browser wallet found. Open AfterKey in a browser with MetaMask or another Ethereum wallet extension.');const accounts=await window.ethereum.request({method:'eth_requestAccounts'});if(!accounts[0])throw new Error('No wallet account selected.');account=getAddress(accounts[0]);if(!config.owner)config.owner=account;persist();}
-async function ensureSigner(expected=config.owner){if(!account)await connect();if(!same(account!,expected))throw new Error(`Switch your wallet to the reviewed signer ${short(expected)} before signing.`);if(!window.ethereum)throw new Error('Wallet disconnected.');const accounts=await window.ethereum.request({method:'eth_accounts'});if(!accounts[0]||!same(accounts[0],expected))throw new Error('The active wallet account differs from the reviewed signer. Reconnect that account.');const chain=Number(await window.ethereum.request({method:'eth_chainId'}));if(chain!==sepolia.id)await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xaa36a7'}]});if(Number(await window.ethereum.request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Select Ethereum Sepolia in your wallet.');return createWalletClient({chain:sepolia,transport:custom(window.ethereum),account:getAddress(expected)});}
+async function connect(){
+  const choice=await selectWallet(wallets);if(!choice)return;
+  const accounts=await choice.provider.request({method:'eth_requestAccounts'});
+  if(!accounts[0])throw new Error('No wallet account selected.');
+  const connected=getAddress(accounts[0]);
+  unbindWallet();selectedWallet=choice;account=connected;reviewed=false;
+  const accountsChanged=(accounts:string[])=>{if(selectedWallet?.provider!==choice.provider)return;account=accounts[0]?getAddress(accounts[0]):undefined;reviewed=false;if(!busy)render();};
+  const chainChanged=()=>{if(selectedWallet?.provider!==choice.provider)return;reviewed=false;if(!busy)render();};
+  choice.provider.on?.('accountsChanged',accountsChanged);choice.provider.on?.('chainChanged',chainChanged);
+  unbindWallet=()=>{choice.provider.removeListener?.('accountsChanged',accountsChanged);choice.provider.removeListener?.('chainChanged',chainChanged);};
+  if(!config.owner)config.owner=account;persist();
+}
+function walletProvider(){if(!selectedWallet)throw new Error('Choose and connect a wallet first.');return selectedWallet.provider;}
+
+async function ensureSigner(expected=config.owner){if(!account)await connect();if(!account)throw new Error('Wallet selection cancelled.');if(!same(account,expected))throw new Error(`Switch your wallet to the reviewed signer ${short(expected)} before signing.`);const provider=walletProvider();const accounts=await provider.request({method:'eth_accounts'});if(!accounts[0]||!same(accounts[0],expected))throw new Error('The active wallet account differs from the reviewed signer. Reconnect that account.');const chain=Number(await provider.request({method:'eth_chainId'}));if(chain!==sepolia.id)await provider.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xaa36a7'}]});if(Number(await provider.request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Select Ethereum Sepolia in your wallet.');return createWalletClient({chain:sepolia,transport:custom(provider),account:getAddress(expected)});}
 async function execute(){
   capture();
   const signer=await ensureSigner();
@@ -91,8 +108,8 @@ async function execute(){
     if(finding.data!==reviewedFinding.data||!finding.executable){current=liveStep;reviewed=false;throw new Error('Permissions changed between transactions. Review the remaining plan again.');}
 
     busyText=`Awaiting signature: ${finding.title}`;render();
-    const accounts=await window.ethereum!.request({method:'eth_accounts'});
-    if(!accounts[0]||!same(accounts[0],config.owner)||Number(await window.ethereum!.request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Wallet account or network changed. Execution stopped.');
+    const accounts=await walletProvider().request({method:'eth_accounts'});
+    if(!accounts[0]||!same(accounts[0],config.owner)||Number(await walletProvider().request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Wallet account or network changed. Execution stopped.');
     // Send the reviewed calldata directly. No simulateContract or privileged-call probing.
     const hash=await signer.sendTransaction({to:finding.address,data:finding.data,account:getAddress(config.owner),chain:sepolia});
     const tx={label:finding.title,hash,status:'pending' as 'pending'|'confirmed'|'failed'};transactions.push(tx);busyText=`Waiting for confirmation: ${finding.title}`;render();
@@ -125,8 +142,6 @@ function bind(){
   const importConfig=document.querySelector<HTMLInputElement>('#import-config');if(importConfig)importConfig.onchange=()=>void task('Importing your scope',async()=>{const file=importConfig.files?.[0];if(!file)return;if(file.size>100000)throw new Error('Configuration file is too large.');const data=JSON.parse(await file.text());if(!Array.isArray(data.targets)||data.targets.length>100||typeof data.owner!=='string'||typeof data.subject!=='string')throw new Error('Invalid scope file.');for(const t of data.targets)if(typeof t.label!=='string'||typeof t.address!=='string'||typeof t.resource!=='string'||!['registry','resolver'].includes(t.kind))throw new Error('Invalid ENS target.');config={...config,owner:data.owner,subject:data.subject,targets:data.targets};persist();clearScan();notice='Scope imported. Review it before scanning.';});
   document.querySelectorAll<HTMLButtonElement>('[data-report]').forEach(b=>b.onclick=()=>{const r=storedReports()[Number(b.dataset.report)];if(r){if(r.before?.config)r.before.config.rpc='[not exported]';if(r.after?.config)r.after.config.rpc='[not exported]';download(`afterkey-report-${b.dataset.report}.json`,r);}});
 }
-window.ethereum?.on?.('accountsChanged',(accounts:string[])=>{account=accounts[0]?getAddress(accounts[0]):undefined;reviewed=false;if(!busy)render();});
-window.ethereum?.on?.('chainChanged',()=>{reviewed=false;if(!busy)render();});
 function ensContext(){return {config,busy,task,render,setTargets:(targets:Config['targets'])=>{config.targets=targets;persist();clearScan();},offboard:()=>{view='offboard';render();},send:sendEnsAction,sendRecord};}
 async function sendRecord(reviewed:RecordWrite){
   if(!same(reviewed.actor,config.owner)&&!same(reviewed.actor,config.subject))throw new Error('Record signer must be the configured owner or departing operator.');

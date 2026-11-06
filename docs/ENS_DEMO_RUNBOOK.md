@@ -14,6 +14,10 @@ The pattern drawn from the ENS prize examples is identity → authority → usef
 - Both wallet accounts must be available to their respective holders. The operator needs Sepolia gas to sign a real record update. Never supply private keys to AfterKey.
 - Run `npm run dev` from the project directory and open its printed URL in a browser with the wallet extension. The hosted version does not receive local edits automatically.
 
+## Choose MetaMask
+
+Cancel any old MathWallet connection request and refresh AfterKey. Click Connect wallet, select MetaMask in the wallet picker, then choose the owner account ending Bedd5. AfterKey uses that selected provider for account checks, network switching and transaction signing. Click the connected-wallet button to select another wallet. Wallet discovery follows EIP-6963; legacy extensions are shown as unidentified browser providers.
+
 ## Real demonstration, step by step
 
 1. **Create the operator namespace as owner.** ENS identity → Set up namespace. Parent `manager.eth`; label `treasury-agent`; key `agent-context`. Enter an accurate context value describing the operator's real responsibility. Alternatively use an `agent-endpoint[...]` key with an actual URL you control. Prepare, inspect and sign each setup transaction. The resulting dedicated resolver limits the scope of the demonstration.

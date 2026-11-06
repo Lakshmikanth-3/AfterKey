@@ -1,4 +1,5 @@
 import { evidenceReport, type EvidenceTransaction } from './evidence';
+import { waitForReviewedReceipt, type ReviewedCall } from './transactions';
 import { walletDiscovery, selectWallet, type WalletProvider, type WalletChoice } from './wallet';
 import { accessEvidence } from './ens/evidence-ui';
 import { prepareRecordWrite, sameRecordWrite, type RecordWrite } from './ens/operator';
@@ -58,7 +59,7 @@ function offboardView(){
   <div class="results-layout"><div class="results-main"><div class="results-title"><h2>Access paths ${current?`<span>${count}</span>`:''}</h2><span>${current?`Block ${current.block.toLocaleString()}`:'Awaiting your first scan'}</span></div>
   ${current?resultsView():`<section class="empty-state"><div class="orbit"><span></span>${icon('scan-line')}</div><h3>Know what access really remains.</h3><p>Enter two wallets to inspect operator approvals<br/>and your configured ENS permissions.</p><div class="empty-protocols"><span><b class="protocol-dot uni"><img src="/brands/uniswap.svg" alt=""/></b>Uniswap v3</span><span><b class="protocol-dot ens"><img src="/brands/ens.svg" alt=""/></b>ENSv2</span></div><div class="empty-foot">No sample findings. Your report starts with live data.</div></section>`}
   </div><aside class="summary-card"><div class="summary-heading">${icon('shield-check')} OFFBOARDING SUMMARY</div><div class="summary-metric">${current&&!current.complete?'—':count??'—'}<span>surviving access paths</span></div><div class="summary-rows"><div><span>Positions checked</span><b>${current?(current.config.scanUniswap===false?'Excluded':`${current.positions.length} / ${current.positionCount}`):'—'}</b></div><div><span>ENS resources checked</span><b>${current?`${current.ens.length} / ${config.targets.length}`:'—'}</b></div><div><span>Coverage</span><b class="${current&&!current.complete?'amber':''}">${current?(current.complete?'Configured scope':'Incomplete'):'Not scanned'}</b></div><div><span>Owner permissions</span><b>${verified?(ownerProblems.length?'Changed':current?.complete?'Retained':'Incomplete'):'Not rechecked'}</b></div></div><div class="scope-note">${icon('circle')}<p>A report covers the listed contracts and resources at the recorded block. It does not establish universal loss of access.</p></div>${current?`<button class="button export-button" id="export">${icon('download')}Export evidence</button>`:''}<div class="summary-bottom">${icon('lock-keyhole')}Review. Sign. Verify.</div></aside></div>
-  ${transactions.length?`<section class="transactions"><h2>Transaction activity</h2>${transactions.map(t=>`<a href="https://sepolia.etherscan.io/tx/${t.hash}" target="_blank" rel="noreferrer"><span class="tx-status ${t.status}">${icon(t.status==='confirmed'?'check':t.status==='failed'?'x':'loader-circle')}</span><span>${esc(t.label)}<small>${short(t.hash)}</small></span><b>${t.status}</b>${icon('external-link')}</a>`).join('')}</section>`:''}`;
+  ${transactions.length?`<section class="transactions"><h2>Transaction activity</h2>${transactions.map(t=>`<a href="https://sepolia.etherscan.io/tx/${t.hash}" target="_blank" rel="noreferrer"><span class="tx-status ${t.status}">${icon(t.status==='confirmed'?'check':t.status==='failed'?'x':t.status==='unverified'?'circle-alert':'loader-circle')}</span><span>${esc(t.label)}<small>${short(t.hash)}</small></span><b>${t.status}</b>${icon('external-link')}</a>`).join('')}</section>`:''}`;
 }
 function resultsView(){
   if(!current)return '';
@@ -94,6 +95,16 @@ async function connect(){
 function walletProvider(){if(!selectedWallet)throw new Error('Choose and connect a wallet first.');return selectedWallet.provider;}
 
 async function ensureSigner(expected=config.owner){if(!account)await connect();if(!account)throw new Error('Wallet selection cancelled.');if(!same(account,expected))throw new Error(`Switch your wallet to the reviewed signer ${short(expected)} before signing.`);const provider=walletProvider();const accounts=await provider.request({method:'eth_accounts'});if(!accounts[0]||!same(accounts[0],expected))throw new Error('The active wallet account differs from the reviewed signer. Reconnect that account.');const chain=Number(await provider.request({method:'eth_chainId'}));if(chain!==sepolia.id)await provider.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xaa36a7'}]});if(Number(await provider.request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Select Ethereum Sepolia in your wallet.');return createWalletClient({chain:sepolia,transport:custom(provider),account:getAddress(expected)});}
+async function confirmReviewedCall(tx:EvidenceTransaction,expected:ReviewedCall){
+  tx.submittedHash=tx.hash;
+  const receipt=await waitForReviewedReceipt(clientFor(config.rpc),tx.hash,expected,mined=>{
+    tx.hash=mined.transactionHash;tx.blockNumber=mined.blockNumber;tx.blockHash=mined.blockHash;
+    tx.status=mined.status==='success'?'unverified':'failed';tx.intentVerified=false;
+  });
+  tx.from=expected.from;tx.to=expected.to;tx.data=expected.data;tx.value=expected.value??0n;
+  tx.intentVerified=true;tx.status='confirmed';
+  return receipt;
+}
 async function execute(){
   capture();
   const signer=await ensureSigner();
@@ -103,7 +114,6 @@ async function execute(){
   const fresh=latest.findings.filter(f=>selected.has(f.id));
   if(planned.length!==fresh.length||planned.some(f=>!fresh.some(g=>g.id===f.id&&g.data===f.data&&g.executable))) {current=latest;reviewed=false;selected=new Set(latest.findings.filter(f=>f.executable).map(f=>f.id));throw new Error('Permissions changed since your review. Review the refreshed plan before signing.');}
   before=latest;verified=false;
-  const client=clientFor(config.rpc);
   for(const reviewedFinding of fresh){
     const liveStep=await scan(config);
     if(!liveStep.complete)throw new Error('Fresh permission reads are incomplete. Execution stopped.');
@@ -117,8 +127,7 @@ async function execute(){
     // Send the reviewed calldata directly. No simulateContract or privileged-call probing.
     const hash=await signer.sendTransaction({to:finding.address,data:finding.data,account:getAddress(config.owner),chain:sepolia});
     const tx:EvidenceTransaction={label:finding.title,hash,status:'pending',to:finding.address,functionName:finding.fn};transactions.push(tx);busyText=`Waiting for confirmation: ${finding.title}`;render();
-    const receipt=await client.waitForTransactionReceipt({hash,confirmations:1});tx.blockNumber=receipt.blockNumber;tx.blockHash=receipt.blockHash;tx.status=receipt.status==='success'?'confirmed':'failed';
-    if(receipt.status!=='success')throw new Error('Transaction reverted. Execution stopped; recheck current permissions.');
+    await confirmReviewedCall(tx,{from:getAddress(config.owner),to:finding.address,data:finding.data});
     const checkpoint=await scan(config);
     const changed=compareOwner(before,checkpoint);
     if(!checkpoint.complete||changed.length){current=checkpoint;ownerProblems=changed;throw new Error(`Execution stopped after confirmation: ${changed.join(' ')||'permission reads incomplete'}`);}
@@ -159,9 +168,7 @@ async function sendPositionAction(action:PositionAction){
   const hash=await signer.sendTransaction({to:fresh.to,data:fresh.data,account:fresh.actor,chain:sepolia});
   const tx:EvidenceTransaction={label:fresh.label,hash,to:fresh.to,status:'pending'};transactions.push(tx);
   busyText='Waiting for Uniswap confirmation';render();
-  const receipt=await clientFor(config.rpc).waitForTransactionReceipt({hash,confirmations:1});
-  tx.status=receipt.status==='success'?'confirmed':'failed';tx.blockNumber=receipt.blockNumber;tx.blockHash=receipt.blockHash;
-  if(receipt.status!=='success')throw new Error('Uniswap operation reverted. No further operation was submitted.');
+  const receipt=await confirmReviewedCall(tx,{from:fresh.actor,to:fresh.to,data:fresh.data});
   return receipt;
 }
 async function sendRecord(reviewed:RecordWrite){
@@ -175,11 +182,9 @@ async function sendRecord(reviewed:RecordWrite){
 async function sendEnsAction(action:SetupAction,expected=config.owner){
   const signer=await ensureSigner(expected);busyText=`Awaiting signature: ${action.label}`;render();
   const hash=await signer.sendTransaction({to:action.to,data:action.data,account:getAddress(expected),chain:sepolia});
-  const tx={label:action.label,hash,status:'pending' as 'pending'|'confirmed'|'failed'};transactions.push(tx);
+  const tx:EvidenceTransaction={label:action.label,hash,status:'pending'};transactions.push(tx);
   busyText=`Waiting for confirmation: ${action.label}`;render();
-  const receipt=await clientFor(config.rpc).waitForTransactionReceipt({hash,confirmations:1});
-  tx.status=receipt.status==='success'?'confirmed':'failed';
-  if(receipt.status!=='success')throw new Error('ENS transaction reverted. No next setup step was submitted.');
+  const receipt=await confirmReviewedCall(tx,{from:getAddress(expected),to:action.to,data:action.data});
   return receipt;
 }
 render();

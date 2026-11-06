@@ -18,11 +18,24 @@ test('permission absence and a receipt between scoped snapshots are distinct evi
   before.findings=[{id:'root',protocol:'ENSv2',title:'Root access',detail:'',scope:'name',broad:true,address,fn:'revokeRootRoles',args:[16n,subject],data:'0x',executable:true}];
   const inputs={before,after,transactions:[] as EvidenceTransaction[],verified:true,ownerProblems:[]};
   assert.equal(evidenceReport(inputs).signedOffboardingVerified,false);
-  const tx:EvidenceTransaction={label:'Root access',hash,status:'confirmed',to:address,functionName:'revokeRootRoles',blockNumber:11n,blockHash:hash};
+  const tx:EvidenceTransaction={label:'Root access',hash,status:'confirmed',from:owner,to:address,data:'0x',value:0n,intentVerified:true,functionName:'revokeRootRoles',blockNumber:11n,blockHash:hash};
   assert.equal(evidenceReport({...inputs,transactions:[tx]}).signedOffboardingVerified,true);
   assert.equal(evidenceReport({...inputs,transactions:[{...tx,blockNumber:9n}]}).signedOffboardingVerified,false);
   assert.equal(evidenceReport({...inputs,transactions:[{...tx,status:'failed'}]}).signedOffboardingVerified,false);
   assert.equal(evidenceReport({...inputs,transactions:[tx],ownerProblems:['Owner changed']}).signedOffboardingVerified,false);
+});
+
+test('legacy receipts, changed calldata, partial receipt coverage and changed scope cannot prove signed cleanup',()=>{
+  const before=snapshot(),after={...snapshot(),block:12n};
+  before.findings=[{id:'root',protocol:'ENSv2',title:'Root access',detail:'',scope:'name',broad:true,address,fn:'revokeRootRoles',args:[16n,subject],data:'0x1234',executable:true}];
+  const tx:EvidenceTransaction={label:'Root access',hash,status:'confirmed',from:owner,to:address,data:'0x1234',value:0n,intentVerified:true,functionName:'revokeRootRoles',blockNumber:11n,blockHash:hash};
+  const report=(transactions:EvidenceTransaction[],a=after)=>evidenceReport({before,after:a,transactions,verified:true,ownerProblems:[]});
+  assert.equal(report([tx]).signedOffboardingVerified,true);
+  for(const bad of [{intentVerified:undefined},{from:subject},{data:'0xabcd' as const},{value:1n},{status:'unverified' as const}])assert.equal(report([{...tx,...bad}]).signedOffboardingVerified,false);
+  assert.equal(report([tx],{...after,config:{...after.config,scanUniswap:true}}).permissionStateVerified,false);
+  before.findings.push({...before.findings[0],id:'second',data:'0x5678'});
+  const partial=report([tx]);assert.equal(partial.permissionStateVerified,true);assert.equal(partial.signedOffboardingVerified,false);assert.equal(partial.signedReceiptCoverage.matchedPaths,1);
+  before.complete=false;assert.equal(report([tx]).permissionStateVerified,false);
 });
 test('an executable ENS finding cannot also carry a blocking reason',()=>{
   const s=snapshot();s.ens=[{target:{label:'resolver',kind:'resolver',address,resource:'1'},root:16n,local:0n,ownerRoot:16n<<128n,ownerLocal:0n,operator:null}];

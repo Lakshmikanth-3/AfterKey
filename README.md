@@ -1,10 +1,41 @@
+<img src="public/logo.svg" width="42" alt="AfterKey logo">
+
 # AfterKey
 
-**Offboard the operator. Keep the ENS identity.**
+**Offboard the operator. Keep the identity.**
 
 AfterKey discovers surviving ENSv2 permissions for a departing wallet, prepares owner-reviewed revocations, and rereads live authorization state after confirmation. The default workflow centers ENSv2 registry hierarchy, Enhanced Access Control and Permissioned Resolvers. The Uniswap workspace adds delegated position management, while Chainlink CRE monitors and verifies departures independently.
 
 Live application: https://afterkey-access.resplendentflair1.chatgpt.site — currently owner-private. Judge-accessible sharing must be arranged before submission. Source: https://github.com/Lakshmikanth-3/AfterKey. Unauthenticated GitHub API access confirmed the repository is public on November 6, 2026. The hosted build still needs an update and judge access.
+
+## Verify the implementation
+
+| Evidence | Open it |
+| --- | --- |
+| ENS owner-approved revocation | [Successful Sepolia receipt](https://sepolia.etherscan.io/tx/0xbe002b4c04dc64da5ab12fde4c449f25010bc78fc3044f86dd46c29849e7f241), [ten setup/delegation/update/revocation receipts](docs/transactions.md) |
+| ENS identity and owner preservation | [30 historical-state checks](docs/ens-offboarding-verification.json) across blocks 12074041 and 12074046 |
+| Chainlink scheduled monitoring | [Authenticated execution proof](docs/cre-execution-proof.json): successful run `4a9f683b-50a0-4645-873d-d838400d21b6`, Sepolia block 12074459 |
+| Actual ENSv2 workspace | [Permissioned Resolver](https://sepolia.etherscan.io/address/0x6161ada4D10a529940B90b078B4F9A8d3679c8f8), [subname registry](https://sepolia.etherscan.io/address/0x26560685235D2d7861afF80866E8C1846d14420D) |
+| Official Uniswap integration | [Sepolia v3 position manager](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52), [six reviewed operations](src/uniswap/positions.ts#L39) |
+
+## Sponsor requirement mapping
+
+Checked against the [ETHGlobal Mumbai sponsor requirements](https://ethglobal.com/events/mumbai/prizes). Implementation and demonstrated execution are recorded separately.
+
+| Prize | Requirement | Current status and evidence |
+| --- | --- | --- |
+| ENS — Best Use of ENSv2 | ENSv2 on mainnet or Sepolia, central and functional integration | Sepolia hierarchy, Permissioned Resolver, EAC delegation and offboarding; [live discovery](src/ens/protocol.ts#L32), [independent access paths](src/engine.ts#L68), [receipts](docs/transactions.md) |
+| ENS — Best Use of ENSv2 | Open source and a live demo link in the showcase | Public MIT source is available; current hosted demo access and showcase publication remain submission steps |
+| Uniswap — Build with Uniswap | Meaningful use of the stack, with clear implementation pointers | Official v3 NFTs, approvals, collection and withdrawal; [portfolio reads](src/uniswap/positions.ts#L10), [action policy](src/uniswap/positions.ts#L39), [preservation](src/engine.ts#L168). User-owned position receipts remain pending |
+| Uniswap — Build with Uniswap | Public source, FEEDBACK.md and developer feedback form | [Feedback file](FEEDBACK.md) is published; submit its public link through the [required form](https://developers.uniswap.org/hackathon-feedback) |
+| Chainlink — Best workflow with CRE | Blockchain plus external API/system, meaningful orchestration | [GitHub case reads](cre/external-case.ts#L4), [signed HTTP routing](cre/main.ts#L26), [cron](cre/main.ts#L40), [approval events](cre/main.ts#L43). External-case execution remains pending |
+| Chainlink — Best workflow with CRE | Live deployment or successful workflow execution | [ACTIVE deployment](cre/deployment.json) and [successful scheduled execution](docs/cre-execution-proof.json). This proves monitoring, not every trigger path |
+
+## Architecture
+
+![AfterKey architecture](docs/architecture.svg)
+
+The wallet signs asset changes. The browser scans and verifies the reviewed scope. Chainlink CRE independently reads the chain, validates external departure cases and records execution evidence. Its relay verifies the owner's exact request and never stores a signing key. See [editable sequence/flow diagrams and evidence boundaries](docs/ARCHITECTURE.md).
 
 ## Why ENSv2 is central
 

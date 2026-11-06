@@ -32,7 +32,7 @@ export async function readRelease(config:Config,address:string){
   if(!code||!matchesReleaseCode(code,'gate'))throw new Error('Gate does not match the compiled release contract.');
   const read=(fn:string,args:readonly unknown[]=[])=>c.readContract({address:gate,abi:gateAbi,functionName:fn,args,blockNumber:height} as never) as Promise<any>;
   const owner=await read('owner');if(!same(owner,config.owner)||!same(await read('manager'),POSITION_MANAGER)||!same(await read('treasury'),config.owner))throw new Error('Release policy differs from workspace.');
-  const [epoch,coverage,activeDigest,active,checkedDigest,checkedUntil,checkedPassed,count,resolver,dns,identityValid,workflowId,workflowOwner,forwarder]=await Promise.all(['epoch','coverageHash','activeDigest','active','checkedDigest','checkedUntil','checkedPassed','consumerCount','resolver','dnsName','identityValid','workflowId','workflowOwner','forwarder'].map(f=>read(f)));
+  const [epoch,coverage,activeDigest,active,checkedDigest,checkedUntil,checkedPassed,count,resolver,dns,identityValid,workflowId,workflowOwner,forwarder,paused,checkedEpoch,checkedCoverage,activeCoverage]=await Promise.all(['epoch','coverageHash','activeDigest','active','checkedDigest','checkedUntil','checkedPassed','consumerCount','resolver','dnsName','identityValid','workflowId','workflowOwner','forwarder','paused','checkedEpoch','checkedCoverage','activeCoverage'].map(f=>read(f)));
   let candidate:ReleaseConfiguration|undefined,digest:Hex|undefined,candidateError='';
   try{[candidate,digest]=await read('candidate');}catch{candidateError='Publish a valid candidate in the ENS data record first.';}
   const consumers=[];
@@ -44,10 +44,10 @@ export async function readRelease(config:Config,address:string){
     const custodian=await c.readContract({address:POSITION_MANAGER,abi:positionAbi,functionName:'ownerOf',args:[tokenId],blockNumber:height});
     consumers.push({address,tokenId,custodian,deposited:same(address,custodian)});
   }
-  return {gate,block:height,now:block.timestamp,owner,epoch:epoch as bigint,coverage,activeDigest,active:active as readonly [Address,Address,Address,bigint],checkedDigest,checkedUntil:checkedUntil as bigint,checkedPassed:checkedPassed as boolean,consumers,resolver:resolver as Address,dns:dns as Hex,identityValid:identityValid as boolean,workflowId,workflowOwner,forwarder,candidate,digest,candidateError,issues:candidate?configurationProblems(candidate,config.owner,POSITION_MANAGER,block.timestamp):[candidateError]};
+  return {gate,block:height,now:block.timestamp,owner,epoch:epoch as bigint,coverage,activeDigest,active:active as readonly [Address,Address,Address,bigint],checkedDigest,checkedUntil:checkedUntil as bigint,checkedPassed:checkedPassed as boolean,paused:paused as boolean,checkedEpoch:checkedEpoch as bigint,checkedCoverage,activeCoverage,consumers,resolver:resolver as Address,dns:dns as Hex,identityValid:identityValid as boolean,workflowId,workflowOwner,forwarder,candidate,digest,candidateError,issues:candidate?configurationProblems(candidate,config.owner,POSITION_MANAGER,block.timestamp):[candidateError]};
 }
 export type ReleaseState=Awaited<ReturnType<typeof readRelease>>;
-export type ReleaseAction={operation:'candidate'|'register'|'deposit'|'activate'|'collect'|'pause'|'release';gate:string;consumer:string;candidate:ReleaseConfiguration};
+export type ReleaseAction={operation:'candidate'|'register'|'deposit'|'activate'|'collect'|'pause'|'resume'|'release';gate:string;consumer:string;candidate:ReleaseConfiguration};
 export async function prepareReleaseAction(config:Config,request:ReleaseAction):Promise<SetupAction&{actor:string}>{
   const s=await readRelease(config,request.gate),c=clientFor(config.rpc);
   let to=s.gate,data:Hex,label='',actor=config.owner;
@@ -59,7 +59,7 @@ export async function prepareReleaseAction(config:Config,request:ReleaseAction):
   }else if(request.operation==='activate'){
     if(!s.digest||s.issues.length)throw new Error(s.issues.join('; '));
     data=encode('activate',[s.digest,s.epoch]);label='Activate checked configuration';
-  }else if(request.operation==='pause'){data=encode('setPaused',[true]);label='Pause release consumers';}
+  }else if(request.operation==='pause'||request.operation==='resume'){data=encode('setPaused',[request.operation==='pause']);label=request.operation==='pause'?'Pause release consumers':'Resume release consumers';}
   else{
     const consumer=s.consumers.find(v=>same(v.address,request.consumer));if(!consumer)throw new Error('Choose a registered consumer.');
     to=consumer.address;

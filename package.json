@@ -5,6 +5,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "compile:vault": "node scripts/compile-vault.mjs",
+    "predev": "npm run compile:vault",
+    "prebuild": "npm run compile:vault",
+    "prebuild:vercel": "npm run compile:vault",
     "dev": "vite --host 127.0.0.1",
     "start": "tsx server/serve.ts",
     "build": "tsc --noEmit && node scripts/build-worker.mjs && node scripts/check-worker.mjs",
@@ -14,14 +18,19 @@
     "proof:cre": "node --import tsx scripts/collect-cre-proof.ts"
   },
   "dependencies": {
-    "viem": "^2.38.0",
-    "lucide": "^0.468.0"
+    "lucide": "^0.468.0",
+    "viem": "^2.38.0"
   },
   "devDependencies": {
-    "vite": "^6.4.0",
-    "typescript": "^5.7.3",
+    "@afterkey/evm-tests": "file:contracts/evm",
+    "@types/node": "^22.0.0",
+    "solc": "0.8.30",
     "tsx": "^4.20.0",
-    "@types/node": "^22.0.0"
+    "typescript": "^5.7.3",
+    "vite": "^6.4.0"
+  },
+  "overrides": {
+    "solc": { "tmp": "0.2.7" }
   },
   "engines": {
     "node": "22.x"

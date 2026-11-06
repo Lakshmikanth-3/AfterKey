@@ -20,7 +20,7 @@ Live application: **https://afterkey.vercel.app**. Source: https://github.com/La
 
 The new **Change review** workspace stages ENS configuration, shows known shared-record dependencies, requests a version-bound CRE report, and lets the owner activate that exact version for registered Uniswap LP consumers. Contracts reject stale versions and unauthorized recipient changes. [Implementation, setup and proof boundaries](docs/configuration-releases.md).
 
-**Status:** implemented locally; new gate/consumer deployment and live CRE report delivery still require verification. The archived receipts below demonstrate the existing offboarding flow, not this extension.
+**Status:** the replacement ENS resolver/name, gate, both consumers and NFT deposits are verified on Sepolia. The candidate is published. The latest batched CRE workflow still needs owner binding and successful report delivery, followed by activation and collections. Vercel still serves the earlier offboarding app. See [current ENS qualification gaps](docs/ENS_QUALIFICATION_REVIEW.md) and [live readiness](docs/ens-release-readiness.json). Archived offboarding receipts demonstrate that earlier flow.
 
 ## Verify the implementation
 
@@ -49,6 +49,23 @@ Checked against the [ETHGlobal Mumbai sponsor requirements](https://ethglobal.co
 | Chainlink — Best workflow with CRE | Live deployment or successful workflow execution | [ACTIVE deployment](cre/deployment.json), [current signed HTTP execution](docs/cre-execution-proof.json), and archived [scheduled](docs/cre-scheduled-execution-proof.json) / [approval-event](docs/cre-approval-event-proof.json) executions. The current run compares blocks 12075512 and 12075653 and reports preserved assets with permissions absent |
 
 ## Uniswap judge verification
+
+### Current release consumer integration
+
+These links reference current local source; publish the matching source before judging. Line anchors below were checked during the audit and should be rechecked if files change.
+
+| Behavior | Contract / exact source |
+| --- | --- |
+| Official Sepolia v3 manager | [Manager constant](src/uniswap/contracts.ts#L4) |
+| ENS active version authorizes the operator | [Gate authorization](contracts/ENSReleaseGate.sol#L109) |
+| Consumer holds exactly one NFT and collects only to the fixed owner | [ReleaseLPVault](contracts/ENSReleaseGate.sol#L116), [collect](contracts/ENSReleaseGate.sol#L124) |
+| Owner recovery and restricted deposits | [release](contracts/ENSReleaseGate.sol#L130), [NFT receiver](contracts/ENSReleaseGate.sol#L131) |
+| Prepared owner/operator actions | [Release actions](src/releases/client.ts#L63) |
+| Official manager receipt must agree with consumer event | [Collection verifier](src/uniswap/collection-proof.ts#L5) |
+| Independent live collection and principal checks | [Receipt verifier](scripts/verify-release-collection.ts), [live custody/liquidity](docs/uniswap-release-readiness.json) |
+
+**Current proof boundary:** NFTs 234145 and 234146 are deposited with nonzero liquidity. Release activation and both new consumer collection receipts remain pending. Prior direct-manager collection/revocation evidence does not prove the new consumer flow. [Current qualification checklist](docs/UNISWAP_QUALIFICATION_REVIEW.md).
+
 
 The **$10,000 Build with Uniswap** prize accepts v3 protocol integrations; an API key or v4 hook is not required by the [Mumbai rules](https://ethglobal.com/events/mumbai/prizes). The separate $5,000 pool requires Continuity Track participation, which is not established by this repository.
 

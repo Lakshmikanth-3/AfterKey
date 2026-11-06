@@ -65,15 +65,27 @@ ENS setter rights are scoped by record key/type across the resolver, not by indi
 
 ## Proof status and limits
 
-Gate deployment is now independently verified on Sepolia: [`0x96100054c7ffec8b9a0a52d78e254c07e127196a`](https://sepolia.etherscan.io/address/0x96100054c7ffec8b9a0a52d78e254c07e127196a), [deployment transaction](https://sepolia.etherscan.io/tx/0xe0835f3a170536c89538aad74390c00d3311b960c78dcbb9b7895ccacbbe3ea8), block 12079070. [Independent verification](release-gate-verification.json) checks canonical receipt, owner, chain, zero value, exact constructor calldata and compiled runtime. At observation block 12079162, the gate had zero registered consumers and no active configuration. This verifies deployment only.
+Current release identity: **afterkey-release.manager.eth**, resolver `0xd629d7De9c72684d27682Ed3C503283314906c24`, gate `0x47ae5aF5A9A2D0e90D2986861aD99f088270258F`. The resolver and subname were repaired after the legacy resolver was found to lack data-write authority. The original name was preserved, and NFTs were recovered before replacement deposits.
 
-Contracts and browser/CRE paths are also tested locally against a real local EVM with fixture contracts. These tests are not a deployed DON execution. The earlier offboarding transaction and CRE proofs cover the earlier workflow only. This release flow still requires consumer deployment/deposits, matching CRE deployment, report delivery and live activation/collection receipts.
+| Verified phase | Evidence |
+| --- | --- |
+| Resolver deployment and owner data/admin permissions | [Resolver proof](release-repair-resolver-proof.json), block 12079630 |
+| Subname ownership and official resolver | [Namespace proof](release-repair-namespace-proof.json) |
+| Exact replacement gate constructor and runtime | [Gate proof](release-replacement-gate-proof.json), block 12079648 |
+| Consumers for NFTs 234145 and 234146 | [First](release-replacement-consumer-234145.json), [second](release-replacement-consumer-234146.json) |
+| Both NFTs deposited in the replacement consumers | [Canonical transaction and custody proof](release-replacement-custody-proof.json) |
+| Live ENS data candidate and owner/operator authority | [12-check readiness report](ens-release-readiness.json); run `node --import tsx scripts/verify-ens-release.ts` |
+
+**Still pending:** owner binding to workflow `0x008b8fff1c0118afc754c6f524fb07be206d2bae97d7d0167cf035ac599daa20`, passing onchain CRE report, owner activation, both operator collections and publication of this current version to GitHub/Vercel. The previous request was accepted but its execution failed at the contract-read capability limit; [failure evidence](cre-release-read-limit-failure.json). The updated verifier batches reads; deployment and a successful batch call are not proof of actual report delivery.
+
+Local EVM tests verify enforcement with fixtures. They do not replace DON execution or real wallet receipts. Historical offboarding proofs cover only the earlier workflow. The original gate `0x96100054C7ffec8B9a0a52d78e254C07E127196a` is retained in historical evidence and is not the active setup target.
 
 Verification proves explicit rules and observed custody, not agent quality, investment returns, endpoint safety or absence of every permission. Candidate URI availability is not involved; configuration is ABI-encoded onchain. A malicious owner can recover assets or rebind a workflow; owner trust is explicit. This implementation is not a security audit.
 
 ## Source map
 
 - `contracts/ENSReleaseGate.sol`: report authentication, activation and Uniswap consumer enforcement.
+- `src/releases/ens-policy.ts`: official resolver provenance, live data-setter role mapping and publication authority.
 - `src/releases/model.ts`: shared configuration schema, policy and bundle grouping.
 - `src/releases/client.ts`: live reads, bytecode verification, reviewed operations and known-name inspection.
 - `src/releases/ui.ts`: setup, dependencies, candidate review, CRE trigger and execution.

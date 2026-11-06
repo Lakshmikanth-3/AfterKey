@@ -1,0 +1,73 @@
+{
+  "checkedAt": "2026-11-06T23:08:16.306Z",
+  "transactions": [
+    {
+      "block": "12079705",
+      "hash": "0xefab14b2237268c166a9b2369fa73dc2e318ccb40e921195d2a7bb0a3bae4ff8",
+      "action": {
+        "functionName": "registerConsumer",
+        "args": [
+          "0x65E74c5DFb833E9bC1798954da416b8D1aea4460"
+        ]
+      }
+    },
+    {
+      "block": "12079709",
+      "hash": "0x9e8cbbcba5f204e87164f9bdd2b1de2bcfb21fc52787eb1272cafbdb5b271aff",
+      "action": {
+        "functionName": "safeTransferFrom",
+        "args": [
+          "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+          "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+          "234146"
+        ]
+      }
+    }
+  ],
+  "state": {
+    "gate": "0x47ae5aF5A9A2D0e90D2986861aD99f088270258F",
+    "block": "12079712",
+    "now": "1794006492",
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "epoch": "0",
+    "coverage": "0x2eef8812afc466760fc6884f4b7ffa5a1b82df0e962270bf907ff6af834ad207",
+    "activeDigest": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "active": [
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0"
+    ],
+    "checkedDigest": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "checkedUntil": "0",
+    "checkedPassed": false,
+    "paused": false,
+    "checkedEpoch": "0",
+    "checkedCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "activeCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "consumers": [
+      {
+        "address": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+        "tokenId": "234145",
+        "custodian": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+        "deposited": true
+      },
+      {
+        "address": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+        "tokenId": "234146",
+        "custodian": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+        "deposited": true
+      }
+    ],
+    "resolver": "0xd629d7De9c72684d27682Ed3C503283314906c24",
+    "dns": "0x1061667465726b65792d72656c65617365076d616e616765720365746800",
+    "identityValid": true,
+    "workflowId": "0x00995a8e43b33f54021e48cd0180eb2dadf4c21e3684b945920228a6ad8a44dc",
+    "workflowOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
+    "forwarder": "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
+    "candidateError": "Publish a valid candidate in the ENS data record first.",
+    "issues": [
+      "Publish a valid candidate in the ENS data record first."
+    ]
+  }
+}

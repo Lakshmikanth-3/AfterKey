@@ -1,0 +1,28 @@
+{
+  "block": "12079723",
+  "hash": "0x529e2db4c3a7de4105ce5b3e2d4eaf799c8d62975c0b564d3e1ad00bcdb8faa5",
+  "action": {
+    "functionName": "bindWorkflow",
+    "args": [
+      "0x00eb41c82c93d32165ab2e27c34ef71dcbc033fee9520af19e1add15beff2acf"
+    ]
+  },
+  "observedBlock": "12079726",
+  "workflowId": "0x00eb41c82c93d32165ab2e27c34ef71dcbc033fee9520af19e1add15beff2acf",
+  "epoch": "1",
+  "consumers": [
+    {
+      "address": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "tokenId": "234145",
+      "custodian": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "deposited": true
+    },
+    {
+      "address": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+      "tokenId": "234146",
+      "custodian": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+      "deposited": true
+    }
+  ],
+  "candidatePublicationPreflight": "passed with one-day expiry; read-only eth_call"
+}

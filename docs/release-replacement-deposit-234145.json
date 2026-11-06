@@ -1,0 +1,21 @@
+{
+  "confirmedBlock": "12079665",
+  "transactionHash": "0x4c9e933151abbdf1fb7491b1174c60b5924f48a379a79a650599ad5d74cf83b8",
+  "action": {
+    "functionName": "safeTransferFrom",
+    "args": [
+      "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+      "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "234145"
+    ]
+  },
+  "observedBlock": "12079667",
+  "consumers": [
+    {
+      "address": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "tokenId": "234145",
+      "custodian": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "deposited": true
+    }
+  ]
+}

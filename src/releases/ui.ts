@@ -35,7 +35,9 @@ export function bindReleaseWorkspace(ctx:Context){
   const queue=(label:string,detail:string,run:()=>Promise<void>)=>{pending={label,detail,run};reviewed=false;};
   const refresh=async()=>{state=await readRelease(ctx.config,gate);};
   document.querySelectorAll<HTMLButtonElement>('[data-release-tab]').forEach(b=>b.onclick=()=>{capture();tab=b.dataset.releaseTab!;pending=undefined;reviewed=false;ctx.render();});
-  document.querySelectorAll<HTMLInputElement>('[id^="rel-"]:not(#rel-review)').forEach(el=>el.addEventListener('change',()=>{const previous=gate;capture();if(previous!==gate){state=undefined;document.getElementById('rel-live')?.remove();}pending=undefined;reviewed=false;document.getElementById('rel-pending')?.remove();}));
+  // Only editable fields invalidate a prepared request. A checkbox change bubbles
+  // through #rel-pending; binding its container would discard the reviewed action.
+  document.querySelectorAll<HTMLInputElement|HTMLTextAreaElement>('input[id^="rel-"]:not(#rel-review), textarea[id^="rel-"]').forEach(el=>el.addEventListener('change',event=>{if(event.target!==el)return;const previous=gate;capture();if(previous!==gate){state=undefined;document.getElementById('rel-live')?.remove();}pending=undefined;reviewed=false;document.getElementById('rel-pending')?.remove();}));
   on('rel-read',()=>{capture();task('Reading release state',refresh);});
   on('rel-deploy-gate',()=>{capture();task('Checking release deployment',async()=>{const d=await releaseDeployment(ctx.config,name,forwarder,author,workflow);queue('Deploy ENS release gate',serialize(d),async()=>{const fresh=await releaseDeployment(ctx.config,name,forwarder,author,workflow);if(serialize(fresh)!==serialize(d))throw new Error('Deployment changed. Review again.');const r=await ctx.deploy('gate',d.args);gate=r.contractAddress!;persist();await refresh();message=`Gate deployed at block ${r.blockNumber}.`;});});});
   on('rel-deploy-consumer',()=>{capture();task('Checking LP consumer',async()=>{

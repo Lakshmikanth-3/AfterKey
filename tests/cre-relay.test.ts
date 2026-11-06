@@ -35,3 +35,13 @@ test('relay rejects malformed event-specific input before paying for a CRE execu
     await assert.rejects(()=>validateSignedTrigger(request.body,authorization,1050,policy),message);
   }
 });
+
+test('release trigger requires owner authorization and deployed gate coverage',async()=>{
+  const account=privateKeyToAccount(toHex(3n,{size:32})),subject='0x2222222222222222222222222222222222222222',gate='0x3333333333333333333333333333333333333333',workflowId='d'.repeat(64);
+  const r=triggerSigningRequest(workflowId,{eventId:'release-1',event:'release',subject,gate},account.address,1000,crypto.randomUUID());
+  const signature=await account.signMessage({message:r.signingInput}),authorization=`Bearer ${finishTriggerJwt(r.signingInput,signature)}`;
+  const policy={owner:account.address,subject,workflowId,releaseGates:[gate]};
+  await validateSignedTrigger(r.body,authorization,1050,policy);
+  await assert.rejects(()=>validateSignedTrigger(r.body,authorization,1050,{...policy,releaseGates:[]}),/outside deployed coverage/);
+  await assert.rejects(()=>validateSignedTrigger(r.body,authorization,1050,{...policy,owner:subject}),/Only the deployed owner/);
+});

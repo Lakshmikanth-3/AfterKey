@@ -1,8 +1,9 @@
 import type { GitHubCasePolicy } from './case-policy';
+type ReleaseTarget={gate:string;consumers:string[]};
 import { vaultContinuity, type VaultState } from '../src/guarded/model';
 export type GuardedTarget={address:string;tokenId:string;treasury:string;registry:string;resolver:string;nameResource:string;capabilityResource:string};
 export type CreTarget={label:string;address:string;resource:string;kind:'registry'|'resolver';name?:string;recordType?:'text';argument?:string};
-export type Config={authorizedEVMAddress:string;owner:string;subject:string;ensTargets:CreTarget[];maxPositions:number;scanUniswap?:boolean;monitorSchedule?:string;watchApprovals?:boolean;github?:GitHubCasePolicy;guardedVaults?:GuardedTarget[]};
+export type Config={authorizedEVMAddress:string;owner:string;subject:string;ensTargets:CreTarget[];maxPositions:number;scanUniswap?:boolean;monitorSchedule?:string;watchApprovals?:boolean;github?:GitHubCasePolicy;guardedVaults?:GuardedTarget[];releases?:ReleaseTarget[]};
 export type PermissionSnapshot={block:string;blockHash:string;owner:string;subject:string;positionCount:string;uniswapIncluded:boolean;operator:boolean;positions:{tokenId:string;owner:string;approved:string;token0:string;token1:string;fee:number;tickLower:number;tickUpper:number;liquidity:string;tokensOwed0:string;tokensOwed1:string}[];ens:{address:string;resource:string;root:string;local:string;ownerRoot:string;ownerLocal:string;nameOwner:string|null;operator:boolean|null;identity?:Record<string,string>;subjectCanWrite?:boolean;ownerCanWrite?:boolean}[];findings:{protocol:string;kind:string;contract:string;resource?:string;roles?:string;tokenId?:string;label?:string}[];complete:boolean;guarded?:GuardedSnapshot[]};
 export function compareSnapshots(before:PermissionSnapshot,after:PermissionSnapshot):string[]{
   const changes:string[]=[];

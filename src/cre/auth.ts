@@ -1,6 +1,6 @@
 import { getAddress, hexToBytes, parseSignature, sha256, stringToHex, type Hex } from 'viem';
 export const CRE_GATEWAY='https://01.gateway.zone-a.cre.chain.link';
-export type TriggerInput={eventId:string;event:'departure'|'recheck'|'verify';subject:string;beforeBlock?:string;issueNumber?:number};
+export type TriggerInput={eventId:string;event:'departure'|'recheck'|'verify'|'release';subject:string;beforeBlock?:string;issueNumber?:number;gate?:string};
 export function canonicalJson(value:unknown):string {
   if(value===null||typeof value!=='object')return JSON.stringify(value);
   if(Array.isArray(value))return `[${value.map(canonicalJson).join(',')}]`;

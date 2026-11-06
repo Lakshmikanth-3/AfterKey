@@ -7,8 +7,9 @@ import { readDepartureCase } from './external-case';
 import { validateCasePolicy } from './case-policy';
 import type { Workflow } from '@chainlink/cre-sdk';
 import { evidenceLogFrames } from '../src/cre/chunks';
+import {verifyRelease} from './release';
 const eq=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
-type Request={eventId:string;event:'departure'|'recheck'|'verify';subject:string;beforeBlock?:string;issueNumber?:number};
+type Request={eventId:string;event:'departure'|'recheck'|'verify'|'release';subject:string;beforeBlock?:string;issueNumber?:number;gate?:string};
 function result(runtime:Runtime<Config>,trigger:string,eventId:string,beforeBlock?:string,departureCase?:unknown,triggerContext?:unknown){
   const after=readState(runtime);
   if(beforeBlock!==undefined&&(typeof beforeBlock!=='string'||!/^\d+$/.test(beforeBlock)||BigInt(beforeBlock)<=0n||BigInt(beforeBlock)>=BigInt(after.block)))throw new Error('Baseline must be a positive Sepolia block before the current snapshot.');
@@ -26,7 +27,11 @@ function result(runtime:Runtime<Config>,trigger:string,eventId:string,beforeBloc
 function onHttp(runtime:Runtime<Config>,payload:HTTPPayload):string{
   if(payload.input.length>16000)throw new Error('Request exceeds 16 KB.');
   const request=decodeJson(payload.input) as unknown as Request;
-  if(!request||typeof request.eventId!=='string'||!request.eventId||request.eventId.length>128||!['departure','recheck','verify'].includes(request.event)||typeof request.subject!=='string'||!eq(request.subject,runtime.config.subject))throw new Error('Invalid event or subject outside the deployed workspace.');
+  if(!request||typeof request.eventId!=='string'||!request.eventId||request.eventId.length>128||!['departure','recheck','verify','release'].includes(request.event)||typeof request.subject!=='string'||!eq(request.subject,runtime.config.subject))throw new Error('Invalid event or subject outside the deployed workspace.');
+  if(request.event==='release'){
+    if(typeof request.gate!=='string'||!isAddress(request.gate))throw new Error('Release gate required.');
+    return verifyRelease(runtime,request.gate);
+  }
   if(request.event==='verify'&&!request.beforeBlock)throw new Error('Verification requires a beforeBlock baseline.');
   let departureCase:unknown;
   if(request.event==='departure'){
@@ -52,6 +57,10 @@ function onVault(runtime:Runtime<Config>,log:EVMLog):string{
   return result(runtime,'evm:vault',`${bytesToHex(log.txHash)}:${log.index}`,undefined,undefined,{contract:address,transactionHash:bytesToHex(log.txHash),eventBlock:String(protoBigIntToBigint(log.blockNumber))});
 }
 function initWorkflow(config:Config){
+  if(config.releases){
+    if(!Array.isArray(config.releases)||config.releases.length>4)throw new Error('At most four release gates.');
+    for(const r of config.releases)if(!isAddress(r.gate)||eq(r.gate,zeroAddress)||!Array.isArray(r.consumers)||r.consumers.length<1||r.consumers.length>16||new Set(r.consumers.map(a=>a.toLowerCase())).size!==r.consumers.length||r.consumers.some(a=>!isAddress(a)||eq(a,zeroAddress)))throw new Error('Invalid release coverage.');
+  }
   for(const a of [config.owner,config.subject,config.authorizedEVMAddress])if(!isAddress(a)||eq(a,zeroAddress))throw new Error('Use valid nonzero workspace addresses.');
   if(eq(config.owner,config.subject))throw new Error('Owner and operator must differ.');
   if(!Number.isInteger(config.maxPositions)||config.maxPositions<1||config.maxPositions>20)throw new Error('maxPositions must be 1–20.');

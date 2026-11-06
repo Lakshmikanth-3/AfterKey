@@ -32,6 +32,8 @@ export const resolverInitAbi=parseAbi(['function initialize((address account,uin
 export const registryInitAbi=parseAbi(['function initialize((address account,uint256 roleBitmap)[] grants)']);
 export const factoryAbi=parseAbi([
   'function proxyLogic() view returns (address)',
+  'function predictProxyAddress(address deployer,uint256 salt) view returns (address)',
+  'function verifyContract(address proxy) view returns (address implementation)',
   'function deployProxy(address implementation,uint256 salt,bytes data) returns (address)',
   'event ProxyDeployed(address indexed sender,address indexed proxyAddress,uint256 salt,address implementation)',
 ]);

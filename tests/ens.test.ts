@@ -1,14 +1,29 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { decodeFunctionData, encodeAbiParameters, getAddress, keccak256, stringToHex, zeroAddress, type Address } from 'viem';
+import { decodeFunctionData, encodeAbiParameters, getAddress, keccak256, namehash, stringToHex, zeroAddress, type Address } from 'viem';
 import { describeRoles, resolverResource, SET_TEXT, RESOLVER_OWNER_ROLES } from '../src/ens/roles';
-import { makeProxyAction, delegationAction, mergeTargets, dns, contract, recordSetupReceipt, type SetupState } from '../src/ens/protocol';
+import { makeProxyAction, delegationAction, mergeTargets, dns, contract, recordSetupReceipt, resolverProxySalt, registryProxySalt, type SetupState } from '../src/ens/protocol';
 import { factoryAbi, resolverInitAbi, ensAbi } from '../src/ens/abi';
 import { compareOwner, validateConfig, type Snapshot } from '../src/engine';
 
 const owner=getAddress('0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5');
 const subject=getAddress('0x22225204824EdF00b3c8c32A43f1C04246e2d1b4');
 const state=():SetupState=>({parent:'team.eth',label:'treasury-agent',key:'description',transactions:[]});
+test('official ENS proxy salts are deterministic and domain separated',()=>{
+  const resolverExpected=BigInt(keccak256(encodeAbiParameters(
+    [{type:'bytes32'},{type:'address'},{type:'uint256'}],
+    [keccak256(stringToHex('OwnedResolver')),owner,0n],
+  )));
+  const registryExpected=BigInt(keccak256(encodeAbiParameters(
+    [{type:'bytes32'},{type:'bytes32'},{type:'uint256'}],
+    [keccak256(stringToHex('UserRegistry')),namehash('team.eth'),0n],
+  )));
+  assert.equal(resolverProxySalt(owner),resolverExpected);
+  assert.equal(resolverProxySalt(owner),resolverProxySalt(owner));
+  assert.equal(registryProxySalt('TEAM.ETH'),registryExpected);
+  assert.notEqual(resolverProxySalt(owner),resolverProxySalt(subject));
+  assert.notEqual(registryProxySalt('team.eth'),registryProxySalt('other.eth'));
+});
 test('resolver scopes use the setter argument alone, not the namehash',()=>{
   assert.equal(resolverResource('text','description'),BigInt(keccak256(stringToHex('description'))));
   assert.equal(resolverResource('data','description'),resolverResource('text','description'));

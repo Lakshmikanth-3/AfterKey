@@ -1,5 +1,5 @@
 import { validAgentUrl } from './agent-records';
-import { encodeFunctionData, decodeFunctionResult, getAddress, keccak256, stringToHex, namehash, toHex, zeroAddress, parseEventLogs, type Address, type Hash, type Hex, type TransactionReceipt } from 'viem';
+import { encodeAbiParameters, encodeFunctionData, decodeFunctionResult, getAddress, keccak256, stringToHex, namehash, toHex, zeroAddress, parseEventLogs, type Address, type Hash, type Hex, type TransactionReceipt } from 'viem';
 import { normalize, packetToBytes } from 'viem/ens';
 import deployments from './deployments.json';
 import { ensAbi, factoryAbi, profileAbi, registryInitAbi, resolverInitAbi } from './abi';
@@ -12,6 +12,14 @@ export const contract=(name:keyof typeof deployments.contracts)=>getAddress(depl
 export const equal=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
 export const dns=(name:string)=>toHex(packetToBytes(normalize(name)));
 export const labelId=(label:string)=>BigInt(keccak256(stringToHex(label)));
+export const resolverProxySalt=(owner:Address,version=0n)=>BigInt(keccak256(encodeAbiParameters(
+  [{type:'bytes32'},{type:'address'},{type:'uint256'}],
+  [keccak256(stringToHex('OwnedResolver')),owner,version],
+)));
+export const registryProxySalt=(parent:string,version=0n)=>BigInt(keccak256(encodeAbiParameters(
+  [{type:'bytes32'},{type:'bytes32'},{type:'uint256'}],
+  [keccak256(stringToHex('UserRegistry')),namehash(normalize(parent)),version],
+)));
 export type NameEntry={name:string;label:string;registry:Address;resource:bigint;tokenId:bigint;owner:Address;expiry:bigint;subregistry:Address;resolver:Address};
 export type NameInspection={name:string;key:string;block:bigint;entries:NameEntry[];resolver:Address;resolverVerified:boolean;targets:Target[];text:string;address:Address|null;recordId:bigint|null;notes:string[]};
 export type SetupState={parent:string;label:string;key:string;textValue?:string;owner?:Address;registry?:Address;resolver?:Address;resolverSalt?:string;registrySalt?:string;registrationExpiry?:string;attached?:boolean;registered?:boolean;transactions:{label:string;hash:Hash}[]};
@@ -21,13 +29,27 @@ async function read(client:Client,address:Address,functionName:string,args:reado
   return client.readContract({address,abi:ensAbi,functionName,args,blockNumber:block} as never);
 }
 export async function checkNetwork(rpc:string){const c=clientFor(rpc);if(await c.getChainId()!==11155111)throw new Error('Use an Ethereum Sepolia RPC.');return c;}
+async function verifyDeploymentCode(client:Client,name:keyof typeof deployments.contracts,block:bigint):Promise<void>{
+  const item=deployments.contracts[name],code=await client.getCode({address:getAddress(item.address),blockNumber:block});
+  if(!code||keccak256(code)!==item.codeHash)throw new Error(`Protocol deployment code changed at ${item.address}. Review the pinned ENS deployment before signing.`);
+}
 export async function verifyDeployments(rpc:string):Promise<bigint>{
   const c=await checkNetwork(rpc),block=await c.getBlockNumber({cacheTime:0});
-  await Promise.all(Object.values(deployments.contracts).map(async item=>{
-    const code=await c.getCode({address:getAddress(item.address),blockNumber:block});
-    if(!code||keccak256(code)!==item.codeHash)throw new Error(`Protocol deployment code changed at ${item.address}. Review the pinned ENS deployment before signing.`);
-  }));
+  await Promise.all((Object.keys(deployments.contracts) as (keyof typeof deployments.contracts)[]).map(name=>verifyDeploymentCode(c,name,block)));
   return block;
+}
+export async function verifyFactoryProxy(client:Client,proxy:Address,expectedImplementation:Address,block:bigint):Promise<Address>{
+  let implementation:Address;
+  try{
+    implementation=getAddress(await client.readContract({address:contract('VerifiableFactory'),abi:factoryAbi,functionName:'verifyContract',args:[proxy],blockNumber:block}));
+  }catch{
+    throw new Error(`ENS proxy ${proxy} was not deployed by the pinned official Verifiable Factory.`);
+  }
+  if(!equal(implementation,expectedImplementation))throw new Error(`ENS proxy ${proxy} uses an unexpected current implementation. Setup stopped.`);
+  return implementation;
+}
+async function predictedProxy(client:Client,deployer:Address,salt:bigint,block:bigint):Promise<Address>{
+  return getAddress(await client.readContract({address:contract('VerifiableFactory'),abi:factoryAbi,functionName:'predictProxyAddress',args:[deployer,salt],blockNumber:block}));
 }
 export async function inspectName(input:string,rpc:string,key='description'):Promise<NameInspection>{
   const name=normalize(input.trim());
@@ -107,20 +129,36 @@ export async function nextSetupAction(state:SetupState,owner:Address,rpc:string)
   const client=await checkNetwork(rpc),block=await client.getBlockNumber({cacheTime:0});
   if(!state.registry&&!equal(entry.subregistry,zeroAddress))state.registry=entry.subregistry;
   if(state.registry){
+    await verifyFactoryProxy(client,state.registry,contract('UserRegistryImpl'),block);
     if(!await read(client,state.registry,'supportsInterface',[REGISTRY_INTERFACE],block))throw new Error('The existing subregistry does not implement the supported ENSv2 registry interface.');
     const existingOwner=await read(client,state.registry,'getOwner',[labelId(state.label)],block);
     if(!equal(existingOwner,zeroAddress)&&!equal(existingOwner,owner))throw new Error('This subname belongs to another wallet. Pick a different label.');
     if(equal(existingOwner,owner)&&!state.resolver){
       const existingResolver=await read(client,state.registry,'getResolver',[state.label],block);
       if(equal(existingResolver,zeroAddress))throw new Error('This existing subname has no resolver. Configure it through ENS before using this setup.');
+      await verifyFactoryProxy(client,getAddress(existingResolver),contract('PermissionedResolverImpl'),block);
       if(!await read(client,existingResolver,'supportsInterface',[RESOLVER_INTERFACE],block))throw new Error('This existing name does not use a supported Permissioned Resolver.');
       if(!await read(client,existingResolver,'hasRootRoles',[SET_TEXT|(SET_TEXT<<128n),owner],block))throw new Error('The owner does not manage text permissions on the existing resolver. AfterKey will not replace it.');
       state.resolver=getAddress(existingResolver);
     }
   }
-  const newSalt=()=>String(BigInt(keccak256(stringToHex(`AfterKey:${owner}:${state.parent}:${state.label}:${crypto.randomUUID()}`))));
-  if(!state.resolver){state.resolverSalt??=newSalt();return makeProxyAction('resolver',owner,state,BigInt(state.resolverSalt));}
-  if(!state.registry){state.registrySalt??=newSalt();return makeProxyAction('registry',owner,state,BigInt(state.registrySalt));}
+  if(!state.resolver){
+    await Promise.all([verifyDeploymentCode(client,'VerifiableFactory',block),verifyDeploymentCode(client,'PermissionedResolverImpl',block)]);
+    state.resolverSalt??=String(resolverProxySalt(owner));
+    const predicted=await predictedProxy(client,owner,BigInt(state.resolverSalt),block),code=await client.getCode({address:predicted,blockNumber:block});
+    if(!code)return makeProxyAction('resolver',owner,state,BigInt(state.resolverSalt));
+    await verifyFactoryProxy(client,predicted,contract('PermissionedResolverImpl'),block);
+    state.resolver=predicted;
+  }
+  await verifyFactoryProxy(client,state.resolver,contract('PermissionedResolverImpl'),block);
+  if(!state.registry){
+    await Promise.all([verifyDeploymentCode(client,'VerifiableFactory',block),verifyDeploymentCode(client,'UserRegistryImpl',block)]);
+    state.registrySalt??=String(registryProxySalt(state.parent));
+    const predicted=await predictedProxy(client,owner,BigInt(state.registrySalt),block),code=await client.getCode({address:predicted,blockNumber:block});
+    if(!code)return makeProxyAction('registry',owner,state,BigInt(state.registrySalt));
+    await verifyFactoryProxy(client,predicted,contract('UserRegistryImpl'),block);
+    state.registry=predicted;
+  }
   if(!await read(client,state.registry,'supportsInterface',[REGISTRY_INTERFACE],block))throw new Error('The subregistry does not implement the supported ENSv2 registry interface.');
   if(!await read(client,state.resolver,'supportsInterface',[RESOLVER_INTERFACE],block))throw new Error('The resolver does not implement the supported ENSv2 resolver interface.');
   if(equal(entry.subregistry,zeroAddress)){

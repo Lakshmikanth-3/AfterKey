@@ -1,10 +1,12 @@
 import {decodeFunctionResult,encodeFunctionData,getAddress,isAddress,keccak256,toHex,type Abi,type Address,type Hex} from 'viem';
+import {isRateLimited,isBlockUnavailable} from '../rpc';
 import {packetToBytes} from 'viem/ens';
 import gateArtifact from './ENSReleaseGate.json';
 import consumerArtifact from './ReleaseLPVault.json';
 import {clientFor,same,type Config} from '../engine';
-import {inspectName,type SetupAction} from '../ens/protocol';
+import {inspectName,verifyFactoryProxy,contract,type SetupAction} from '../ens/protocol';
 import {ensAbi} from '../ens/abi';
+import {inspectReleasePublisher,releaseSetter} from './ens-policy';
 import {POSITION_MANAGER,positionAbi} from '../uniswap/contracts';
 import {configurationProblems,encodeConfiguration,affectedNames,type ReleaseConfiguration,type ImpactIdentity} from './model';
 
@@ -19,8 +21,11 @@ export function matchesReleaseCode(code:Hex,kind:'gate'|'consumer'){
 export async function releaseDeployment(config:Config,name:string,forwarder:string,author:string,workflowId:string){
   if(!isAddress(forwarder)||!isAddress(author)||!/^0x[\da-f]{64}$/i.test(workflowId))throw new Error('Enter forwarder, workflow owner and 0x workflow ID.');
   const n=await inspectName(name,config.rpc),leaf=n.entries.at(-1);
-  if(!leaf||!same(leaf.owner,config.owner)||!n.resolverVerified||!same(leaf.resolver,n.resolver))throw new Error('Use an owned ENSv2 name with its own Permissioned Resolver.');
-  const c=clientFor(config.rpc);if(!await c.getCode({address:getAddress(forwarder)}))throw new Error('Forwarder has no deployed code.');
+  if(!leaf||leaf.name!==n.name||!same(leaf.owner,config.owner)||!n.resolverVerified||!same(leaf.resolver,n.resolver))throw new Error('Use an owned ENSv2 name with its own Permissioned Resolver.');
+  const c=clientFor(config.rpc);
+  await verifyFactoryProxy(c,leaf.registry,contract('UserRegistryImpl'),n.block);
+  if(!(await inspectReleasePublisher(config.rpc,n.resolver,config.owner,n.block)).canPublish)throw new Error('Owner must hold SET_DATA for afterkey.release before deploying a release gate.');
+  if(!await c.getCode({address:getAddress(forwarder)}))throw new Error('Forwarder has no deployed code.');
   return {name:n.name,args:[getAddress(config.owner),POSITION_MANAGER,leaf.registry,n.resolver,leaf.label,toHex(packetToBytes(n.name)),getAddress(forwarder),getAddress(author),workflowId as Hex]};
 }
 export async function readRelease(config:Config,address:string){
@@ -31,17 +36,24 @@ export async function readRelease(config:Config,address:string){
   const code=await c.getCode({address:gate,blockNumber:height});
   if(!code||!matchesReleaseCode(code,'gate'))throw new Error('Gate does not match the compiled release contract.');
   const read=(fn:string,args:readonly unknown[]=[])=>c.readContract({address:gate,abi:gateAbi,functionName:fn,args,blockNumber:height} as never) as Promise<any>;
-  const owner=await read('owner');if(!same(owner,config.owner)||!same(await read('manager'),POSITION_MANAGER)||!same(await read('treasury'),config.owner))throw new Error('Release policy differs from workspace.');
-  const [epoch,coverage,activeDigest,active,checkedDigest,checkedUntil,checkedPassed,count,resolver,dns,identityValid,workflowId,workflowOwner,forwarder,paused,checkedEpoch,checkedCoverage,activeCoverage]=await Promise.all(['epoch','coverageHash','activeDigest','active','checkedDigest','checkedUntil','checkedPassed','consumerCount','resolver','dnsName','identityValid','workflowId','workflowOwner','forwarder','paused','checkedEpoch','checkedCoverage','activeCoverage'].map(f=>read(f)));
+  // One pinned multicall avoids bursting public RPCs with 21 independent eth_calls.
+  const fields=['owner','manager','treasury','epoch','coverageHash','activeDigest','active','checkedDigest','checkedUntil','checkedPassed','consumerCount','resolver','dnsName','identityValid','workflowId','workflowOwner','forwarder','paused','checkedEpoch','checkedCoverage','activeCoverage'];
+  const values=await c.multicall({contracts:fields.map(functionName=>({address:gate,abi:gateAbi,functionName})),allowFailure:false,blockNumber:height});
+  const [owner,manager,treasury,epoch,coverage,activeDigest,active,checkedDigest,checkedUntil,checkedPassed,count,resolver,dns,identityValid,workflowId,workflowOwner,forwarder,paused,checkedEpoch,checkedCoverage,activeCoverage]=values as any[];
+  if(!same(owner,config.owner)||!same(manager,POSITION_MANAGER)||!same(treasury,config.owner))throw new Error('Release policy differs from workspace.');
   let candidate:ReleaseConfiguration|undefined,digest:Hex|undefined,candidateError='';
-  try{[candidate,digest]=await read('candidate');}catch{candidateError='Publish a valid candidate in the ENS data record first.';}
+  try{[candidate,digest]=await read('candidate');}catch(error){if(isRateLimited(error)||isBlockUnavailable(error))throw error;candidateError='Publish a valid candidate in the ENS data record first.';}
   const consumers=[];
-  for(let i=0;i<Number(count);i++){
-    const address=await read('consumers',[BigInt(i)]) as Address;
+  if(Number(count)>16)throw new Error('Unsupported consumer count.');
+  const addresses=count?await c.multicall({contracts:Array.from({length:Number(count)},(_,i)=>({address:gate,abi:gateAbi,functionName:'consumers',args:[BigInt(i)]})),allowFailure:false,blockNumber:height}) as Address[]:[];
+  const tokens=addresses.length?await c.multicall({contracts:addresses.map(address=>({address,abi:consumerAbi,functionName:'tokenId'})),allowFailure:false,blockNumber:height}) as bigint[]:[];
+  const holders=tokens.length?await c.multicall({contracts:tokens.map(tokenId=>({address:POSITION_MANAGER,abi:positionAbi,functionName:'ownerOf',args:[tokenId]})),allowFailure:false,blockNumber:height}):[];
+  for(let i=0;i<addresses.length;i++){
+    const address=addresses[i];
     const code=await c.getCode({address,blockNumber:height});
     if(!code||!matchesReleaseCode(code,'consumer'))throw new Error('Registered consumer has unsupported code.');
-    const tokenId=await c.readContract({address,abi:consumerAbi,functionName:'tokenId',blockNumber:height}) as bigint;
-    const custodian=await c.readContract({address:POSITION_MANAGER,abi:positionAbi,functionName:'ownerOf',args:[tokenId],blockNumber:height});
+    const tokenId=tokens[i];
+    const custodian=holders[i] as Address;
     consumers.push({address,tokenId,custodian,deposited:same(address,custodian)});
   }
   return {gate,block:height,now:block.timestamp,owner,epoch:epoch as bigint,coverage,activeDigest,active:active as readonly [Address,Address,Address,bigint],checkedDigest,checkedUntil:checkedUntil as bigint,checkedPassed:checkedPassed as boolean,paused:paused as boolean,checkedEpoch:checkedEpoch as bigint,checkedCoverage,activeCoverage,consumers,resolver:resolver as Address,dns:dns as Hex,identityValid:identityValid as boolean,workflowId,workflowOwner,forwarder,candidate,digest,candidateError,issues:candidate?configurationProblems(candidate,config.owner,POSITION_MANAGER,block.timestamp):[candidateError]};
@@ -53,7 +65,11 @@ export async function prepareReleaseAction(config:Config,request:ReleaseAction):
   let to=s.gate,data:Hex,label='',actor=config.owner;
   const encode=(fn:string,args:readonly unknown[]=[])=>encodeFunctionData({abi:gateAbi,functionName:fn,args} as never);
   if(request.operation==='candidate'){
-    to=s.resolver;data=encodeFunctionData({abi:[{type:'function',name:'setData',stateMutability:'nonpayable',inputs:[{name:'name',type:'bytes'},{name:'key',type:'string'},{name:'value',type:'bytes'}],outputs:[]}],functionName:'setData',args:[s.dns,'afterkey.release',encodeConfiguration(request.candidate)]});label='Publish ENS candidate';
+    const problems=configurationProblems(request.candidate,config.owner,POSITION_MANAGER,s.now);
+    if(problems.length)throw new Error(problems.join('; '));
+    const {canPublish}=await inspectReleasePublisher(config.rpc,s.resolver,config.owner,s.block);
+    if(!canPublish)throw new Error('Owner lacks ENS SET_DATA permission for afterkey.release. This resolver needs a permission-capable migration; do not retry publication. Existing deposits remain in their consumers and owner recovery is available.');
+    to=s.resolver;data=releaseSetter(s.dns,encodeConfiguration(request.candidate));label='Publish ENS candidate';
   }else if(request.operation==='register'){
     to=s.gate;data=encode('registerConsumer',[getAddress(request.consumer)]);label='Register LP consumer';
   }else if(request.operation==='activate'){

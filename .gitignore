@@ -2,6 +2,20 @@ node_modules/
 dist/
 .env*
 !.env.example
+# Local credentials and signing material
+*.pem
+*.key
+credentials*.json
+secrets*.json
+.secrets/
+# Local instructions, editor state, logs and source archives
+GENERAL_INST.md
+.vscode/
+.idea/
+*.log
+*.zip
+.DS_Store
+Thumbs.db
 .openai/*.local.*
 cre/binary.wasm
 cre/binary.wasm.br.b64

@@ -1,0 +1,78 @@
+{
+  "checkedAt": "2026-11-06T11:43:17.128Z",
+  "method": "Read-only canonical receipt verification and pinned Sepolia portfolio reads. No new signatures, broadcasts or simulations.",
+  "chainId": 11155111,
+  "manager": "0x1238536071E1c677A632429e3655c799b22cDA52",
+  "historicalTransaction": {
+    "hash": "0x2a4ca9ba41a8fe0d11f8d8eeba69a9a50dee27841b80e8c0905366e5032671f8",
+    "block": "12075584",
+    "blockHash": "0x6dddf486e133ccacab4c17dcd009ffb08f09e9c508ef5370efecd8b1ede15eb2",
+    "from": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "to": "0x1238536071E1c677A632429e3655c799b22cDA52",
+    "data": "0xa22cb46500000000000000000000000022225204824edf00b3c8c32a43f1c04246e2d1b40000000000000000000000000000000000000000000000000000000000000000",
+    "value": "0",
+    "intentVerified": true
+  },
+  "currentPortfolio": {
+    "block": "12076345",
+    "blockHash": "0x0c0d8a93df0a5a1da4b606ea6852cecbc44d234a3e1a85839127d519960d6fb4",
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "subject": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+    "operator": false,
+    "count": "2",
+    "positions": [
+      {
+        "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+        "fee": 3000,
+        "tickLower": -887220,
+        "tickUpper": 887220,
+        "liquidity": "6179549430",
+        "tokensOwed0": "0",
+        "tokensOwed1": "0",
+        "id": "234145",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "approved": "0x0000000000000000000000000000000000000000",
+        "portfolioApproved": false,
+        "symbol0": "USDC",
+        "symbol1": "WETH",
+        "decimals0": 6,
+        "decimals1": 18
+      },
+      {
+        "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+        "fee": 3000,
+        "tickLower": -887220,
+        "tickUpper": 887220,
+        "liquidity": "6179549430",
+        "tokensOwed0": "0",
+        "tokensOwed1": "0",
+        "id": "234146",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "approved": "0x0000000000000000000000000000000000000000",
+        "portfolioApproved": false,
+        "symbol0": "USDC",
+        "symbol1": "WETH",
+        "decimals0": 6,
+        "decimals1": 18
+      }
+    ],
+    "complete": true
+  },
+  "checks": [
+    {
+      "name": "Historical mined revocation exactly matches reviewed call",
+      "passed": true
+    },
+    {
+      "name": "Both live positions retained by configured owner",
+      "passed": true
+    },
+    {
+      "name": "Portfolio and individual approvals absent",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

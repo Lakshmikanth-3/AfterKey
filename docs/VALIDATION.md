@@ -2,13 +2,15 @@
 
 ## Implementation checks
 
-- `npm test`: **50 tests passed**, including independent approvals, ENS scopes, identity/financial preservation, actor-bound operations, wallet discovery, exact signed request digests, expiry, log framing, pinned-block recovery and Worker relay bounds.
+- `npm test`: **58 tests passed**, including independent approvals, ENS scopes, identity/financial preservation, exact mined transaction intent, strict token minimums, metadata failure, stale review detection, wallet discovery, signed request digests, expiry, log framing, pinned-block recovery and Worker relay bounds.
 - `npm run build`: TypeScript plus browser/Worker compilation and built-artifact checks passed. The Worker serves emitted assets, rejects unknown paths, and returns HTTP 400 for unsigned CRE requests.
 - `npm run typecheck` and WASM compilation in `cre/` passed for the deployed workflow source.
 - [GitHub validation run](https://github.com/Lakshmikanth-3/AfterKey/actions/runs/42200112055) passed for source `7994f6b49c0069e900cc932df415bc34da692414`, including tests, both hosting builds and CRE typecheck.
 - Browser QA verified the actual two-position portfolio and reviewed delegation preparation. Actual user wallet signatures are recorded separately in the linked receipts.
 
 ## Live evidence
+
+The [Uniswap security review](UNISWAP_SECURITY_REVIEW.md) records the resource-guided fixes, new regression coverage, [live read-only checks](uniswap-security-verification.json), and the unresolved upstream CRE/Zod dependency warning.
 
 | Integration | Verified result |
 | --- | --- |

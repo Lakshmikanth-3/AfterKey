@@ -1,0 +1,55 @@
+{
+  "source": "Independent Sepolia RPC reads",
+  "checkedAt": "2026-11-06T21:16:14.870Z",
+  "deployment": {
+    "gate": "0x96100054c7ffec8b9a0a52d78e254c07e127196a",
+    "transactionHash": "0xe0835f3a170536c89538aad74390c00d3311b960c78dcbb9b7895ccacbbe3ea8",
+    "block": "12079070",
+    "blockHash": "0x69b84909c2c30f649cbda8e3c01ce6b6324966d2885d661d2faca44db621af74"
+  },
+  "checks": {
+    "sepolia": true,
+    "successfulReceipt": true,
+    "canonicalBlock": true,
+    "expectedOwner": true,
+    "contractCreation": true,
+    "zeroValue": true,
+    "exactConstructor": true,
+    "expectedContract": true,
+    "expectedBlock": true
+  },
+  "currentState": {
+    "gate": "0x96100054C7ffec8B9a0a52d78e254C07E127196a",
+    "block": "12079162",
+    "now": "1793999772",
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "epoch": "0",
+    "coverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "activeDigest": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "active": [
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0"
+    ],
+    "checkedDigest": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "checkedUntil": "0",
+    "checkedPassed": false,
+    "paused": false,
+    "checkedEpoch": "0",
+    "checkedCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "activeCoverage": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "consumers": [],
+    "resolver": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+    "dns": "0x0e74726561737572792d6167656e74076d616e616765720365746800",
+    "identityValid": true,
+    "workflowId": "0x008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76",
+    "workflowOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
+    "forwarder": "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
+    "candidateError": "Publish a valid candidate in the ENS data record first.",
+    "issues": [
+      "Publish a valid candidate in the ENS data record first."
+    ]
+  },
+  "completion": "Gate deployment verified. Consumer custody, CRE report delivery, activation and collection require their own proof."
+}

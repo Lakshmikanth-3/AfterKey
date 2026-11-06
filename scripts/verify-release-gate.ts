@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import {encodeDeployData,getAddress,type Hex} from 'viem';
+import artifact from '../src/releases/ENSReleaseGate.json';
+import {readRelease} from '../src/releases/client';
+import {clientFor,DEFAULT_RPC,same,serialize} from '../src/engine';
+import {WORKSPACE_OWNER,WORKSPACE_SUBJECT} from '../src/workspace';
+
+const path=process.argv[2];if(!path)throw new Error('Pass the downloaded gate deployment JSON path.');
+const supplied=JSON.parse(fs.readFileSync(path,'utf8'));
+if(supplied.kind!=='gate'||!Array.isArray(supplied.args))throw new Error('Expected a gate deployment export.');
+const client=clientFor(DEFAULT_RPC),hash=supplied.transactionHash as Hex;
+const [chain,receipt,tx]=await Promise.all([client.getChainId(),client.getTransactionReceipt({hash}),client.getTransaction({hash})]);
+const header=await client.getBlock({blockNumber:receipt.blockNumber});
+const constructor=encodeDeployData({abi:artifact.abi,bytecode:artifact.bytecode as Hex,args:supplied.args});
+const checks={sepolia:chain===11155111,successfulReceipt:receipt.status==='success',canonicalBlock:header.hash===receipt.blockHash&&tx.blockHash===receipt.blockHash,expectedOwner:same(tx.from,WORKSPACE_OWNER),contractCreation:tx.to===null,zeroValue:tx.value===0n,exactConstructor:tx.input.toLowerCase()===constructor.toLowerCase(),expectedContract:!!receipt.contractAddress&&same(receipt.contractAddress,supplied.address),expectedBlock:String(receipt.blockNumber)===supplied.block};
+if(Object.values(checks).some(v=>!v))throw new Error(`Deployment check failed: ${serialize(checks)}`);
+const observed=await readRelease({owner:WORKSPACE_OWNER,subject:WORKSPACE_SUBJECT,rpc:DEFAULT_RPC,targets:[]},getAddress(supplied.address));
+const output={source:'Independent Sepolia RPC reads',checkedAt:new Date().toISOString(),deployment:{gate:receipt.contractAddress,transactionHash:hash,block:String(receipt.blockNumber),blockHash:header.hash},checks,currentState:observed,completion:'Gate deployment verified. Consumer custody, CRE report delivery, activation and collection require their own proof.'};
+fs.writeFileSync('docs/release-gate-verification.json',serialize(output)+'\n');
+console.log(serialize({checks,gate:receipt.contractAddress,observedBlock:observed.block,registeredConsumers:observed.consumers.length,proof:'docs/release-gate-verification.json'}));

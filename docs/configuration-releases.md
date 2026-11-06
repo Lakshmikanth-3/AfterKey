@@ -65,7 +65,9 @@ ENS setter rights are scoped by record key/type across the resolver, not by indi
 
 ## Proof status and limits
 
-New contracts and browser/CRE paths are implemented and tested locally against a real local EVM with fixture contracts. These tests are not Sepolia deployment evidence or a deployed DON execution. The earlier offboarding transaction and CRE proofs cover the earlier workflow only. This release flow still requires owner-signed deployment/deposits, matching CRE deployment, report delivery and live activation/collection receipts.
+Gate deployment is now independently verified on Sepolia: [`0x96100054c7ffec8b9a0a52d78e254c07e127196a`](https://sepolia.etherscan.io/address/0x96100054c7ffec8b9a0a52d78e254c07e127196a), [deployment transaction](https://sepolia.etherscan.io/tx/0xe0835f3a170536c89538aad74390c00d3311b960c78dcbb9b7895ccacbbe3ea8), block 12079070. [Independent verification](release-gate-verification.json) checks canonical receipt, owner, chain, zero value, exact constructor calldata and compiled runtime. At observation block 12079162, the gate had zero registered consumers and no active configuration. This verifies deployment only.
+
+Contracts and browser/CRE paths are also tested locally against a real local EVM with fixture contracts. These tests are not a deployed DON execution. The earlier offboarding transaction and CRE proofs cover the earlier workflow only. This release flow still requires consumer deployment/deposits, matching CRE deployment, report delivery and live activation/collection receipts.
 
 Verification proves explicit rules and observed custody, not agent quality, investment returns, endpoint safety or absence of every permission. Candidate URI availability is not involved; configuration is ABI-encoded onchain. A malicious owner can recover assets or rebind a workflow; owner trust is explicit. This implementation is not a security audit.
 

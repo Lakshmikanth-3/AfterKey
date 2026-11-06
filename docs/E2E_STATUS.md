@@ -8,9 +8,11 @@ The independent verifier checked canonical before/after block hashes, historical
 
 The next user action is not another ENS grant or revoke. Save the export and move on to the real Uniswap position lifecycle and CRE execution phases. An optional operator preparation check can show the permission denial in the UI without submitting a transaction.
 
-## Uniswap: code implemented, asset lifecycle unverified
+## Uniswap: position mints verified, operator lifecycle pending
 
-The Uniswap workspace now reads real position economics and offers individual/portfolio delegation and revocation, collection to the owner, and owner-reviewed withdrawal plus collection. Every operation checks its actor and current position state before signing. Offboarding compares ownership, pair, fee tier, range, liquidity and recorded owed tokens. The live owner still has zero positions and no portfolio approval. This proves an empty-wallet read; position creation and signed lifecycle receipts remain necessary. See the [walkthrough](UNISWAP_CRE_RUNBOOK.md).
+The Uniswap workspace reads real position economics and offers individual/portfolio delegation and revocation, collection to the owner, and owner-reviewed withdrawal plus collection. Every operation checks its actor and current position state before signing. Offboarding compares ownership, pair, fee tier, range, liquidity and recorded owed tokens.
+
+Positions **234145** and **234146** were minted successfully at blocks **12075338** and **12075343**. Each holds 1 USDC and 0.000038186831164543 WETH in the official Sepolia 0.3% full-range pool. Live ownership, mint events and canonical receipts passed four checks: [mint verification](uniswap-mint-verification.json). Browser discovery found both positions and prepared delegation for 234145 at block 12075448. No operator approval was signed during this browser check. Delegation, collection and full revocation remain pending. See the [walkthrough](UNISWAP_CRE_RUNBOOK.md).
 
 ## Chainlink CRE: scheduled execution verified
 
@@ -24,10 +26,10 @@ The first direct-read version failed the live 15-call quota. The revised version
 
 ## Validation
 
-43 unit tests passed, the app production build passed, and CRE typecheck/WASM build passed. Browser QA verified real portfolio discovery and request preparation. Both the development relay and built server rejected an unsigned request with HTTP 400; the built server served the app with HTTP 200. Tests cover exact request digests, signer/expiry/scope rejection, owner-bound recipients, withdrawal bounds, financial preservation, batched-read failures and log reconstruction limits. Unit fixtures do not stand in for live transaction receipts.
+47 unit tests passed and the app production build passed after the block-read recovery fix. CRE typecheck/WASM build passed for the deployed source. Browser QA verified real portfolio discovery and delegation preparation. Both the development relay and built server rejected an unsigned request with HTTP 400; the built server served the app with HTTP 200. Tests cover exact request digests, signer/expiry/scope rejection, owner-bound recipients, withdrawal bounds, financial preservation, batched-read failures, log reconstruction limits and block availability retries. Unit fixtures do not stand in for live transaction receipts.
 
 ## Publication
 
 Source is pushed in small feature commits. An unauthenticated GitHub API read confirmed that AfterKey is now public. The last hosted Sites build remains restricted and does not follow local edits. The new signed CRE relay requires server hosting (`npm run build` then `npm start`); a static-only upload cannot provide it. Update hosting and judge access before claiming a live public submission is ready.
 
-No privileged-call or CRE simulations were run. ENS completion is scoped to its historical proof. CRE scheduled monitoring now has real execution proof. Uniswap transactions and the external-case / HTTP / approval-event lifecycle are not claimed complete without their own receipts and execution references.
+No privileged-call or CRE simulations were run. ENS completion is scoped to its historical proof. CRE scheduled monitoring and Uniswap position mints have real execution proof. The Uniswap operator lifecycle and external-case / HTTP / approval-event paths are not claimed complete without their own receipts and execution references.

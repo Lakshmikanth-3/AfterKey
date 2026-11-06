@@ -4,11 +4,11 @@ This page describes the current implementation. Earlier empty-wallet checks and 
 
 ## Local checks
 
-- `npm test`: **43 tests passed**. Coverage includes independent approval paths, ENS EAC scopes, owner/identity preservation, withdrawal bounds, owner-bound collection recipients, wallet discovery, request-signature validation, expiry and digest rejection, view-batch bounds and evidence-log framing.
-- `npm run build`: TypeScript and Vite production build passed after the Sepolia setup guidance was added.
+- `npm test`: **47 tests passed**. Coverage includes independent approval paths, ENS EAC scopes, owner/identity preservation, withdrawal bounds, owner-bound collection recipients, wallet discovery, request-signature validation, expiry and digest rejection, view-batch bounds, evidence-log framing and temporarily unavailable block reads.
+- `npm run build`: TypeScript and Vite production build passed after the block-read recovery fix.
 - `npm run typecheck` in `cre/`: passed for the deployed workflow source.
 - The deployed CRE source compiled to WASM. Its recorded binary/configuration hashes are in [deployment metadata](../cre/deployment.json).
-- Browser inspection verified the position workspace, real empty-portfolio discovery, exact CRE request preparation and recorded execution status. Browser preparation did not sign a wallet transaction.
+- Browser inspection verified discovery of positions **234145** and **234146** at block **12075445**, then prepared owner delegation for **234145** at block **12075448**. Browser preparation did not sign or submit that approval. Earlier checks verified exact CRE request preparation and recorded execution status.
 - Both the development relay and built server rejected an unsigned local request with HTTP 400. The built server served the application with HTTP 200.
 
 Unit fixtures test policy and encoding. They are not blockchain execution proof. No privileged-call or CRE simulations were used.
@@ -20,6 +20,12 @@ The real workspace is `treasury-agent.manager.eth` on Sepolia. Ten successful re
 The independent verifier checked 30 conditions against historical state and the actual final transaction. Between blocks **12074041** and **12074046**, the operator lost effective text-edit authority while the captured owner permissions, ownership, expiry, identity pointers, ETH address, record bundle and selected text value were retained.
 
 Evidence: [transaction receipts](transactions.md), [historical verification](ens-offboarding-verification.json).
+
+## Uniswap live proof
+
+Successful, canonical mint receipts at blocks **12075338** and **12075343** created positions **234145** and **234146**. Both are owned by the workspace owner and hold Sepolia Circle USDC/WETH, 0.3%, with full-range ticks. Each mint deposited **1 USDC** and **0.000038186831164543 WETH**. Four checks verified receipt canonicality, ownership, pair/range and mint events against live data at block **12075455**. Evidence: [mint verification](uniswap-mint-verification.json).
+
+The new RPC transport retries missing headers and temporarily unavailable pinned-block reads without switching to `latest`. Regression checks cover null-header fallback, bounded retries, preserving block parameters, and leaving permission failures, writes and pending receipts alone. Delegation preparation succeeded in the live browser; signed delegation, collection and revocation still require their own receipts.
 
 ## Chainlink live proof
 
@@ -35,7 +41,7 @@ This scheduled snapshot does not prove external-case validation, HTTP authorizat
 
 | Check | Next evidence |
 | --- | --- |
-| User-owned Uniswap lifecycle | Create a real Sepolia v3 position; retain delegation, management and revocation receipts |
+| User-owned Uniswap lifecycle | Mints verified; retain delegation, management and revocation receipts |
 | GitHub departure case | Completed, labeled issue and successful owner-authorized CRE execution |
 | Approval-event trigger | Real approval transaction plus matching CRE execution reference |
 | CRE before/after comparison | Successful verification request with a genuine baseline block |

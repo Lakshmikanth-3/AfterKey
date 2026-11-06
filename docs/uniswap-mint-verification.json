@@ -1,0 +1,114 @@
+{
+  "verifiedAt": "2026-11-06T08:42:30.833Z",
+  "chainId": 11155111,
+  "manager": "0x1238536071E1c677A632429e3655c799b22cDA52",
+  "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "subject": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+  "scope": "Two owner-held position mints. Delegation, collection and offboarding remain separate unverified operations.",
+  "checks": {
+    "successfulCanonicalReceipts": true,
+    "ownerHasBothPositions": true,
+    "correctPairFeeAndRange": true,
+    "matchingMintEvents": true
+  },
+  "receipts": [
+    {
+      "hash": "0x16caa08ee7554deab54b0576d8c6f044d64f1a78b4cafe3cd3f403c10ca462e5",
+      "status": "success",
+      "block": "12075338",
+      "blockHash": "0x0f15c685bb210588b75c686ffeb2b4d150207fd93e9c7073632bdc984b8a4d50",
+      "timestamp": "2026-11-06T08:18:36.000Z",
+      "gasUsed": "1431122",
+      "events": [
+        {
+          "event": "Transfer",
+          "args": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+            "tokenId": "234145"
+          }
+        },
+        {
+          "event": "IncreaseLiquidity",
+          "args": {
+            "tokenId": "234145",
+            "liquidity": "6179549430",
+            "amount0": "1000000",
+            "amount1": "38186831164543"
+          }
+        }
+      ]
+    },
+    {
+      "hash": "0xd3f9913c78b72387198073488fad9427bdd6fbd732b44245239fb201ecdd8517",
+      "status": "success",
+      "block": "12075343",
+      "blockHash": "0x181a901c3989ea26b26c1c2e69e911f42327ed686a65d2ea8b70d695a22e4084",
+      "timestamp": "2026-11-06T08:19:36.000Z",
+      "gasUsed": "1194972",
+      "events": [
+        {
+          "event": "Transfer",
+          "args": {
+            "from": "0x0000000000000000000000000000000000000000",
+            "to": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+            "tokenId": "234146"
+          }
+        },
+        {
+          "event": "IncreaseLiquidity",
+          "args": {
+            "tokenId": "234146",
+            "liquidity": "6179549430",
+            "amount0": "1000000",
+            "amount1": "38186831164543"
+          }
+        }
+      ]
+    }
+  ],
+  "portfolio": {
+    "block": "12075455",
+    "blockHash": "0x354b2b4939f32931b8fabf4a85c071c00797166495a82a6298e26b03d0afab71",
+    "count": "2",
+    "operator": false,
+    "positions": [
+      {
+        "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+        "fee": 3000,
+        "tickLower": -887220,
+        "tickUpper": 887220,
+        "liquidity": "6179549430",
+        "tokensOwed0": "0",
+        "tokensOwed1": "0",
+        "id": "234145",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "approved": "0x0000000000000000000000000000000000000000",
+        "portfolioApproved": false,
+        "symbol0": "USDC",
+        "symbol1": "WETH",
+        "decimals0": 6,
+        "decimals1": 18
+      },
+      {
+        "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+        "fee": 3000,
+        "tickLower": -887220,
+        "tickUpper": 887220,
+        "liquidity": "6179549430",
+        "tokensOwed0": "0",
+        "tokensOwed1": "0",
+        "id": "234146",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "approved": "0x0000000000000000000000000000000000000000",
+        "portfolioApproved": false,
+        "symbol0": "USDC",
+        "symbol1": "WETH",
+        "decimals0": 6,
+        "decimals1": 18
+      }
+    ]
+  }
+}

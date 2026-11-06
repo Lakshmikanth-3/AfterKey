@@ -1,22 +1,50 @@
-# AfterKey live CRE workflow
+# AfterKey live CRE orchestration
 
-An authorized external HR/identity system sends a signed HTTP trigger carrying `{eventId, event: "departure" | "recheck", subject}`. The workflow independently reads Sepolia position approvals and configured ENSv2 permissions at one block, derives surviving paths and returns JSON evidence to the caller. The same `recheck` trigger is used after owner-approved revocations. It does not sign owner transactions or perform privileged-call simulations.
+The workflow independently reads the deployed ENSv2 namespace and official Sepolia Uniswap v3 positions. It uses three genuine CRE trigger types:
 
-## Build and activate
+| Trigger | Operation |
+| --- | --- |
+| Owner-signed HTTP | `recheck`: current access; `departure`: verify a real GitHub departure issue then inspect access; `verify`: read historical before/current after state and compare preserved assets |
+| Cron | Recheck the configured operator every five minutes |
+| EVM log | Recheck after the owner's Uniswap `Approval` / `ApprovalForAll` changes, with SAFE trigger confidence |
 
-1. `npm install` in this directory, then `npm run typecheck`.
-2. The configured asset owner and authorized trigger signer are the user-supplied address `0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5`. Add exact ENS resources to `config.production.json` when available.
-3. Authenticate locally using `cre login` and confirm private-registry access. This target uses the private registry and does not require wallet key linking or Mainnet gas. Do not paste private keys into chat or track credentials in Git.
-4. Use `cre workflow build . --target production` and `cre workflow deploy . --target production` with your supported registry settings. Deployment requires the user's authenticated account, deployment eligibility and workflow owner setup. CLI may require Bun for TypeScript/WASM builds.
-5. Configure your external system to invoke the returned workflow ID using Chainlink's signed HTTP trigger flow. The workflow accepts only signatures from `authorizedEVMAddress`.
-6. The workflow is registered ACTIVE in the private registry; see `deployment.json`. Retain real execution IDs/output after signed triggers. No successful execution is claimed yet. No simulations were run.
+The GitHub case must be a completed issue in the configured public repository, labeled `afterkey-departure`, closed by the configured approver, and contain exactly one matching `AfterKey-Subject: 0x...` line. CRE's HTTP capability reads the GitHub API and reaches consensus on validated case fields. A browser-supplied issue description is not trusted as approval.
 
-The workflow reads at most 20 positions and 10 ENS resources to bound execution cost. It returns `complete: false` when a portfolio exceeds its configured limit. RPC/view errors fail the workflow rather than returning a false clean result. Configured owner role snapshots are included in results so before/after owner checks can be compared. The browser app maintains its separate local scanner and is usable without CRE activation.
+The workflow reports access and preservation. It holds no asset-owner signing key, executes no revocations and publishes no onchain attestation. Review and sign cleanup in the application. It does not automatically notify another person.
 
-The return value is a workflow response, not an onchain attestation. CRE activation does not automatically create an HR system, notify another person, or publish a report onchain.
+## Build and deploy
 
-The current verifier source and registered deployment include ENSv2 interface checks, canonical registry resource lookup, name-owner snapshots, effective role bitmaps and optional Uniswap scanning. Export targets from the ENS identity screen and redeploy the configuration after namespace setup. Empty protocol scope cannot return a complete result. `scanUniswap` defaults to true for compatibility when omitted; the browser's export records its selected value explicitly. The currently registered configuration has no ENS targets, so it does not yet cover the user's future namespace.
+```sh
+npm install
+npm run typecheck
+npm run build
+cre workflow deploy . --target production
+```
 
-Dependency audit: the pinned CRE SDK 1.23.0 depends on Zod 3.25.76, which npm flags under GHSA-mrhx-c7xc-m3w5. A forced Zod 4 override is incompatible with the SDK's function schemas. The workflow limits incoming payloads to 16 KB and limits configured collections, but this does not resolve the upstream advisory. Review an upstream SDK fix before activating in a production environment. The independently built browser app does not depend on the CRE SDK or Zod.
+Use the authenticated CRE CLI session with deployment access. Private-registry deployment does not require the owner's wallet private key. Public addresses and configuration are in `config.production.json`; `deployment.json` records the actual workflow version. Update configuration and redeploy after changing the owner, monitored operator or scope. This deployment includes the actual four-resource `manager.eth` namespace.
 
-References: [HTTP trigger configuration](https://docs.chain.link/cre/guides/workflow/using-triggers/http-trigger/configuration-ts), [EVM view reads](https://docs.chain.link/cre/guides/workflow/using-evm-client/onchain-read-ts), [deployment](https://docs.chain.link/cre/guides/operations/deploying-workflows/overview).
+The browser signs a five-minute EIP-191 authorization bound to recursively sorted JSON and its SHA-256 digest. A same-origin relay verifies signer, scope, expiry and body before forwarding to the fixed CRE gateway. No bearer token is saved or exported. The gateway does not provide browser CORS, so run the app with `npm run dev`, or build it and use `npm start` from the repository root. A static-files-only host cannot provide the relay route.
+
+Gateway acceptance is not completion. Retrieve real execution status and output:
+
+```sh
+cre execution list afterkey-departure-verifier --output json
+cre execution status <execution-id> --output json
+cre execution logs <execution-id> --output json
+# From the repository root:
+npm run proof:cre -- <execution-id>
+```
+
+The collector checks authenticated CLI status, current deployment time, wallet pair and exact configured scope. Complete output is framed in log lines below 1 KB with a shared digest, reconstructed and checked before recording evidence. The app displays the saved execution observation, not a live health poll. Individual transaction signatures remain separate proof.
+
+## Live limits
+
+The deployed workflow's initial direct-read version hit the live 15-call quota and failed explicitly. Reads now use the canonical Sepolia Multicall3 deployment to batch **only declared view/pure functions**, with each request below the 5 KB payload limit. All required calls must succeed. Each snapshot is pinned to a single header block. Before/after verification uses independent snapshots and compares owner roles, identity values, position ownership, token pair, range, liquidity and recorded owed tokens.
+
+The configured bound is ten positions (maximum configurable twenty) and ten ENS resources. Above the position bound, evidence is incomplete. Extremely large scopes, view arguments, evidence or quota errors stop execution; they cannot produce a clean report. The workflow is not a universal permission graph and does not enumerate old signed permits, unknown keys, other wallets or unrelated contracts. Its owner-preservation claims cover only captured state.
+
+Pause recurring monitoring with `cre workflow pause . --target production`. No CRE or privileged-call simulations are used.
+
+The pinned SDK 1.23.0's Zod 3 dependency has the previously documented GHSA-mrhx-c7xc-m3w5 advisory. Forcing Zod 4 breaks SDK schemas. Payload/configuration bounds reduce exposure but do not fix that upstream dependency. Browser builds do not import the CRE SDK or Zod.
+
+See [the complete walkthrough](../docs/UNISWAP_CRE_RUNBOOK.md), [trigger authentication](https://docs.chain.link/cre/guides/workflow/using-triggers/http-trigger/triggering-deployed-workflows), [service quotas](https://docs.chain.link/cre/service-quotas) and [Multicall3 deployments](https://github.com/mds1/multicall3/blob/main/deployments.json).

@@ -2,15 +2,15 @@
 
 **Offboard the operator. Keep the ENS identity.**
 
-AfterKey discovers surviving ENSv2 permissions for a departing wallet, prepares owner-reviewed revocations, and rereads live authorization state after confirmation. The default workflow centers ENSv2 registry hierarchy, Enhanced Access Control and Permissioned Resolvers. Uniswap v3 position approvals are an optional additional scope.
+AfterKey discovers surviving ENSv2 permissions for a departing wallet, prepares owner-reviewed revocations, and rereads live authorization state after confirmation. The default workflow centers ENSv2 registry hierarchy, Enhanced Access Control and Permissioned Resolvers. The Uniswap workspace adds delegated position management, while Chainlink CRE monitors and verifies departures independently.
 
-Live application: https://afterkey-access.resplendentflair1.chatgpt.site — currently owner-private. Judge-accessible sharing must be arranged before submission. The requested GitHub URL, https://github.com/Lakshmikanth-3/AfterKey, returned 404 when checked; public source access is not yet verified.
+Live application: https://afterkey-access.resplendentflair1.chatgpt.site — currently owner-private. Judge-accessible sharing must be arranged before submission. Source: https://github.com/Lakshmikanth-3/AfterKey. Unauthenticated GitHub API access confirmed the repository is public on November 6, 2026. The hosted build still needs an update and judge access.
 
 ## Why ENSv2 is central
 
 Removing a text-key permission from a Permissioned Resolver does not remove a corresponding resolver-wide role. AfterKey checks both scopes, distinguishes ordinary and admin roles, and shows effective authority through `hasRoles`. It also checks registry roles that can redirect identity and ERC-1155 operator approval. The identity, its record values and its owner remain visible while the departing wallet's known access paths are removed.
 
-See [the ENS qualification review](docs/ENS_QUALIFICATION_REVIEW.md) for the prize mapping, technical limitations and demo narrative. Qualification still requires live user-owned namespace/transaction evidence and publicly accessible submission links.
+See [the ENS qualification review](docs/ENS_QUALIFICATION_REVIEW.md) for the prize mapping, technical limitations and demo narrative. Configured ENS offboarding has live receipt and historical-state proof; publicly accessible submission links still need verification.
 
 ## Run
 
@@ -64,17 +64,23 @@ Resolver text/data resources depend on the key alone. Coin/content resources dep
 
 Registry and resolver permissions are separate. A registry root role does not automatically confer a role on another resolver, although certain registry roles can redirect a name/subregistry. Regular roles are distinct from ADMIN roles controlling granting/revoking.
 
-## Optional Uniswap integration
+## Uniswap delegated liquidity
 
-Sepolia NonfungiblePositionManager: `0x1238536071E1c677A632429e3655c799b22cDA52`, from [Uniswap's deployment documentation](https://developers.uniswap.org/docs/protocols/v3/deployments/v3-ethereum-deployments).
+The **Uniswap** workspace reads actual v3 NFTs, token pairs, fee tiers, tick ranges, liquidity, recorded owed tokens and both approval sources from the [official Sepolia position manager](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52).
 
-Enable **Include Uniswap v3** to enumerate up to 200 owner positions and check `getApproved` plus `isApprovedForAll`. Writes are `approve(address(0), tokenId)` and `setApprovalForAll(operator, false)`. Operator approval is checked even with zero current positions. This optional scope does not gate ENS-only scanning.
+Six reviewed operations are available: individual delegation, portfolio delegation, individual revocation, portfolio revocation, collection to the owner, and owner-reviewed liquidity withdrawal plus collection. ERC-721 approvals also allow NFT transfers; they are not fee-only permissions. All actions recheck the expected signer and live position state before wallet submission. Collection recipients are fixed to the owner. Withdrawals bind explicit token minimums and an expiry.
 
-## CRE
+Offboarding independently discovers both approval paths and compares position ownership, liquidity, pair, fee tier, tick range and recorded owed amounts. The position workspace bounds discovery to 50 NFTs; the offboarding scanner bounds coverage to 200. Incomplete coverage blocks execution. Recorded owed amounts are not a live fee quote or a USD valuation.
 
-An authorized external system submits a signed departure/recheck event to the CRE workflow. See `cre/README.md` and `cre/deployment.json` for registered deployment details. New source supports ENS interface/current-resource/owner checks and optional Uniswap; compile with `cre workflow build . --target production` from `cre/`. Export configured ENS targets and redeploy when the namespace/scope changes. Do not claim a prior empty ENS deployment scope covers a newly configured namespace.
+See [the Uniswap and CRE runbook](docs/UNISWAP_CRE_RUNBOOK.md), [contracts/financial checks](src/uniswap/contracts.ts), [live reads and transaction policy](src/uniswap/positions.ts), [UI and decoded receipt events](src/uniswap/ui.ts), and [offboarding engine](src/engine.ts). Live position creation and wallet signatures are required for transaction proof; an empty wallet does not demonstrate offboarding.
 
-Registration is not proof of trigger execution. No successful live CRE execution or wallet-signed revocation is claimed before real evidence exists. No CRE or privileged-call simulations are included.
+## Chainlink CRE orchestration
+
+The workflow now combines owner-signed HTTP requests, recurring monitoring and SAFE-confidence Uniswap approval events. It independently reads the real ENS namespace and Uniswap positions. Departure requests validate a completed, labeled GitHub issue against the configured repository, completing actor and exact operator wallet through CRE's HTTP capability and consensus. Before/after requests compare preserved identity and position state.
+
+The browser signs a five-minute, body-bound gateway authorization through MetaMask; it never requests a private key. A same-origin server verifies that signature, exact body, expiry and deployed scope before forwarding to the fixed CRE gateway. `npm run dev` includes the relay, and `npm run build` followed by `npm start` serves the built app and relay. Static-only hosting cannot provide this API route. Gateway acceptance is displayed separately from execution success. `npm run proof:cre -- <execution-id>` collects authenticated CLI execution status and structured logs. See [deployment metadata](cre/deployment.json), [workflow source](cre/main.ts), [authentication](src/cre/auth.ts) and [runbook](docs/UNISWAP_CRE_RUNBOOK.md).
+
+CRE reports and owner-signed offboarding receipts are separate evidence. The workflow does not hold the owner key, sign revocations or claim an onchain attestation. No CRE or privileged-call simulations are included. Recorded execution status is an observation, not a browser health poll.
 
 ## Evidence, limits and submission
 

@@ -95,3 +95,10 @@ See `docs/AI_ATTRIBUTION.md`, `docs/VALIDATION.md`, `docs/DEMO.md`, `docs/transa
 ENS resource decisions, agent-record support, live network evidence, and setup steps: [ENS_RESOURCES.md](docs/ENS_RESOURCES.md).
 
 Real ENS operator workflow and submission steps: [ENS_DEMO_RUNBOOK.md](docs/ENS_DEMO_RUNBOOK.md).
+
+
+### Local environment
+
+Use Node.js 22.9 or newer. Copy `.env.example` to `.env` and optionally replace `SEPOLIA_RPC_URL` with your RPC endpoint. `npm run verify:ens` loads the local file when present; it also works without one using the public default. Browser RPC configuration remains in Connections and is stored locally in the browser.
+
+`.env`, environment variants, signing keys, credential files, local archives and `GENERAL_INST.md` are excluded from Git. Only `.env.example` contains shareable defaults. Never place a private key or a secret in a `VITE_*` variable: browser build variables are public. CRE authentication stays in the CRE CLI account session.

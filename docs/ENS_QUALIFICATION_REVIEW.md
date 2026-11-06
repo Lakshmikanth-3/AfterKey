@@ -1,20 +1,21 @@
 # ENSv2 qualification review
 
-## Verdict
+## Current verdict — release workflow review
 
-AfterKey meets the technical requirements for **Best Use of ENSv2** on Sepolia. ENSv2 is the product's authorization layer, not a cosmetic address label: the app discovers hierarchy and resolver scopes, delegates a real text permission, detects a surviving resolver-wide permission, prepares owner-reviewed revocations and proves that the identity remains under the owner.
+Target **Best Use of ENSv2** on Sepolia. ENS is central: its permissioned data record supplies the proposed operator, treasury, manager and expiry; the gate and CRE bind activation to that exact digest. The separately documented offboarding lifecycle is already supported by historical receipts. Do not describe the new release lifecycle as complete until report delivery, activation and both collections have their own receipts.
 
-## Requirement mapping
-
-| Requirement | Current evidence |
+| Requirement | Observed status |
 | --- | --- |
-| ENSv2 on mainnet or Sepolia | `treasury-agent.manager.eth` is live on ENSv2 Sepolia. The three-level hierarchy, Permissioned Resolver and User Registry are reread by `npm run verify:ens -- treasury-agent.manager.eth`. |
-| ENSv2 central to the product | Registry resources, EAC root/local roles, resolver text-key roles and registry operator approval determine the audit and revocation plan. |
-| Functional, not hard-coded | Names, owners, resources, expiry, pointers, roles, records and transaction receipts come from pinned live reads. Protocol addresses are pinned official deployments, not fabricated user state. |
-| Live demo | https://afterkey.vercel.app is publicly accessible; wallet writes require the configured signer and Sepolia. |
-| Open-source code | https://github.com/Lakshmikanth-3/AfterKey is public and MIT licensed. |
+| ENSv2 on mainnet or Sepolia | Verified Sepolia subname `afterkey-release.manager.eth`, dedicated official Permissioned Resolver and owner-controlled User Registry. See [live release readiness](ens-release-readiness.json). |
+| ENSv2 central | EAC authorizes candidate publication; resolver data is independently read by CRE and the onchain gate. Names are not just wallet labels. |
+| Functional, not hard-coded | Real registration, data publication, consumer deployment and deposits have receipts. Candidate/role/custody reads are live. The latest release CRE deployment still needs binding, successful report delivery, owner activation and both collection proofs. |
+| Live demo link | Vercel returns HTTP 200, but its downloaded bundle still serves the older offboarding app. Publish and verify the current release workflow after its live proof is complete. |
+| Public open-source repository | GitHub connector confirms `private:false` and MIT. New local repair/release changes still need small reviewed commits and a push. |
+| Showcase contains demo and source links | Must still be checked in the participant's final showcase entry. A README alone does not prove submission. |
 
-The separate Existing Project prize requires Continuity Track participation and mainnet under the supplied rules. This repository targets Best Use of ENSv2.
+The **Existing Project / Continuity** prize additionally requires Continuity Track eligibility and Ethereum mainnet. Sepolia proof does not satisfy that prize. Do not spend real ETH on a mainnet deployment merely to imitate eligibility.
+
+Wildcard resolution, record/namespace aliasing, an agent CLI and AI-agent integrations are optional capabilities or resources in the supplied brief, not a checklist of mandatory features. The current implementation uses its own subname registry, dedicated resolver and EAC. Dependency inspection detects known shared record bundles; it does not create aliases or discover every dependent name. ENSIP-25 support is an ENS-side attestation lookup, not full ERC-8004 ownership/reputation verification. ENSIP-26 keys are supported; do not claim a real autonomous agent has run without its own evidence.
 
 ## Completed onchain lifecycle
 

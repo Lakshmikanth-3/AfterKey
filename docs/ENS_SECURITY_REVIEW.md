@@ -2,6 +2,24 @@
 
 Reviewed 6 November 2026 against the official ENSv2 registry, resolver, EAC, factory, app/contract developer and agent-record documentation.
 
+## Latest release workflow audit
+
+The legacy resolver had no `SET_DATA` or matching admin role. The replacement resolver `0xd629d7De9c72684d27682Ed3C503283314906c24` was deployed by the owner at block 12079630 with both roles, and the new subname was registered at 12079639. The replacement gate is `0x47ae5aF5A9A2D0e90D2986861aD99f088270258F`. Old name records were preserved and both NFTs were recovered before the replacement deposits.
+
+Additional preparation checks now verify the live official factory implementation and `decodeSetter` mapping for `afterkey.release`. An interface-compatible resolver with an unexpected implementation, the wrong key resource, a text role instead of a data role, or missing owner authority cannot prepare publication. Gate deployment requires the exact registered leaf name and official User Registry, which prevents an inherited/wildcard parent being mistaken for a dedicated registered subname.
+
+Registry hierarchy reads are grouped at one explicit block. Rate limits and unavailable blocks propagate instead of being mislabeled as unsupported resolvers, missing profiles or unpublished candidates. Wallet writes are never retried automatically.
+
+The latest code checks do not alter deployed gate bytecode or require another gate/consumer deployment. See `src/releases/ens-policy.ts`, `tests/ens-release-policy.test.ts` and the read-only `scripts/verify-ens-release.ts` report.
+
+## Deployment limitations that remain
+
+- The immutable gate checks its pinned **leaf registry resource, owner, expiry and resolver**. It does not independently prove every ancestor/root pointer on each collection. Changing an ancestor can make normal ENS resolution disagree with the pinned source. Do not claim universal hierarchy continuity; an ancestor-attested gate would require a separately reviewed contract version and deployment.
+- The owner is trusted and can recover NFTs or rebind workflows. Resolver provenance checks in the app are not a substitute for gate-level enforcement against every future proxy upgrade. This resolver was initialized without an upgrade role.
+- Data/text roles are scoped by key/type across the resolver, not per name. The release name uses a dedicated resolver. Known bundle inspection is bounded and not an index of every alias or application dependency.
+- CRE acceptance is not completion. The prior release attempt failed at its read capability limit. A batched verifier is deployed; its passing onchain report, activation and both collections are still pending.
+- The published Vercel bundle and remote source need updating to the current release version. Earlier offboarding evidence remains valid for its stated historical scope.
+
 ## Findings fixed
 
 ### Deterministic official proxy salts

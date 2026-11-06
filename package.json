@@ -8,6 +8,7 @@
     "dev": "vite --host 127.0.0.1",
     "start": "tsx server/serve.ts",
     "build": "tsc --noEmit && node scripts/build-worker.mjs && node scripts/check-worker.mjs",
+    "build:vercel": "tsc --noEmit && vite build --outDir dist-vercel",
     "test": "tsx --test tests/*.test.ts",
     "verify:ens": "node --env-file-if-exists=.env --import tsx scripts/verify-ens.ts",
     "proof:cre": "node --import tsx scripts/collect-cre-proof.ts"

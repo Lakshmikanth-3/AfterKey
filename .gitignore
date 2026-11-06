@@ -22,3 +22,8 @@ cre/binary.wasm.br.b64
 cre/.cre/
 cre/.cre_build_tmp.*
 worker/assets.generated.ts
+.vercel/
+dist-vercel/
+
+.vercel
+.env*.local

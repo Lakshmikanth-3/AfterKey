@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "compile:vault": "node scripts/compile-vault.mjs",
+    "compile:vault": "node scripts/compile-vault.mjs && node scripts/compile-release.mjs",
     "predev": "npm run compile:vault",
     "prebuild": "npm run compile:vault",
     "prebuild:vercel": "npm run compile:vault",

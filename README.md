@@ -9,7 +9,7 @@ AfterKey reviews shared ENS configuration before an owner activates it for treas
 ## Start here
 
 1. Run `npm run dev` in this repository and open **http://127.0.0.1:5173/?step=setup**.
-2. Use **Change review → Set up consumers** to deploy the release gate, then deploy, register and deposit the LP consumers with the owner wallet.
+2. Use **Change review → 1. Setup** to deploy the release gate, then deploy, register and deposit the LP consumers with the owner wallet.
 3. Follow the [configuration release guide](docs/configuration-releases.md) to configure/deploy CRE, verify a candidate, activate it and collect using the approved version.
 
 **Current boundary:** the configuration-review extension is local and requires live deployment/report/transaction proof. The public Vercel app and historical evidence below cover the earlier offboarding workflow. Do not repeat ENS name registration or mint new positions just to start this extension.

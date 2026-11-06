@@ -25,7 +25,7 @@ The active configuration is stored in the gate; changing the ENS candidate does 
 
 ## Setup in the application
 
-Open **Change review → Set up consumers**. Use the existing owned ENS name, official Sepolia forwarder, and the CRE workflow owner and ID. Review and deploy with the owner wallet. Deploy/register/deposit a consumer for each NFT. Existing directly approved positions are not automatically moved or revoked.
+Open **Change review → 1. Setup**. If a gate is already saved, click **Refresh live state** instead of deploying another one. Otherwise use the existing owned ENS name, review the collapsed Chainlink settings, and deploy with the owner wallet. Deploy/register/deposit a consumer for each NFT. Existing directly approved positions are not automatically moved or revoked.
 
 Use **Export CRE coverage**, then run from the repository root:
 
@@ -35,9 +35,27 @@ cd cre
 cre workflow deploy . --target production
 ```
 
-Record the returned workflow ID in `cre/deployment.json`; keep deployment/execution status truthful rather than copying old proof. In **Set up consumers**, enter the new `0x`-prefixed ID and review **Bind updated workflow ID**. Binding invalidates pending reports and increments the epoch. Rebuild/redeploy the frontend and relay with the matching configuration. Workflow-owner identity and forwarder are fixed at gate deployment.
+Record the returned workflow ID in `cre/deployment.json`; keep deployment/execution status truthful rather than copying old proof. In **1. Setup**, enter the new `0x`-prefixed ID and review **Review workflow binding**. Binding invalidates pending reports and increments the epoch. Rebuild/redeploy the frontend and relay with the matching configuration. Workflow-owner identity and forwarder are fixed at gate deployment.
 
-Return to **Review change**: publish a candidate, review/sign CRE verification, wait for actual report delivery, read live state, then review/sign owner activation. `ACCEPTED` is not execution success. The UI will not trigger a gate absent from deployed coverage.
+Return to **2. Review change**: publish a candidate, review/sign CRE verification, wait for actual report delivery, refresh live state, then review/sign owner activation. `ACCEPTED` is not execution success. The UI will not trigger a gate absent from deployed coverage. **3. Run workflow** contains operator collection and collapsed owner recovery controls. **4. Evidence** lists saved confirmed wallet receipts and exports them with current reads. CRE acceptance references are kept separate.
+
+## Real MetaMask end-to-end acceptance test
+
+Use Chrome with MetaMask on **Sepolia**. Owner: `0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5`. Operator: `0x22225204824EdF00b3c8c32A43f1C04246e2d1b4`. Never enter private keys in the app.
+
+| Step | Signer / action | Required proof |
+| --- | --- | --- |
+| Deploy gate if none exists | Owner MetaMask transaction | Successful receipt and deployed gate address |
+| Deploy, register and deposit a consumer for NFT 234145; repeat for 234146 | Three owner transactions per position | Each consumer holds its intended NFT; both belong to the same gate |
+| Export coverage and deploy CRE; bind the returned ID | CRE CLI deployment, then owner MetaMask transaction | Deployed consumer list and gate's workflow ID match |
+| Publish candidate with operator above and expiry tomorrow | Owner MetaMask transaction to the ENS resolver | Resolver candidate digest matches the gate's read |
+| Request CRE verification | Owner MetaMask **message signature** | Successful CRE execution and actual onchain forwarder report, not merely an accepted request |
+| Activate exact checked candidate | Owner MetaMask transaction | Activation event, matching digest and incremented epoch |
+| Select each consumer and collect | Operator MetaMask transactions | Successful collection receipts, recipient remains fixed owner treasury; zero fees can still produce a valid receipt |
+| Verify version rejection | Preserve old digest/epoch, promote another valid candidate, check the old call with `eth_call` | Old call is denied. This is read-only denial evidence, not a mined failed transaction |
+| Optional pause/resume and recovery | Owner MetaMask transactions | Paused collection is denied; resume restores authorized collection; recovery returns only the selected NFT to owner |
+
+After each confirmed wallet transaction, open **4. Evidence** and its explorer link. Before claiming completion, independently verify CRE report delivery plus both LP consumer custody states. Browser-saved receipt references are not independent verification and can be cleared by browser storage cleanup. Finish with **Export evidence**. Do not send deliberately failing transactions just to obtain an error screenshot.
 
 ## Dependency coverage
 

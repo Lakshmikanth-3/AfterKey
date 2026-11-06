@@ -56,9 +56,9 @@ function render(){
   ${view==='releases'?releaseWorkspace(releaseContext()):view==='ens'?ensWorkspace(ensContext()):view==='uniswap'?uniswapWorkspace(uniswapContext()):view==='guarded'?guardedWorkspace(guardedContext()):view==='cre'?creWorkspace(creContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
   <footer><span>${icon('lock-keyhole')} Your keys stay in your wallet. Every transaction needs your signature.</span><div class="brand-strip"><a href="https://ens.domains" target="_blank" rel="noreferrer"><img src="/brands/ens.svg" alt="ENS"/><span>ENSv2</span></a><a href="https://chain.link/cross-chain/cre" target="_blank" rel="noreferrer"><img src="/brands/chainlink.svg" alt="Chainlink"/><span>CRE</span></a><a href="https://uniswap.org" target="_blank" rel="noreferrer"><img src="/brands/uniswap.svg" alt="Uniswap"/><span>Uniswap</span></a></div></footer></main></div>${busy?`<div class="working" role="status">${icon('loader-circle','spin')}<span>${esc(busyText)}</span></div>`:''}`;
   createIcons({icons});bind();bindReleaseWorkspace(releaseContext());bindEnsWorkspace(ensContext());bindUniswapWorkspace(uniswapContext());bindCreWorkspace(creContext());bindGuardedWorkspace(guardedContext());
-  if(view==='uniswap'){
+  if(view==='uniswap'&&(config.guardedVaults?.length??0)>0){
     const tabs=document.querySelector('.ens-tabs');
-    if(tabs){const button=document.createElement('button');button.textContent='Protected LP';button.disabled=busy;button.onclick=()=>{view='guarded';render();};tabs.append(button);}
+    if(tabs){const button=document.createElement('button');button.textContent='Existing protected vaults';button.disabled=busy;button.onclick=()=>{view='guarded';render();};tabs.append(button);}
   }
   if(view==='guarded'){
     const tabs=document.querySelector('.ens-tabs');

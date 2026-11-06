@@ -6,7 +6,7 @@
 
 AfterKey discovers surviving ENSv2 permissions for a departing wallet, prepares owner-reviewed revocations, and rereads live authorization state after confirmation. The default workflow centers ENSv2 registry hierarchy, Enhanced Access Control and Permissioned Resolvers. The Uniswap workspace adds delegated position management, while Chainlink CRE monitors and verifies departures independently.
 
-Live application: https://afterkey-access.resplendentflair1.chatgpt.site — currently owner-private. Judge-accessible sharing must be arranged before submission. Source: https://github.com/Lakshmikanth-3/AfterKey. Unauthenticated GitHub API access confirmed the repository is public on November 6, 2026. The hosted build still needs an update and judge access.
+Live application: **https://afterkey.vercel.app**. Source: https://github.com/Lakshmikanth-3/AfterKey. The Vercel app is publicly accessible, includes the signed CRE relay, and reads real Sepolia state. The earlier Sites deployment remains private by the owner’s choice. [Deployment checks](docs/vercel-deployment-verification.json).
 
 ## Verify the implementation
 
@@ -27,9 +27,9 @@ Checked against the [ETHGlobal Mumbai sponsor requirements](https://ethglobal.co
 | Prize | Requirement | Current status and evidence |
 | --- | --- | --- |
 | ENS — Best Use of ENSv2 | ENSv2 on mainnet or Sepolia, central and functional integration | Sepolia hierarchy, Permissioned Resolver, EAC delegation and offboarding; [live discovery](src/ens/protocol.ts#L32), [independent access paths](src/engine.ts#L68), [receipts](docs/transactions.md) |
-| ENS — Best Use of ENSv2 | Open source and a live demo link in the showcase | Public MIT source is available; current hosted demo access and showcase publication remain submission steps |
+| ENS — Best Use of ENSv2 | Open source and a live demo link in the showcase | Public MIT source and the public Vercel demo are available; attach both links to the showcase |
 | Uniswap — Build with Uniswap | Meaningful use of the stack, with clear implementation pointers | Official v3 NFTs, approvals, collection and withdrawal; [portfolio reads](src/uniswap/positions.ts#L10), [action policy](src/uniswap/positions.ts#L39), [preservation](src/engine.ts#L168). [Two owner-held mints](docs/uniswap-mint-verification.json), [operator collection](docs/uniswap-operator-verification.json) and [complete offboarding](docs/uniswap-offboarding-verification.json) verified. Optional withdrawal is implemented but was not executed in this preservation demo |
-| Uniswap — Build with Uniswap | Public source, FEEDBACK.md and developer feedback form | [Feedback file](FEEDBACK.md) is published; submit its public link through the [required form](https://developers.uniswap.org/hackathon-feedback) |
+| Uniswap — Build with Uniswap | Public source, FEEDBACK.md and developer feedback form | [Feedback file](FEEDBACK.md) is published and the [required form](https://developers.uniswap.org/hackathon-feedback) was submitted with its public link; [confirmation](docs/uniswap-feedback-confirmation.png) |
 | Chainlink — Best workflow with CRE | Blockchain plus external API/system, meaningful orchestration | [GitHub case reads](cre/external-case.ts#L4), [signed HTTP routing](cre/main.ts#L26), [cron](cre/main.ts#L40), [approval events](cre/main.ts#L43). [Successful departure verification](docs/cre-departure-verification.json) joins GitHub issue 2 with Sepolia state |
 | Chainlink — Best workflow with CRE | Live deployment or successful workflow execution | [ACTIVE deployment](cre/deployment.json), [current signed HTTP execution](docs/cre-execution-proof.json), and archived [scheduled](docs/cre-scheduled-execution-proof.json) / [approval-event](docs/cre-approval-event-proof.json) executions. The current run compares blocks 12075512 and 12075653 and reports preserved assets with permissions absent |
 
@@ -47,7 +47,7 @@ See [the ENS qualification review](docs/ENS_QUALIFICATION_REVIEW.md) for the pri
 
 ## Run
 
-Node.js 22+ is required. A browser wallet on Sepolia is required for signing.
+Node.js 22.9 or newer in the 22.x release line is required. A browser wallet on Sepolia is required for signing.
 
 ```sh
 npm install
@@ -111,7 +111,7 @@ See [the Uniswap and CRE runbook](docs/UNISWAP_CRE_RUNBOOK.md), [contracts/finan
 
 The workflow now combines owner-signed HTTP requests, recurring monitoring and SAFE-confidence Uniswap approval events. It independently reads the real ENS namespace and Uniswap positions. Departure requests validate a completed, labeled GitHub issue against the configured repository, completing actor and exact operator wallet through CRE's HTTP capability and consensus. Before/after requests compare preserved identity and position state.
 
-The browser signs a five-minute, body-bound gateway authorization through MetaMask; it never requests a private key. A same-origin server verifies that signature, exact body, expiry and deployed scope before forwarding to the fixed CRE gateway. `npm run dev` includes the relay. `npm run build` emits a Cloudflare Worker containing the app's public assets and signed relay; `npm start` serves the same build locally. [Portable signature policy](server/cre-policy.ts) and [Worker relay](server/cre-worker.ts) reject unsigned, expired, oversized or altered requests before forwarding. Gateway acceptance is displayed separately from execution success. `npm run proof:cre -- <execution-id>` collects authenticated CLI execution status and structured logs. See [deployment metadata](cre/deployment.json), [workflow source](cre/main.ts), [authentication](src/cre/auth.ts) and [runbook](docs/UNISWAP_CRE_RUNBOOK.md).
+The browser signs a five-minute, body-bound gateway authorization through MetaMask; it never requests a private key. A same-origin server verifies that signature, exact body, expiry and deployed scope before forwarding to the fixed CRE gateway. `npm run dev` includes the relay. `npm run build` emits a Cloudflare Worker containing the app's public assets and signed relay; `npm start` serves the same build locally. [Portable signature policy](server/cre-policy.ts) and [Worker relay](server/cre-worker.ts) reject unsigned, expired, oversized or altered requests before forwarding. Gateway acceptance is displayed separately from execution success. `npm run proof:cre -- <execution-id>` collects authenticated CLI execution status and structured logs. Vercel uses `npm run build:vercel` for browser assets and [its API handler](api/cre-trigger.ts) for the same validated relay. See [deployment metadata](cre/deployment.json), [workflow source](cre/main.ts), [authentication](src/cre/auth.ts) and [runbook](docs/UNISWAP_CRE_RUNBOOK.md).
 
 CRE reports and owner-signed offboarding receipts are separate evidence. The workflow does not hold the owner key, sign revocations or claim an onchain attestation. No CRE or privileged-call simulations are included. Recorded execution status is an observation, not a browser health poll.
 
@@ -124,7 +124,7 @@ CRE reports and owner-signed offboarding receipts are separate evidence. The wor
 - Transactions are signed individually. Broad-first execution is not atomic and does not eliminate mempool races.
 - Owner checks compare recorded EAC roles, known record authorization and name/NFT ownership; they do not execute arbitrary owner actions.
 - Setup records and up to 20 reports remain in browser storage. Exported scope/evidence excludes the RPC URL. No server database is used.
-- Public source and real signed transaction evidence are available. Judge demo sharing, the feedback form, demo video and showcase submission remain submission tasks.
+- Public source, public demo, actual signed transaction evidence and submitted Uniswap feedback are available. Demo video and showcase submission remain participant steps.
 
 The appropriate ENS prize for this from-scratch Sepolia project is **Best Use of ENSv2**. The Continuity-only Existing Project prize is separate and requires mainnet under the supplied rules. Adding every feature in the sponsor brief is not necessary.
 

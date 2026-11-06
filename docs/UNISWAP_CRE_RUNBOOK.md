@@ -91,3 +91,9 @@ The development server includes the signed CRE relay. `npm run build` emits a Wo
 ## Completed workspace proof
 
 This workspace has completed the core lifecycle; do not mint or grant again just to follow the guide. NFTs 234145 and 234146 remain with the owner. Final portfolio revocation is confirmed at **12075584**. [Fourteen checks](uniswap-offboarding-verification.json) verify absent modeled approvals, preserved state and operator preparation denial. [GitHub issue 2](https://github.com/Lakshmikanth-3/AfterKey/issues/2) and successful CRE execution **f42d1d27-6bcf-4689-b290-d4d533f83729** establish the external-case before/after flow. See [current output](cre-execution-proof.json) and [departure checks](cre-departure-verification.json).
+
+## Vercel publication
+
+The shared demo is **https://afterkey.vercel.app**. `npm run build:vercel` emits `dist-vercel/`; `api/cre-trigger.ts` supplies the signed server route. Vercel project `afterkey` uses Node 22.x. Production is public and preview deployments retain Vercel authentication. No signing key, CRE CLI credential or private RPC secret is required by the hosted relay.
+
+From an authenticated Vercel CLI, deploy with `vercel deploy --prod`. After deployment, ensure the requested alias points to that exact deployment with `vercel alias set <production-deployment-url> afterkey.vercel.app`. The manually assigned alias must be checked after later deployments. `.vercel/`, local environment files, WASM build products and secret-file patterns are excluded from the Vercel upload.

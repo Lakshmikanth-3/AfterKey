@@ -27,4 +27,4 @@ No privileged-call or CRE simulations were used. Preparation denial is a live pe
 
 ## Submission checks still separate
 
-Hosted production deployment and judge access must be verified independently of local build success. Uniswap feedback confirmation, a demo video and ETHGlobal showcase submission are pending. The repository is public and MIT-licensed. See [current status](E2E_STATUS.md) and [showcase draft](SHOWCASE.md).
+The [public Vercel deployment](https://afterkey.vercel.app) passed HTTP and browser checks: real ENS discovery at block 12075839, two live Uniswap positions at 12075847, and the recorded successful CRE departure execution. The relay rejects unsigned POSTs with 400 and GETs with 405. [Deployment verification](vercel-deployment-verification.json). The Uniswap feedback form was submitted with explicit user consent; [confirmation](uniswap-feedback-confirmation.png). A real demo video and ETHGlobal showcase submission remain participant steps. The repository is public and MIT-licensed. See [current status](E2E_STATUS.md) and [showcase draft](SHOWCASE.md).

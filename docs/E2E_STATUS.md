@@ -12,10 +12,11 @@ Verified on November 6, 2026. These are real Sepolia receipts and authenticated 
 | CRE scheduled monitoring | Successful historical execution on workflow version 2 | [Scheduled proof](cre-scheduled-execution-proof.json) |
 | CRE approval-event trigger | Successful historical execution on workflow version 2 | [12 checks](cre-approval-event-proof.json) |
 | GitHub departure case and signed CRE HTTP trigger | Complete on deployed workflow version 3 | [Issue 2](https://github.com/Lakshmikanth-3/AfterKey/issues/2), [authenticated output](cre-execution-proof.json), [nine departure checks](cre-departure-verification.json) |
-| Production app and signed relay | Worker build and local serving verified; hosted update in progress | [Worker entrypoint](../worker/index.ts), [relay](../server/cre-worker.ts) |
+| Production app and signed relay | Public Vercel deployment verified | [afterkey.vercel.app](https://afterkey.vercel.app), [deployment checks](vercel-deployment-verification.json), [API](../api/cre-trigger.ts) |
 | Public source | Complete: MIT repository | [GitHub](https://github.com/Lakshmikanth-3/AfterKey) |
-| Uniswap developer form | Technical draft prepared; contact fields, ratings, consent and confirmed submission pending | [Form](https://developers.uniswap.org/hackathon-feedback), [feedback](../FEEDBACK.md) |
-| Judge access, video and showcase | Pending submission work | [Prepared showcase copy](SHOWCASE.md) |
+| Uniswap developer form | Submitted with user-supplied contact details, ratings and explicit consent | [Confirmation](uniswap-feedback-confirmation.png), [feedback](../FEEDBACK.md) |
+| Judge access | Public demo verified without login | [Vercel](https://afterkey.vercel.app) |
+| Video and showcase | Pending participant submission work | [Prepared showcase copy](SHOWCASE.md) |
 
 ## What the final proof establishes
 
@@ -30,3 +31,11 @@ The earlier accepted HTTP request failed because `User-Agent` was not an allowed
 **50 unit tests passed.** TypeScript, the production Worker build and artifact-serving checks passed. CRE typecheck and WASM compilation passed for the deployed source. The built app serves with HTTP 200; unsigned relay requests return HTTP 400. Unit fixtures are policy checks, separate from execution evidence.
 
 Coverage is the configured four ENS resources and two discovered Uniswap NFTs at recorded blocks. Unknown contracts, unconfigured permissions and other wallets are outside this report. Optional owner liquidity withdrawal is implemented and tested, but has not been live executed and is unnecessary for this preservation proof. No further grants, mints or revocations are needed for the demonstrated lifecycle.
+
+## Hosted verification
+
+The public Vercel app loaded the actual ENS identity at block **12075839**: operator text authority absent and owner authority retained. Its Uniswap view read block **12075847**, found both NFTs, and showed individual approvals zero and portfolio approval absent. The Chainlink workspace displayed the verified HTTP execution and current workflow ID. Public HTTP checks serve the app/assets, reject unsigned relay POSTs with 400, and reject relay GETs with 405. No fresh owner-signed execution was submitted from the hosted origin during these read-only checks.
+
+## Hosted verification
+
+The public Vercel app loaded the actual ENS identity at block **12075839**: operator text authority absent and owner authority retained. Its Uniswap view read block **12075847**, found both NFTs, and showed individual approvals zero and portfolio approval absent. The Chainlink workspace displayed the verified HTTP execution and current workflow ID. Public HTTP checks serve the app/assets, reject unsigned relay POSTs with 400, and reject relay GETs with 405. No fresh owner-signed execution was submitted from the hosted origin during these read-only checks.

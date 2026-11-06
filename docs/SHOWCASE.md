@@ -8,7 +8,7 @@ AfterKey helps a team remove a departing operator's onchain permissions without 
 
 Source: https://github.com/Lakshmikanth-3/AfterKey
 
-Application: https://afterkey-access.resplendentflair1.chatgpt.site — verify judge access before submitting. The demo video and ETHGlobal showcase submission have not yet been published.
+Application: https://afterkey.vercel.app — public app and signed CRE relay verified. The demo video and ETHGlobal showcase submission have not yet been published.
 
 ## How it works
 
@@ -43,4 +43,4 @@ Record the real application and narrate these steps. The completed lifecycle alr
 
 Apply to ENS **Best Use of ENSv2**, Uniswap **Build with Uniswap**, and Chainlink **Best workflow with CRE**, subject to the event dashboard's eligibility. This project does not claim CCIP integration or a mainnet Continuity integration.
 
-Before final submission: verify the demo's judge access, submit the Uniswap developer form with the public FEEDBACK.md link, attach the real video, and submit the showcase through the participant dashboard. The published Chainlink CRE prize requirements do not list a separate feedback form: https://ethglobal.com/events/mumbai/prizes .
+The public demo and Uniswap developer form are complete; [form confirmation](uniswap-feedback-confirmation.png). Before final submission, attach the real video and submit the showcase through the participant dashboard. The published Chainlink CRE prize requirements do not list a separate feedback form: https://ethglobal.com/events/mumbai/prizes .

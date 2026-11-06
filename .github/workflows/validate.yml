@@ -29,6 +29,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - run: npm run build:vercel
 
   cre:
     name: CRE source typecheck

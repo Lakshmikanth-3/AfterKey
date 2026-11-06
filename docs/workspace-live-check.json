@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-11-05T21:09:12.991Z",
+  "checkedAt": "2026-11-06T17:04:25.605Z",
   "method": "Two live read-only permission and identity snapshots; no transactions were submitted",
   "name": "manager.eth",
   "key": "agent-context",
-  "beforeBlock": "12072047",
-  "afterBlock": "12072048",
+  "beforeBlock": "12077916",
+  "afterBlock": "12077916",
   "complete": true,
   "identityChecks": [
     {
@@ -24,7 +24,7 @@
         "kind": "registry",
         "name": "manager.eth",
         "resolver": "0x09a2FCd5E78798B8Fa5193495aeD611a3EB5ab49",
-        "subregistry": "0x0000000000000000000000000000000000000000"
+        "subregistry": "0x26560685235D2d7861afF80866E8C1846d14420D"
       },
       "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
       "expiry": "1825469328"

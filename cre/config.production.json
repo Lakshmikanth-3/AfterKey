@@ -41,5 +41,14 @@
   "github": {
     "repository": "Lakshmikanth-3/AfterKey",
     "approver": "Lakshmikanth-3"
-  }
+  },
+  "releases": [
+    {
+      "gate": "0x47ae5aF5A9A2D0e90D2986861aD99f088270258F",
+      "consumers": [
+        "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+        "0x65E74c5DFb833E9bC1798954da416b8D1aea4460"
+      ]
+    }
+  ]
 }

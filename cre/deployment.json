@@ -1,23 +1,19 @@
 {
   "registry": "private",
   "workflowName": "afterkey-departure-verifier",
-  "workflowId": "008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76",
+  "workflowId": "008b8fff1c0118afc754c6f524fb07be206d2bae97d7d0167cf035ac599daa20",
   "registryOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
   "assetOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
   "authorizedTriggerAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
   "registrationStatus": "ACTIVE",
-  "executionVerified": true,
-  "binaryHash": "fe9aaa681e8f8f5059a4185f0394ce0038532fd6170037e2ebc97cfacd115995",
-  "configHash": "148145de8a1d2f28aab242d963a71a9b234edf090b893423ddfefeee19e34491",
-  "deployedAt": "2026-11-06T09:19:57.162Z",
-  "codeVersion": 3,
-  "wasmSha256": "ef111053cdf65d69b1ea87993c49bb8a0ac33215a512c5349779ecf4dfe3ab9f",
-  "checkedAt": "2026-11-06T14:14:24.686Z",
-  "previousWorkflowId": "00b083370fe2ae701fe30e89b363ba1e2071e3638e42bf8fc55c108ffd0420e5",
-  "latestExecution": {
-    "executionId": "f42d1d27-6bcf-4689-b290-d4d533f83729",
-    "status": "SUCCESS",
-    "trigger": "http:departure",
-    "block": "12075653"
-  }
+  "executionVerified": false,
+  "binaryHash": "7fc0faa7b8ed723608fa3dc0cceb17fc2ed8e2c94cee739101d19c7bd57b5446",
+  "configHash": "44474b9cdecd57dd0226b93a53e705a24858581c90ffecb81f6663e5d08aa983",
+  "codeVersion": 6,
+  "wasmSha256": "b8bf935216e5dee7a8df96a1b397cddb939e396d57c983bfd1f7b62172266aca",
+  "checkedAt": "2026-11-06T23:46:33.673Z",
+  "previousWorkflowId": "00660c7428115ba0da017a6055bce309075de035477b9af6bfda49fa684404b0",
+  "releaseGate": "0x47ae5aF5A9A2D0e90D2986861aD99f088270258F",
+  "completion": "Audited quota-bounded release and approval freshness workflow ACTIVE; owner binding and live release proof pending.",
+  "deployedAt": "2026-11-06T23:46:33.641Z"
 }

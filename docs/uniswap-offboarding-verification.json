@@ -1,0 +1,271 @@
+{
+  "checkedAt": "2026-11-06T09:14:26.795Z",
+  "source": "Read-only Sepolia state, canonical owner-signed receipts and live action policy checks",
+  "chainId": 11155111,
+  "verified": true,
+  "checks": {
+    "baselineCanonical": true,
+    "narrowReceiptSuccessful": true,
+    "narrowApprovalRemoved": true,
+    "broadAccessSurvivedNarrow": true,
+    "finalReceiptSuccessful": true,
+    "exactOwnerRevocation": true,
+    "completeConfiguredScope": true,
+    "noRemainingFindings": true,
+    "broadApprovalAbsent": true,
+    "operatorPositionApprovalsAbsent": true,
+    "positionsRetained": true,
+    "ensControlAndIdentityRetained": true,
+    "operatorPreparationDenied": true,
+    "ownerPreparationAvailable": true
+  },
+  "baseline": {
+    "block": "12075512",
+    "blockHash": "0xcb9a41422a43e963db57e8c1ed1cec78bbb009ea92cbdd68248218ea7d9dc4e4"
+  },
+  "narrowRevocation": {
+    "hash": "0xc6ecb1909a990a47b93406af53911a9f02ec7d4ab7faf69a38b43c9eab5ebeff",
+    "block": "12075553",
+    "individualApproval": "0x0000000000000000000000000000000000000000",
+    "portfolioApproval": true
+  },
+  "finalRevocation": {
+    "hash": "0x2a4ca9ba41a8fe0d11f8d8eeba69a9a50dee27841b80e8c0905366e5032671f8",
+    "status": "success",
+    "block": "12075584",
+    "blockHash": "0x6dddf486e133ccacab4c17dcd009ffb08f09e9c508ef5370efecd8b1ede15eb2",
+    "call": {
+      "functionName": "setApprovalForAll",
+      "args": [
+        "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+        false
+      ]
+    }
+  },
+  "retainedPositions": [
+    {
+      "id": "234145",
+      "sameOwner": true,
+      "changes": []
+    },
+    {
+      "id": "234146",
+      "sameOwner": true,
+      "changes": []
+    }
+  ],
+  "ensChecks": [
+    {
+      "address": "0xB458D6a3a77919449d03e7A6903C26827c1eC43f",
+      "resource": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+      "ownerRolesRetained": true,
+      "identityRetained": true
+    },
+    {
+      "address": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+      "resource": "16410063006812723652486882596419305936955297605587383794446813834492854140928",
+      "ownerRolesRetained": true,
+      "identityRetained": true
+    },
+    {
+      "address": "0x26560685235D2d7861afF80866E8C1846d14420D",
+      "resource": "8503764272317624696807940130965335064061139586896058404477701855229333471232",
+      "ownerRolesRetained": true,
+      "identityRetained": true
+    },
+    {
+      "address": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+      "resource": "9756880871211087119462890628410095969001155726731944382148495028902581750468",
+      "ownerRolesRetained": true,
+      "identityRetained": true
+    }
+  ],
+  "after": {
+    "block": "12075610",
+    "blockHash": "0x9bbf27cc7a67cfff5d0e48a53ff518cc5ac96b6d725db4abffcaf755dba0800b",
+    "timestamp": "2026-11-06T09:14:12.000Z",
+    "config": {
+      "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+      "subject": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+      "rpc": "[not exported]",
+      "targets": [
+        {
+          "label": "eth / registry",
+          "address": "0xB458D6a3a77919449d03e7A6903C26827c1eC43f",
+          "resource": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+          "kind": "registry",
+          "name": "eth"
+        },
+        {
+          "label": "manager.eth / registry",
+          "address": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+          "resource": "16410063006812723652486882596419305936955297605587383794446813834492854140928",
+          "kind": "registry",
+          "name": "manager.eth"
+        },
+        {
+          "label": "treasury-agent.manager.eth / registry",
+          "address": "0x26560685235D2d7861afF80866E8C1846d14420D",
+          "resource": "8503764272317624696807940130965335064061139586896058404477701855229333471232",
+          "kind": "registry",
+          "name": "treasury-agent.manager.eth"
+        },
+        {
+          "label": "treasury-agent.manager.eth / text:agent-context",
+          "address": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+          "resource": "9756880871211087119462890628410095969001155726731944382148495028902581750468",
+          "kind": "resolver",
+          "name": "treasury-agent.manager.eth",
+          "recordType": "text",
+          "argument": "agent-context"
+        }
+      ],
+      "scanUniswap": true
+    },
+    "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+    "subject": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+    "operator": false,
+    "positions": [
+      {
+        "id": "234145",
+        "approved": "0x0000000000000000000000000000000000000000",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "economics": {
+          "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+          "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+          "fee": 3000,
+          "tickLower": -887220,
+          "tickUpper": 887220,
+          "liquidity": "6179549430",
+          "tokensOwed0": "0",
+          "tokensOwed1": "0"
+        }
+      },
+      {
+        "id": "234146",
+        "approved": "0x0000000000000000000000000000000000000000",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "economics": {
+          "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+          "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+          "fee": 3000,
+          "tickLower": -887220,
+          "tickUpper": 887220,
+          "liquidity": "6179549430",
+          "tokensOwed0": "0",
+          "tokensOwed1": "0"
+        }
+      }
+    ],
+    "positionCount": "2",
+    "ens": [
+      {
+        "target": {
+          "label": "eth / registry",
+          "address": "0xB458D6a3a77919449d03e7A6903C26827c1eC43f",
+          "resource": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+          "kind": "registry",
+          "name": "eth"
+        },
+        "root": "0",
+        "local": "0",
+        "ownerRoot": "0",
+        "ownerLocal": "0",
+        "operator": false,
+        "interfaceVerified": true,
+        "effective": "0",
+        "identity": {
+          "kind": "registry",
+          "name": "eth",
+          "resolver": "0x0000000000000000000000000000000000000000",
+          "subregistry": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4"
+        },
+        "registryOwner": "0x84D3a426D4E12E955d1DF95db0B24fe26afE39D3",
+        "tokenId": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+        "expiry": "18446744073709551615"
+      },
+      {
+        "target": {
+          "label": "manager.eth / registry",
+          "address": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+          "resource": "16410063006812723652486882596419305936955297605587383794446813834492854140928",
+          "kind": "registry",
+          "name": "manager.eth"
+        },
+        "root": "0",
+        "local": "0",
+        "ownerRoot": "0",
+        "ownerLocal": "97409655027181761882228017414928043058140282880",
+        "operator": false,
+        "interfaceVerified": true,
+        "effective": "0",
+        "identity": {
+          "kind": "registry",
+          "name": "manager.eth",
+          "resolver": "0x09a2FCd5E78798B8Fa5193495aeD611a3EB5ab49",
+          "subregistry": "0x26560685235D2d7861afF80866E8C1846d14420D"
+        },
+        "registryOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "tokenId": "16410063006812723652486882596419305936955297605587383794446813834492854140928",
+        "expiry": "1825469328"
+      },
+      {
+        "target": {
+          "label": "treasury-agent.manager.eth / registry",
+          "address": "0x26560685235D2d7861afF80866E8C1846d14420D",
+          "resource": "8503764272317624696807940130965335064061139586896058404477701855229333471232",
+          "kind": "registry",
+          "name": "treasury-agent.manager.eth"
+        },
+        "root": "0",
+        "local": "0",
+        "ownerRoot": "6088190891767158798824361175707112655580889345",
+        "ownerLocal": "97409655027181761882228017414928043058140282880",
+        "operator": false,
+        "interfaceVerified": true,
+        "effective": "0",
+        "identity": {
+          "kind": "registry",
+          "name": "treasury-agent.manager.eth",
+          "resolver": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+          "subregistry": "0x0000000000000000000000000000000000000000"
+        },
+        "registryOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "tokenId": "8503764272317624696807940130965335064061139586896058404477701855229333471232",
+        "expiry": "1825470032"
+      },
+      {
+        "target": {
+          "label": "treasury-agent.manager.eth / text:agent-context",
+          "address": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+          "resource": "9756880871211087119462890628410095969001155726731944382148495028902581750468",
+          "kind": "resolver",
+          "name": "treasury-agent.manager.eth",
+          "recordType": "text",
+          "argument": "agent-context"
+        },
+        "root": "0",
+        "local": "0",
+        "ownerRoot": "91343858117981670043684180922136015068823814161",
+        "ownerLocal": "0",
+        "operator": null,
+        "interfaceVerified": true,
+        "effective": "0",
+        "subjectCanWrite": false,
+        "ownerCanWrite": true,
+        "identity": {
+          "kind": "resolver",
+          "name": "treasury-agent.manager.eth",
+          "recordId": "1",
+          "textKey": "agent-context",
+          "textValue": "Treasury operations context — revision 2.",
+          "ethAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5"
+        }
+      }
+    ],
+    "complete": true,
+    "errors": [],
+    "findings": []
+  },
+  "scopeNote": "Configured 4 ENS resources and 2 owner-held Uniswap positions. Operator denial is a live-state authorization/preparation check, not a reverted or simulated transaction. No privileged calls were simulated."
+}

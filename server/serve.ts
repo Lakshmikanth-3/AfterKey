@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { createReadStream, statSync } from 'node:fs';
 import { resolve, sep, extname } from 'node:path';
 import { creRelay } from './cre-relay';
-const dist=resolve(import.meta.dirname,'../dist'),port=Number(process.env.PORT||5173),host=process.env.HOST||'127.0.0.1';
+const dist=resolve(import.meta.dirname,'../dist'),port=Number(process.argv[2]||process.env.PORT||5173),host=process.env.HOST||'127.0.0.1';
 const mime:Record<string,string>={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2'};
 createServer((req,res)=>{
   if(req.url?.split('?')[0]==='/api/cre-trigger'){void creRelay(req,res);return;}

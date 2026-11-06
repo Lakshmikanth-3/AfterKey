@@ -46,6 +46,11 @@ function onApproval(runtime:Runtime<Config>,log:EVMLog):string{
   if(!log.topics[1]||!eq(bytesToHex(log.topics[1]),pad(runtime.config.owner as `0x${string}`)))throw new Error('Approval event belongs to another owner.');
   return result(runtime,'evm:approval',`${bytesToHex(log.txHash)}:${log.index}`,undefined,undefined,{transactionHash:bytesToHex(log.txHash),eventBlock:String(protoBigIntToBigint(log.blockNumber))});
 }
+function onVault(runtime:Runtime<Config>,log:EVMLog):string{
+  const address=bytesToHex(log.address);
+  if(log.removed||!log.blockNumber||!runtime.config.guardedVaults?.some(v=>eq(v.address,address)))throw new Error('Unexpected or removed protected vault event.');
+  return result(runtime,'evm:vault',`${bytesToHex(log.txHash)}:${log.index}`,undefined,undefined,{contract:address,transactionHash:bytesToHex(log.txHash),eventBlock:String(protoBigIntToBigint(log.blockNumber))});
+}
 function initWorkflow(config:Config){
   for(const a of [config.owner,config.subject,config.authorizedEVMAddress])if(!isAddress(a)||eq(a,zeroAddress))throw new Error('Use valid nonzero workspace addresses.');
   if(eq(config.owner,config.subject))throw new Error('Owner and operator must differ.');
@@ -53,9 +58,20 @@ function initWorkflow(config:Config){
   if(!Array.isArray(config.ensTargets)||config.ensTargets.length>10)throw new Error('At most 10 ENS targets supported.');
   for(const t of config.ensTargets)if(!isAddress(t.address)||eq(t.address,zeroAddress)||BigInt(t.resource)<=0n||BigInt(t.resource)>=2n**256n||!['registry','resolver'].includes(t.kind))throw new Error('Invalid ENS target.');
   if(config.github)validateCasePolicy(config.github);
+  if(config.guardedVaults){
+    if(!Array.isArray(config.guardedVaults)||config.guardedVaults.length>4)throw new Error('At most four protected vaults per workflow.');
+    const seen=new Set<string>();
+    for(const v of config.guardedVaults){
+      for(const a of [v.address,v.treasury,v.registry,v.resolver])if(!isAddress(a)||eq(a,zeroAddress))throw new Error('Invalid protected vault address.');
+      for(const n of [v.tokenId,v.nameResource,v.capabilityResource])if(!/^\d+$/.test(n)||BigInt(n)>=2n**256n)throw new Error('Invalid vault resource or token.');
+      if(!eq(v.treasury,config.owner)||seen.has(v.address.toLowerCase())||seen.has(`token:${v.tokenId}`))throw new Error('Duplicate vault, position or unexpected treasury.');
+      seen.add(v.address.toLowerCase());seen.add(`token:${v.tokenId}`);
+    }
+  }
   const triggers:Array<Workflow<Config>[number]>=[handler(new HTTPCapability().trigger({authorizedKeys:[{type:'KEY_TYPE_ECDSA_EVM',publicKey:config.authorizedEVMAddress}]}),onHttp)];
   if(config.monitorSchedule){if(!/^0 \*\/(5|10|15|30) \* \* \* \*$/.test(config.monitorSchedule))throw new Error('Monitor schedule must run every 5, 10, 15 or 30 minutes.');triggers.push(handler(new CronCapability().trigger({schedule:config.monitorSchedule}),onCron));}
   if(config.watchApprovals&&config.scanUniswap!==false)triggers.push(handler(evmClient().logTrigger(logTriggerConfig({addresses:[POSITION_MANAGER],topics:[[toEventSelector('Approval(address,address,uint256)'),toEventSelector('ApprovalForAll(address,address,bool)')],[pad(config.owner as `0x${string}`)]],confidence:'SAFE'})),onApproval));
+  if(config.guardedVaults?.length)triggers.push(handler(evmClient().logTrigger(logTriggerConfig({addresses:config.guardedVaults.map(v=>v.address as `0x${string}`),topics:[[toEventSelector('OperatorChanged(address,address,uint256,uint64)'),toEventSelector('Paused(bool,uint256)'),toEventSelector('Collected(address,address,uint256,uint256,uint256)')]],confidence:'SAFE'})),onVault));
   return triggers;
 }
 export async function main(){const runner=await Runner.newRunner<Config>();await runner.run(initWorkflow);}

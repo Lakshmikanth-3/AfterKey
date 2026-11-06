@@ -1,5 +1,6 @@
 import { EVMClient, getNetwork, encodeCallMsg, bytesToHex, blockNumber, protoBigIntToBigint, type Runtime } from '@chainlink/cre-sdk';
-import { encodeFunctionData, decodeFunctionResult, namehash, keccak256, stringToHex, toHex, zeroAddress, type Address } from 'viem';
+import { encodeFunctionData, decodeFunctionResult, namehash, keccak256, stringToHex, toHex, zeroAddress, type Address, type Abi } from 'viem';
+import { vaultAbi, vaultFields, type VaultState } from '../src/guarded/model';
 import { packetToBytes } from 'viem/ens';
 import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, SET_TEXT } from '../src/ens/roles';
 import { ensAbi, profileAbi } from '../src/ens/abi';
@@ -14,8 +15,8 @@ export function readState(runtime:Runtime<Config>,height?:bigint):PermissionSnap
   if(!header?.blockNumber)throw new Error('Missing Sepolia block header.');
   const block=protoBigIntToBigint(header.blockNumber),owner=runtime.config.owner as Address,subject=runtime.config.subject as Address;
   const batch=new ViewBatch((to,data)=>bytesToHex(evm.callContract(runtime,{call:encodeCallMsg({from:zeroAddress,to,data}),blockNumber:blockNumber(block)}).result().data));
-  const call=(address:Address,fn:string,args:readonly unknown[],abi:typeof ensAbi|typeof positionAbi=ensAbi):ViewCall=>({address,fn,args,abi});
-  const read=(address:Address,fn:string,args:readonly unknown[],abi:typeof ensAbi|typeof positionAbi=ensAbi):any=>batch.read(call(address,fn,args,abi));
+  const call=(address:Address,fn:string,args:readonly unknown[],abi:Abi=ensAbi):ViewCall=>({address,fn,args,abi});
+  const read=(address:Address,fn:string,args:readonly unknown[],abi:Abi=ensAbi):any=>batch.read(call(address,fn,args,abi));
   const uniswapIncluded=runtime.config.scanUniswap!==false;
   batch.warm([
     ...(uniswapIncluded?[call(POSITION_MANAGER,'isApprovedForAll',[owner,subject],positionAbi),call(POSITION_MANAGER,'balanceOf',[owner],positionAbi)]:[]),
@@ -75,5 +76,22 @@ export function readState(runtime:Runtime<Config>,height?:bigint):PermissionSnap
     }
     return {address,resource:String(resource),root:String(root),local:String(local),ownerRoot:String(ownerRoot),ownerLocal:String(ownerLocal),nameOwner,operator:approved,...(identity?{identity}:{}),...(subjectCanWrite===undefined?{}:{subjectCanWrite,ownerCanWrite})};
   });
-  return {block:String(block),blockHash:bytesToHex(header.hash),owner,subject,positionCount:String(total),uniswapIncluded,operator,positions,ens,findings,complete:total<=limit&&(uniswapIncluded||ens.length>0)};
+  const targets=runtime.config.guardedVaults??[];
+  batch.warm(targets.flatMap(t=>vaultFields.map(f=>call(t.address as Address,f,[],vaultAbi))));
+  batch.warm(targets.flatMap(t=>{
+    const a=t.address as Address,op=read(a,'operator',[],vaultAbi);
+    return [call(a,'canCollect',[subject],vaultAbi),call(a,'canCollect',[op],vaultAbi),call(POSITION_MANAGER,'ownerOf',[BigInt(t.tokenId)],positionAbi),call(POSITION_MANAGER,'positions',[BigInt(t.tokenId)],positionAbi)];
+  }));
+  const guarded=targets.map(t=>{
+    const a=t.address as Address,raw=Object.fromEntries(vaultFields.map(f=>{const v=read(a,f,[],vaultAbi);return [f,typeof v==='bigint'?String(v):v];}));
+    if(!eq(raw.owner,owner)||!eq(raw.manager,POSITION_MANAGER))throw new Error('Protected vault owner or manager mismatch.');
+    for(const field of ['treasury','registry','resolver','tokenId','nameResource','capabilityResource'] as const)if(!eq(String(raw[field]),t[field]))throw new Error(`Protected vault binding changed: ${field}`);
+    const custodian=uni('ownerOf',[BigInt(t.tokenId)]) as string;
+    if(!eq(custodian,a))throw new Error('Protected position is no longer held by the configured vault.');
+    const subjectCanCollect=read(a,'canCollect',[subject],vaultAbi),operatorCanCollect=read(a,'canCollect',[raw.operator],vaultAbi);
+    if(subjectCanCollect)findings.push({protocol:'Uniswap v3',kind:'ens-vault-mandate',contract:a,tokenId:t.tokenId});
+    const p=positionEconomics(uni('positions',[BigInt(t.tokenId)]));
+    return {state:{...raw,address:a,custodian,subjectCanCollect,operatorCanCollect} as VaultState,economics:{...p,liquidity:String(p.liquidity),tokensOwed0:String(p.tokensOwed0),tokensOwed1:String(p.tokensOwed1)}};
+  });
+  return {block:String(block),blockHash:bytesToHex(header.hash),owner,subject,positionCount:String(total),uniswapIncluded,operator,positions,ens,findings,guarded,complete:total<=limit&&(uniswapIncluded||ens.length>0||guarded.length>0)};
 }

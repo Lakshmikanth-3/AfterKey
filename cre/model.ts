@@ -1,9 +1,18 @@
 import type { GitHubCasePolicy } from './case-policy';
+import { vaultContinuity, type VaultState } from '../src/guarded/model';
+export type GuardedTarget={address:string;tokenId:string;treasury:string;registry:string;resolver:string;nameResource:string;capabilityResource:string};
 export type CreTarget={label:string;address:string;resource:string;kind:'registry'|'resolver';name?:string;recordType?:'text';argument?:string};
-export type Config={authorizedEVMAddress:string;owner:string;subject:string;ensTargets:CreTarget[];maxPositions:number;scanUniswap?:boolean;monitorSchedule?:string;watchApprovals?:boolean;github?:GitHubCasePolicy};
-export type PermissionSnapshot={block:string;blockHash:string;owner:string;subject:string;positionCount:string;uniswapIncluded:boolean;operator:boolean;positions:{tokenId:string;owner:string;approved:string;token0:string;token1:string;fee:number;tickLower:number;tickUpper:number;liquidity:string;tokensOwed0:string;tokensOwed1:string}[];ens:{address:string;resource:string;root:string;local:string;ownerRoot:string;ownerLocal:string;nameOwner:string|null;operator:boolean|null;identity?:Record<string,string>;subjectCanWrite?:boolean;ownerCanWrite?:boolean}[];findings:{protocol:string;kind:string;contract:string;resource?:string;roles?:string;tokenId?:string;label?:string}[];complete:boolean};
+export type Config={authorizedEVMAddress:string;owner:string;subject:string;ensTargets:CreTarget[];maxPositions:number;scanUniswap?:boolean;monitorSchedule?:string;watchApprovals?:boolean;github?:GitHubCasePolicy;guardedVaults?:GuardedTarget[]};
+export type PermissionSnapshot={block:string;blockHash:string;owner:string;subject:string;positionCount:string;uniswapIncluded:boolean;operator:boolean;positions:{tokenId:string;owner:string;approved:string;token0:string;token1:string;fee:number;tickLower:number;tickUpper:number;liquidity:string;tokensOwed0:string;tokensOwed1:string}[];ens:{address:string;resource:string;root:string;local:string;ownerRoot:string;ownerLocal:string;nameOwner:string|null;operator:boolean|null;identity?:Record<string,string>;subjectCanWrite?:boolean;ownerCanWrite?:boolean}[];findings:{protocol:string;kind:string;contract:string;resource?:string;roles?:string;tokenId?:string;label?:string}[];complete:boolean;guarded?:GuardedSnapshot[]};
 export function compareSnapshots(before:PermissionSnapshot,after:PermissionSnapshot):string[]{
   const changes:string[]=[];
+  if((before.guarded??[]).length!==(after.guarded??[]).length)changes.push('Protected vault coverage changed');
+  for(const p of before.guarded??[]){
+    const q=after.guarded?.find(q=>q.state.address.toLowerCase()===p.state.address.toLowerCase());
+    if(!q){changes.push(`Protected vault missing: ${p.state.address}`);continue;}
+    changes.push(...vaultContinuity(p.state,q.state));
+    if(JSON.stringify(p.economics)!==JSON.stringify(q.economics))changes.push(`Protected position ${p.state.tokenId}: economics changed`);
+  }
   if(before.owner.toLowerCase()!==after.owner.toLowerCase()||before.subject.toLowerCase()!==after.subject.toLowerCase())changes.push('Wallet pair changed');
   if(before.uniswapIncluded!==after.uniswapIncluded)changes.push('Uniswap coverage changed');
   if(before.positionCount!==after.positionCount)changes.push('Position count changed');
@@ -20,3 +29,4 @@ export function compareSnapshots(before:PermissionSnapshot,after:PermissionSnaps
   }
   return changes;
 }
+export type GuardedSnapshot={state:VaultState;economics:{token0:string;token1:string;fee:number;tickLower:number;tickUpper:number;liquidity:string;tokensOwed0:string;tokensOwed1:string}};

@@ -8,7 +8,6 @@ import { accessEvidence } from './ens/evidence-ui';
 import { prepareRecordWrite, sameRecordWrite, type RecordWrite } from './ens/operator';
 import './style.css';
 import './design.css';
-import './studio.css';
 import { createIcons, ArrowUpRight, ArrowRight, ShieldCheck, KeyRound, ScanLine, Settings2, History, Wallet, ChevronRight, Check, Circle, Plus, X, Download, ExternalLink, RefreshCw, LoaderCircle, LockKeyhole, Layers, AlertTriangle, Copy, LogOut } from 'lucide';
 import { createWalletClient, custom, getAddress, isAddress, zeroAddress, type Address, type Hash } from 'viem';
 import { sepolia } from 'viem/chains';

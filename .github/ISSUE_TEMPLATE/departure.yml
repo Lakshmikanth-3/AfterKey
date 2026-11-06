@@ -1,0 +1,16 @@
+name: AfterKey departure case
+description: Authorize a testnet operator departure for the CRE verifier
+title: "AfterKey: depart treasury operator"
+labels: ["afterkey-departure"]
+body:
+  - type: markdown
+    attributes:
+      value: "Complete this issue as the configured repository approver. CRE validates the exact subject marker below. The owner still signs every onchain revocation."
+  - type: textarea
+    id: subject
+    attributes:
+      label: Operator wallet
+      description: Keep exactly one AfterKey-Subject line and replace the address for your deployed workspace.
+      value: "AfterKey-Subject: 0x22225204824EdF00b3c8c32A43f1C04246e2d1b4"
+    validations:
+      required: true

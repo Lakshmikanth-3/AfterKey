@@ -7,7 +7,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "test": "tsx --test tests/*.test.ts",
-    "verify:ens": "node --env-file-if-exists=.env --import tsx scripts/verify-ens.ts"
+    "verify:ens": "node --env-file-if-exists=.env --import tsx scripts/verify-ens.ts",
+    "proof:cre": "node --import tsx scripts/collect-cre-proof.ts"
   },
   "dependencies": {
     "viem": "^2.38.0",

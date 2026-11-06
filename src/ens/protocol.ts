@@ -1,4 +1,5 @@
 import { validAgentUrl } from './agent-records';
+import {isRateLimited,isBlockUnavailable} from '../rpc';
 import { encodeAbiParameters, encodeFunctionData, decodeFunctionResult, getAddress, keccak256, stringToHex, namehash, toHex, zeroAddress, parseEventLogs, type Address, type Hash, type Hex, type TransactionReceipt } from 'viem';
 import { normalize, packetToBytes } from 'viem/ens';
 import deployments from './deployments.json';
@@ -42,7 +43,8 @@ export async function verifyFactoryProxy(client:Client,proxy:Address,expectedImp
   let implementation:Address;
   try{
     implementation=getAddress(await client.readContract({address:contract('VerifiableFactory'),abi:factoryAbi,functionName:'verifyContract',args:[proxy],blockNumber:block}));
-  }catch{
+  }catch(error){
+    if(isRateLimited(error)||isBlockUnavailable(error))throw error;
     throw new Error(`ENS proxy ${proxy} was not deployed by the pinned official Verifiable Factory.`);
   }
   if(!equal(implementation,expectedImplementation))throw new Error(`ENS proxy ${proxy} uses an unexpected current implementation. Setup stopped.`);
@@ -63,9 +65,14 @@ export async function inspectName(input:string,rpc:string,key='description'):Pro
     const supported=await read(client,registry,'supportsInterface',[REGISTRY_INTERFACE],block);
     if(!supported){notes.push(`Registry for ${currentName} is not the supported ENSv2 Permissioned Registry. Traversal stopped.`);break;}
     const id=labelId(label);
-    const [resource,tokenId,owner,expiry,subregistry,ownResolver]=await Promise.all([
-      read(client,registry,'getResource',[id],block),read(client,registry,'getTokenId',[id],block),read(client,registry,'getOwner',[id],block),read(client,registry,'getExpiry',[id],block),read(client,registry,'getSubregistry',[label],block),read(client,registry,'getResolver',[label],block),
-    ]);
+    const [resource,tokenId,owner,expiry,subregistry,ownResolver]=await client.multicall({contracts:[
+      {address:registry,abi:ensAbi,functionName:'getResource',args:[id]},
+      {address:registry,abi:ensAbi,functionName:'getTokenId',args:[id]},
+      {address:registry,abi:ensAbi,functionName:'getOwner',args:[id]},
+      {address:registry,abi:ensAbi,functionName:'getExpiry',args:[id]},
+      {address:registry,abi:ensAbi,functionName:'getSubregistry',args:[label]},
+      {address:registry,abi:ensAbi,functionName:'getResolver',args:[label]},
+    ],allowFailure:false,blockNumber:block});
     const entry={name:currentName,label,registry,resource,tokenId,owner:getAddress(owner),expiry,subregistry:getAddress(subregistry),resolver:getAddress(ownResolver)};
     entries.push(entry);
     targets.push({label:`${currentName} · registry`,address:registry,resource:String(resource),kind:'registry',name:currentName});
@@ -74,7 +81,7 @@ export async function inspectName(input:string,rpc:string,key='description'):Pro
   }
   let resolverVerified=false,text='',address:Address|null=null,recordId:bigint|null=null;
   if(!equal(resolver,zeroAddress)){
-    try{resolverVerified=await read(client,resolver,'supportsInterface',[RESOLVER_INTERFACE],block);}catch{notes.push('The effective resolver does not expose a supported ENSv2 Permissioned Resolver interface.');}
+    try{resolverVerified=await read(client,resolver,'supportsInterface',[RESOLVER_INTERFACE],block);}catch(error){if(isRateLimited(error)||isBlockUnavailable(error))throw error;notes.push('The effective resolver does not expose a supported ENSv2 Permissioned Resolver interface.');}
     if(resolverVerified){
       const dnsName=dns(name),node=namehash(name);
       const [,liveResource,liveRole]=await read(client,resolver,'decodeSetter',[encodeFunctionData({abi:ensAbi,functionName:'setText',args:[dnsName,key,'']})],block);
@@ -88,7 +95,7 @@ export async function inspectName(input:string,rpc:string,key='description'):Pro
         ]);
         text=decodeFunctionResult({abi:profileAbi,functionName:'text',data:textResult});
         address=decodeFunctionResult({abi:profileAbi,functionName:'addr',data:addressResult});recordId=id;
-      }catch{notes.push('Permission scope was found, but one or more profile reads were unavailable.');}
+      }catch(error){if(isRateLimited(error)||isBlockUnavailable(error))throw error;notes.push('Permission scope was found, but one or more profile reads were unavailable.');}
       notes.push(`Text-key permissions apply across ALL names served by ${resolver}, not just ${name}.`);
     }
   }else notes.push('No resolver found in the traversed hierarchy.');

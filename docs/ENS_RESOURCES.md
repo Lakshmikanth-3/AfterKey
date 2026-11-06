@@ -47,6 +47,6 @@ These commands only read public chain state. No privileged-call simulations, tra
 
 ## Submission status
 
-The supplied Best Use of ENSv2 requirements allow Sepolia. AfterKey’s core implementation fits that use case; qualification is not complete until actual signed setup/grant/revoke evidence, a judge-accessible live demo, and publicly accessible source are verified. The separate existing-project Continuity prize requires mainnet integration and track eligibility. A read-only mainnet lookup does not establish that qualification.
+The Best Use of ENSv2 technical gates are now demonstrated on Sepolia: signed setup/grant/update/revoke receipts, preserved identity evidence, a public live demo and public source are available. The separate Existing Project Continuity prize still requires mainnet integration and track eligibility. The participant must still attach the final demo video, select the ENS prize and submit the ETHGlobal showcase entry.
 
-This change set is local. No remote source synchronization or GitHub push was performed.
+See [ENS_SECURITY_REVIEW.md](ENS_SECURITY_REVIEW.md) for the resource-driven code review and [ens-live-read-check.json](ens-live-read-check.json) for current factory, hierarchy and permission evidence.

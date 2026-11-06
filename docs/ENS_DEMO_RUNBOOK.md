@@ -41,10 +41,10 @@ If any observed state differs, show that state and investigate; never substitute
 - Permission absence does not revoke copied API credentials, endpoint sessions, unknown contracts, or another wallet's access. Any external service needs its own enforcement.
 - A denial during preparation does not imply a wallet-signed transaction reverted. No privileged-call simulations are used.
 
-## Submission gates still requiring completion
+## Submission status
 
-The intended prize is Best Use of ENSv2, which accepts Sepolia. A signed end-to-end demonstration, a judge-accessible deployed build, and a publicly readable open-source repository must be verified. The separate Continuity prize requires an existing project and mainnet integration.
+The signed ENS lifecycle, judge-accessible Vercel build and public repository are complete. The final root revoke is independently verified in `ens-offboarding-verification.json`; the current read-only hierarchy, factory and authorization check is in `ens-live-read-check.json`.
 
-The latest read-only check is in `workspace-live-check.json`. It explicitly reports `signedOffboardingVerified: false`; it is not a substitute for completing the steps above. Changes are local; no GitHub push or hosting-audience change is part of this work.
+Participant-only steps remain: record/attach the final demo video, select Best Use of ENSv2 and submit the ETHGlobal showcase. The separate Continuity prize requires an existing project and mainnet integration.
 
 References: [ENS prize requirements](https://ethglobal.com/events/mumbai/prizes), [Enhanced Access Control](https://docs.ens.domains/ensv2/enhanced-access-control/), [Permissioned Resolver](https://docs.ens.domains/ensv2/permissioned-resolver/).

@@ -60,7 +60,7 @@ The wallet signs asset changes. The browser scans and verifies the reviewed scop
 
 Removing a text-key permission from a Permissioned Resolver does not remove a corresponding resolver-wide role. AfterKey checks both scopes, distinguishes ordinary and admin roles, and shows effective authority through `hasRoles`. It also checks registry roles that can redirect identity and ERC-1155 operator approval. The identity, its record values and its owner remain visible while the departing wallet's known access paths are removed.
 
-See [the ENS qualification review](docs/ENS_QUALIFICATION_REVIEW.md) for the prize mapping, technical limitations and demo narrative. Configured ENS offboarding has live receipt and historical-state proof; publicly accessible submission links still need verification.
+See [the ENS qualification review](docs/ENS_QUALIFICATION_REVIEW.md) and [security review](docs/ENS_SECURITY_REVIEW.md) for the prize mapping, official-resource audit, technical limits and demo narrative. Configured ENS offboarding has live receipt, historical-state proof, public source and a public demo.
 
 ## Run
 
@@ -74,7 +74,7 @@ npm run build
 npm run verify:ens
 ```
 
-`verify:ens` performs ordinary view reads on real Sepolia deployments. It does not send transactions or attempt privileged writes. Its default target is the public `.eth` registry entry, not a namespace owned by this project. Optionally pass a real name with `npm run verify:ens -- your-name.eth`. Set `SEPOLIA_RPC_URL` in the environment to use a different RPC.
+`verify:ens` performs ordinary view reads on real Sepolia deployments. It does not send transactions or attempt privileged writes. Its default target is the public `.eth` registry entry. Pass a workspace name, as in `npm run verify:ens -- treasury-agent.manager.eth`, to additionally verify official factory provenance and current proxy implementations. Set `SEPOLIA_RPC_URL` in the environment to use a different RPC.
 
 ## Live ENS setup
 
@@ -106,7 +106,7 @@ The public addresses are defaults and do not authorize the application to sign. 
 | `src/ens/ui.ts` | ENS-first identity audit, setup, explicit delegation demo and evidence export |
 | `src/engine.ts` | Permission scans, residual paths, ordering, per-block read caching and owner-preservation checks |
 | `src/main.ts` | Wallet connection, calldata review, receipt tracking and verification |
-| `tests/ens.test.ts` | Resource/role/grant/deployment-event and ownership invariants |
+| `tests/ens.test.ts` | Resource/role/grant/deployment-event, deterministic-salt and ownership invariants |
 
 Protocol constants are not fabricated user state. Actual names, profiles, owners, current resources, permission bitmaps and transaction evidence are read from chain. Source revision: `07e55a056f5b6a9c90119f501bdd05714e67dddd`, linked from ENS's [deployment table](https://docs.ens.domains/learn/deployments/). Code/interface checks detect deployment-version drift; they are not an audit of arbitrary custom implementations.
 

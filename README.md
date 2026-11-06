@@ -18,7 +18,7 @@ Live application: **https://afterkey.vercel.app**. Source: https://github.com/La
 | Chainlink external-case verification | [Authenticated execution proof](docs/cre-execution-proof.json): successful HTTP run `f42d1d27-6bcf-4689-b290-d4d533f83729`, [completed GitHub case](https://github.com/Lakshmikanth-3/AfterKey/issues/2), and [nine departure checks](docs/cre-departure-verification.json) |
 | Chainlink scheduled monitoring | [Archived scheduled proof](docs/cre-scheduled-execution-proof.json): successful run `4a9f683b-50a0-4645-873d-d838400d21b6`, Sepolia block 12074459; [approval-event proof](docs/cre-approval-event-proof.json) |
 | Actual ENSv2 workspace | [Permissioned Resolver](https://sepolia.etherscan.io/address/0x6161ada4D10a529940B90b078B4F9A8d3679c8f8), [subname registry](https://sepolia.etherscan.io/address/0x26560685235D2d7861afF80866E8C1846d14420D) |
-| Official Uniswap integration | [Sepolia v3 position manager](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52), [six reviewed operations](src/uniswap/positions.ts#L39) |
+| Official Uniswap integration | [Sepolia v3 position manager](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52), [six reviewed operations](src/uniswap/positions.ts#L36) |
 
 ## Sponsor requirement mapping
 
@@ -26,12 +26,29 @@ Checked against the [ETHGlobal Mumbai sponsor requirements](https://ethglobal.co
 
 | Prize | Requirement | Current status and evidence |
 | --- | --- | --- |
-| ENS — Best Use of ENSv2 | ENSv2 on mainnet or Sepolia, central and functional integration | Sepolia hierarchy, Permissioned Resolver, EAC delegation and offboarding; [live discovery](src/ens/protocol.ts#L32), [independent access paths](src/engine.ts#L68), [receipts](docs/transactions.md) |
+| ENS — Best Use of ENSv2 | ENSv2 on mainnet or Sepolia, central and functional integration | Sepolia hierarchy, Permissioned Resolver, EAC delegation and offboarding; [live discovery](src/ens/protocol.ts#L32), [independent access paths](src/engine.ts#L67), [receipts](docs/transactions.md) |
 | ENS — Best Use of ENSv2 | Open source and a live demo link in the showcase | Public MIT source and the public Vercel demo are available; attach both links to the showcase |
-| Uniswap — Build with Uniswap | Meaningful use of the stack, with clear implementation pointers | Official v3 NFTs, approvals, collection and withdrawal; [portfolio reads](src/uniswap/positions.ts#L10), [action policy](src/uniswap/positions.ts#L39), [preservation](src/engine.ts#L168). [Two owner-held mints](docs/uniswap-mint-verification.json), [operator collection](docs/uniswap-operator-verification.json) and [complete offboarding](docs/uniswap-offboarding-verification.json) verified. Optional withdrawal is implemented but was not executed in this preservation demo |
+| Uniswap — Build with Uniswap | Meaningful use of the stack, with clear implementation pointers | Official v3 NFTs, approvals, collection and withdrawal; [portfolio reads](src/uniswap/positions.ts#L11), [action policy](src/uniswap/positions.ts#L36), [preservation](src/engine.ts#L167). [Two owner-held mints](docs/uniswap-mint-verification.json), [operator collection](docs/uniswap-operator-verification.json) and [complete offboarding](docs/uniswap-offboarding-verification.json) verified. Optional withdrawal is implemented but was not executed in this preservation demo |
 | Uniswap — Build with Uniswap | Public source, FEEDBACK.md and developer feedback form | [Feedback file](FEEDBACK.md) is published and the [required form](https://developers.uniswap.org/hackathon-feedback) was submitted with its public link; [confirmation](docs/uniswap-feedback-confirmation.png) |
 | Chainlink — Best workflow with CRE | Blockchain plus external API/system, meaningful orchestration | [GitHub case reads](cre/external-case.ts#L4), [signed HTTP routing](cre/main.ts#L26), [cron](cre/main.ts#L40), [approval events](cre/main.ts#L43). [Successful departure verification](docs/cre-departure-verification.json) joins GitHub issue 2 with Sepolia state |
 | Chainlink — Best workflow with CRE | Live deployment or successful workflow execution | [ACTIVE deployment](cre/deployment.json), [current signed HTTP execution](docs/cre-execution-proof.json), and archived [scheduled](docs/cre-scheduled-execution-proof.json) / [approval-event](docs/cre-approval-event-proof.json) executions. The current run compares blocks 12075512 and 12075653 and reports preserved assets with permissions absent |
+
+## Uniswap judge verification
+
+The **$10,000 Build with Uniswap** prize accepts v3 protocol integrations; an API key or v4 hook is not required by the [Mumbai rules](https://ethglobal.com/events/mumbai/prizes). The separate $5,000 pool requires Continuity Track participation, which is not established by this repository.
+
+These code links pin the reviewed source so their line numbers remain stable:
+
+| Verify | Exact source or proof |
+| --- | --- |
+| Official Sepolia manager and ABI | [Contract address and ABI](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/contracts.ts#L4) |
+| Live NFTs and both approval paths | [Portfolio reads](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/positions.ts#L11), [offboarding findings](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/engine.ts#L67) |
+| Individual and portfolio revocation | [Approval removal](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/positions.ts#L59) |
+| Collection to the owner; optional withdrawal | [Bound operations](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/positions.ts#L65) |
+| Exact mined transaction and retained position state | [Receipt validation](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/transactions.ts#L14), [live verification](docs/uniswap-security-verification.json), [security review](docs/UNISWAP_SECURITY_REVIEW.md) |
+| Required feedback submission | [FEEDBACK.md](FEEDBACK.md), [saved form confirmation](docs/uniswap-feedback-confirmation.png) |
+
+Still required for the participant's final entry: attach the real demo video, include the public repository and [live app](https://afterkey.vercel.app) links in the ETHGlobal showcase, select the Uniswap prize and submit. This repository does not prove the participant-dashboard submission is complete.
 
 ## Architecture
 

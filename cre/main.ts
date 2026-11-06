@@ -30,7 +30,7 @@ function onHttp(runtime:Runtime<Config>,payload:HTTPPayload):string{
   if(!request||typeof request.eventId!=='string'||!request.eventId||request.eventId.length>128||!['departure','recheck','verify','release'].includes(request.event)||typeof request.subject!=='string'||!eq(request.subject,runtime.config.subject))throw new Error('Invalid event or subject outside the deployed workspace.');
   if(request.event==='release'){
     if(typeof request.gate!=='string'||!isAddress(request.gate))throw new Error('Release gate required.');
-    return verifyRelease(runtime,request.gate);
+    return verifyRelease(runtime,request.gate,request.eventId);
   }
   if(request.event==='verify'&&!request.beforeBlock)throw new Error('Verification requires a beforeBlock baseline.');
   let departureCase:unknown;

@@ -1,0 +1,112 @@
+{
+  "checkedAt": "2026-11-06T08:59:06.255Z",
+  "chainId": 11155111,
+  "manager": "0x1238536071E1c677A632429e3655c799b22cDA52",
+  "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "subject": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+  "transactions": [
+    {
+      "label": "Individual approval",
+      "hash": "0x7ff7d027817c928c1ccb18b55eede21747d17324dd74599e907bf6022684a110",
+      "from": "0x2ce812cf03d1f252c940aff954e15d5e49bbedd5",
+      "to": "0x1238536071e1c677a632429e3655c799b22cda52",
+      "status": "success",
+      "block": "12075485",
+      "blockHash": "0xa6d1db5575d418a56940c8de5a987c6acb82490be4c13dc7836b721663ccc0fc",
+      "call": {
+        "functionName": "approve",
+        "args": [
+          "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+          "234145"
+        ]
+      },
+      "events": [
+        {
+          "name": "Approval",
+          "args": {
+            "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+            "approved": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+            "tokenId": "234145"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Operator collect to owner",
+      "hash": "0xe0099630836e17374e82450be377354505d6bc3331befdfe4f151cae9e702f9a",
+      "from": "0x22225204824edf00b3c8c32a43f1c04246e2d1b4",
+      "to": "0x1238536071e1c677a632429e3655c799b22cda52",
+      "status": "success",
+      "block": "12075498",
+      "blockHash": "0x6092c362cc4daf415c127bc4dc1a5d129c4f249000166e8c9ab347278974bd22",
+      "call": {
+        "functionName": "collect",
+        "args": [
+          {
+            "tokenId": "234145",
+            "recipient": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+            "amount0Max": "340282366920938463463374607431768211455",
+            "amount1Max": "340282366920938463463374607431768211455"
+          }
+        ]
+      },
+      "events": [
+        {
+          "name": "Collect",
+          "args": {
+            "tokenId": "234145",
+            "recipient": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+            "amount0": "0",
+            "amount1": "0"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Portfolio approval",
+      "hash": "0xa4078dc2aa64c4e4e439aa479371a4ec2c46e9137eb670b99ad437bd67a77ed3",
+      "from": "0x2ce812cf03d1f252c940aff954e15d5e49bbedd5",
+      "to": "0x1238536071e1c677a632429e3655c799b22cda52",
+      "status": "success",
+      "block": "12075512",
+      "blockHash": "0xcb9a41422a43e963db57e8c1ed1cec78bbb009ea92cbdd68248218ea7d9dc4e4",
+      "call": {
+        "functionName": "setApprovalForAll",
+        "args": [
+          "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+          true
+        ]
+      },
+      "events": [
+        {
+          "name": "ApprovalForAll",
+          "args": {
+            "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+            "operator": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+            "approved": true
+          }
+        }
+      ]
+    }
+  ],
+  "liveState": {
+    "block": "12075535",
+    "blockHash": "0x7f9d3499f476b2385026b4c3c8a291c49c68beafefebb544073517c1a919e14f",
+    "portfolioApproval": true,
+    "positions": [
+      {
+        "id": "234145",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "approved": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+        "liquidity": "6179549430"
+      },
+      {
+        "id": "234146",
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "approved": "0x0000000000000000000000000000000000000000",
+        "liquidity": "6179549430"
+      }
+    ]
+  },
+  "scopeNote": "Proves individual delegation, operator-signed zero-token collection to owner, and portfolio delegation. Revocation, residual-access and post-offboarding denial remain pending."
+}

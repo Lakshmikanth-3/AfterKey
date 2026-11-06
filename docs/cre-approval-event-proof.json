@@ -1,0 +1,178 @@
+{
+  "checkedAt": "2026-11-06T08:57:56.356Z",
+  "source": "Authenticated CRE CLI status and digest-verified execution logs, cross-checked with Sepolia receipt",
+  "workflowId": "00b083370fe2ae701fe30e89b363ba1e2071e3638e42bf8fc55c108ffd0420e5",
+  "executionId": "e9a83e06-0f2c-463f-a26f-ab251c12eb53",
+  "executionVerified": true,
+  "checks": {
+    "executionSucceeded": true,
+    "workflowMatches": true,
+    "currentDeployment": true,
+    "structuredOutputPresent": true,
+    "loggedOutputsAgree": true,
+    "walletsMatch": true,
+    "ensScopeMatches": true,
+    "uniswapScopeMatches": true,
+    "approvalTriggerMatches": true,
+    "canonicalApprovalReceipt": true,
+    "snapshotMatchesApprovalBlock": true,
+    "twoApprovalPathsDetected": true
+  },
+  "status": {
+    "status": "SUCCESS",
+    "startedAt": "2026-11-06T08:54:31Z",
+    "finishedAt": "2026-11-06T08:54:41Z"
+  },
+  "transaction": {
+    "hash": "0xa4078dc2aa64c4e4e439aa479371a4ec2c46e9137eb670b99ad437bd67a77ed3",
+    "status": "success",
+    "block": "12075512",
+    "blockHash": "0xcb9a41422a43e963db57e8c1ed1cec78bbb009ea92cbdd68248218ea7d9dc4e4",
+    "event": {
+      "name": "ApprovalForAll",
+      "args": {
+        "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+        "operator": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+        "approved": true
+      },
+      "logIndex": 360
+    }
+  },
+  "output": {
+    "schemaVersion": 2,
+    "source": "Chainlink CRE",
+    "trigger": "evm:approval",
+    "eventId": "0xa4078dc2aa64c4e4e439aa479371a4ec2c46e9137eb670b99ad437bd67a77ed3:360",
+    "triggerContext": {
+      "transactionHash": "0xa4078dc2aa64c4e4e439aa479371a4ec2c46e9137eb670b99ad437bd67a77ed3",
+      "eventBlock": "12075512"
+    },
+    "chainId": 11155111,
+    "departureCase": null,
+    "before": null,
+    "after": {
+      "block": "12075512",
+      "blockHash": "0xcb9a41422a43e963db57e8c1ed1cec78bbb009ea92cbdd68248218ea7d9dc4e4",
+      "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+      "subject": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+      "positionCount": "2",
+      "uniswapIncluded": true,
+      "operator": true,
+      "positions": [
+        {
+          "tokenId": "234145",
+          "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+          "approved": "0x22225204824EdF00b3c8c32A43f1C04246e2d1b4",
+          "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+          "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+          "fee": 3000,
+          "tickLower": -887220,
+          "tickUpper": 887220,
+          "liquidity": "6179549430",
+          "tokensOwed0": "0",
+          "tokensOwed1": "0"
+        },
+        {
+          "tokenId": "234146",
+          "owner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+          "approved": "0x0000000000000000000000000000000000000000",
+          "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+          "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+          "fee": 3000,
+          "tickLower": -887220,
+          "tickUpper": 887220,
+          "liquidity": "6179549430",
+          "tokensOwed0": "0",
+          "tokensOwed1": "0"
+        }
+      ],
+      "ens": [
+        {
+          "address": "0xB458D6a3a77919449d03e7A6903C26827c1eC43f",
+          "resource": "35894389512221139346028120028875095598761990588366713962827482865183915769856",
+          "root": "0",
+          "local": "0",
+          "ownerRoot": "0",
+          "ownerLocal": "0",
+          "nameOwner": "0x84D3a426D4E12E955d1DF95db0B24fe26afE39D3",
+          "operator": false,
+          "identity": {
+            "resolver": "0x0000000000000000000000000000000000000000",
+            "subregistry": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+            "expiry": "18446744073709551615"
+          }
+        },
+        {
+          "address": "0xD4eBcbBdF463C9c45784603Db0dDD499BC44A8B4",
+          "resource": "16410063006812723652486882596419305936955297605587383794446813834492854140928",
+          "root": "0",
+          "local": "0",
+          "ownerRoot": "0",
+          "ownerLocal": "97409655027181761882228017414928043058140282880",
+          "nameOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+          "operator": false,
+          "identity": {
+            "resolver": "0x09a2FCd5E78798B8Fa5193495aeD611a3EB5ab49",
+            "subregistry": "0x26560685235D2d7861afF80866E8C1846d14420D",
+            "expiry": "1825469328"
+          }
+        },
+        {
+          "address": "0x26560685235D2d7861afF80866E8C1846d14420D",
+          "resource": "8503764272317624696807940130965335064061139586896058404477701855229333471232",
+          "root": "0",
+          "local": "0",
+          "ownerRoot": "6088190891767158798824361175707112655580889345",
+          "ownerLocal": "97409655027181761882228017414928043058140282880",
+          "nameOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+          "operator": false,
+          "identity": {
+            "resolver": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+            "subregistry": "0x0000000000000000000000000000000000000000",
+            "expiry": "1825470032"
+          }
+        },
+        {
+          "address": "0x6161ada4D10a529940B90b078B4F9A8d3679c8f8",
+          "resource": "9756880871211087119462890628410095969001155726731944382148495028902581750468",
+          "root": "0",
+          "local": "0",
+          "ownerRoot": "91343858117981670043684180922136015068823814161",
+          "ownerLocal": "0",
+          "nameOwner": null,
+          "operator": null,
+          "identity": {
+            "recordId": "1",
+            "textKey": "agent-context",
+            "textValue": "Treasury operations context — revision 2.",
+            "ethAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5"
+          },
+          "subjectCanWrite": false,
+          "ownerCanWrite": true
+        }
+      ],
+      "findings": [
+        {
+          "protocol": "Uniswap v3",
+          "kind": "operator-wide",
+          "contract": "0x1238536071E1c677A632429e3655c799b22cDA52"
+        },
+        {
+          "protocol": "Uniswap v3",
+          "kind": "token-approval",
+          "contract": "0x1238536071E1c677A632429e3655c799b22cDA52",
+          "tokenId": "234145"
+        }
+      ],
+      "complete": true
+    },
+    "preservation": {
+      "checked": false
+    },
+    "permissionStateVerified": false,
+    "ownerSignedRevocationsVerified": false,
+    "status": "access_remaining"
+  },
+  "outputDigest": "0x0c4b1d85d95542a8ee356e089ec36d2ee555af302c834c55be1779fc97bb4ee9",
+  "scopeNote": "Proves the approval-event trigger and complete scoped state read. Does not prove HTTP/GitHub-case execution or offboarding."
+}

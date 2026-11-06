@@ -25,7 +25,9 @@ Evidence: [transaction receipts](transactions.md), [historical verification](ens
 
 Successful, canonical mint receipts at blocks **12075338** and **12075343** created positions **234145** and **234146**. Both are owned by the workspace owner and hold Sepolia Circle USDC/WETH, 0.3%, with full-range ticks. Each mint deposited **1 USDC** and **0.000038186831164543 WETH**. Four checks verified receipt canonicality, ownership, pair/range and mint events against live data at block **12075455**. Evidence: [mint verification](uniswap-mint-verification.json).
 
-The new RPC transport retries missing headers and temporarily unavailable pinned-block reads without switching to `latest`. Regression checks cover null-header fallback, bounded retries, preserving block parameters, and leaving permission failures, writes and pending receipts alone. Delegation preparation succeeded in the live browser; signed delegation, collection and revocation still require their own receipts.
+Individual delegation at **12075485**, operator-signed collection to the owner at **12075498**, and portfolio delegation at **12075512** all have successful, canonical receipts. Collection returned zero USDC/WETH; ownership and liquidity remained unchanged. Evidence: [operator receipt verification](uniswap-operator-verification.json). Complete revocation and post-offboarding denial remain pending.
+
+The new RPC transport retries missing headers and temporarily unavailable pinned-block reads without switching to `latest`. Regression checks cover null-header fallback, bounded retries, preserving block parameters, and leaving permission failures, writes and pending receipts alone. Delegation preparation also succeeded in the live browser.
 
 ## Chainlink live proof
 
@@ -35,15 +37,16 @@ The collector authenticated through the local CRE CLI, reconstructed digest-boun
 
 Evidence: [execution output and checks](cre-execution-proof.json), [deployment](../cre/deployment.json), [status](cre-live-status.json).
 
-This scheduled snapshot does not prove external-case validation, HTTP authorization, approval-event execution, a historical comparison or a signed Uniswap operation. Each needs its own execution/receipt evidence.
+Approval-event execution **e9a83e06-0f2c-463f-a26f-ab251c12eb53** independently detected the actual portfolio grant at **12075512**. Its complete output passed twelve checks, including the exact transaction/log reference, canonical receipt, matching block hash, configured ENS/Uniswap scope and surviving approval paths. Evidence: [approval-event verification](cre-approval-event-proof.json).
+
+External-case validation, HTTP authorization and historical comparison still need their own execution evidence. Monitoring does not prove that owner revocations were signed.
 
 ## Remaining live and submission checks
 
 | Check | Next evidence |
 | --- | --- |
-| User-owned Uniswap lifecycle | Mints verified; retain delegation, management and revocation receipts |
+| User-owned Uniswap lifecycle | Mints, delegation and operator collection verified; retain full-offboarding and denial evidence |
 | GitHub departure case | Completed, labeled issue and successful owner-authorized CRE execution |
-| Approval-event trigger | Real approval transaction plus matching CRE execution reference |
 | CRE before/after comparison | Successful verification request with a genuine baseline block |
 | Hosted demo | Deploy the app with its relay server and verify judge access; a static-only build cannot provide the relay |
 | Uniswap submission form | Submit the public FEEDBACK.md link and retain confirmation |

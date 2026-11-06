@@ -10,16 +10,24 @@ The next user action is not another ENS grant or revoke. Save the export and mov
 
 ## Uniswap: code implemented, asset lifecycle unverified
 
-`src/engine.ts` reads the official Sepolia v3 position manager, discovers per-token and operator approvals, encodes their independent revocations, refreshes between transactions and compares position ownership. Current owner position count is zero and operator approval is absent. This proves an empty-wallet read, not successful position offboarding. A real Sepolia LP position, delegated management and signed revocation evidence remain necessary for the product demonstration.
+The Uniswap workspace now reads real position economics and offers individual/portfolio delegation and revocation, collection to the owner, and owner-reviewed withdrawal plus collection. Every operation checks its actor and current position state before signing. Offboarding compares ownership, pair, fee tier, range, liquidity and recorded owed tokens. The live owner still has zero positions and no portfolio approval. This proves an empty-wallet read; position creation and signed lifecycle receipts remain necessary. See the [walkthrough](UNISWAP_CRE_RUNBOOK.md).
 
-## Chainlink CRE: verifier deployed, execution unverified
+## Chainlink CRE: scheduled execution verified
 
-The CLI confirms workflow `006f1d09b1acf95154e601b9f7e0ebcdd1cbafecf26af76e336d581173c63f76` and deployment are ACTIVE. `lastExecutedAt` is null. The CRE source also passed its TypeScript typecheck during this audit. See [live status](cre-live-status.json).
+The expanded workflow is ACTIVE: `00b083370fe2ae701fe30e89b363ba1e2071e3638e42bf8fc55c108ffd0420e5`. Its scheduled run `4a9f683b-50a0-4645-873d-d838400d21b6` succeeded at 05:20:11 UTC on November 6, 2026 (10:50:11 IST), reading Sepolia block `12074459`. Authenticated CLI status and complete, reconstructed logs passed all eight collector checks. See [execution proof](cre-execution-proof.json) and [deployment metadata](../cre/deployment.json).
 
-The known configuration has no ENS targets. Export genuine ENS scope from AfterKey, update the configuration and redeploy before verifying this namespace. An authorized HTTP trigger and its real execution ID/result are still required. The current CRE workflow reads permissions and returns evidence; it does not sign owner revocations, replace an HR system, or publish an onchain attestation. The browser uses its own scanner and does not prove CRE execution by displaying a result.
+The deployed configuration includes the actual four-resource ENS namespace and Uniswap scope. Its output shows no current access findings, complete configured reads, the owner's retained text-edit authority, and the unchanged public record. This run is a current snapshot; it does not claim before/after preservation without a baseline or claim signed Uniswap transactions.
+
+Owner-signed HTTP requests, GitHub departure-case validation and historical before/after comparisons are implemented. SAFE-confidence Uniswap approval-event monitoring is registered. Their distinct trigger paths still require the corresponding live case/signature/approval event evidence. Cron execution alone does not prove those paths. The workflow does not hold the owner key, sign revocations or publish an onchain attestation.
+
+The first direct-read version failed the live 15-call quota. The revised version batches declared view calls, bounds payload size, and reconstructs digest-bound log chunks below the 1 KB line limit. No failed or truncated run was presented as complete proof.
+
+## Validation
+
+43 unit tests passed, the app production build passed, and CRE typecheck/WASM build passed. Browser QA verified real portfolio discovery and request preparation. Both the development relay and built server rejected an unsigned request with HTTP 400; the built server served the app with HTTP 200. Tests cover exact request digests, signer/expiry/scope rejection, owner-bound recipients, withdrawal bounds, financial preservation, batched-read failures and log reconstruction limits. Unit fixtures do not stand in for live transaction receipts.
 
 ## Publication
 
-Source is pushed to GitHub; the repository remains private. The last checked hosted build has restricted owner-only access and does not automatically follow local edits. Publish the current build, configure judge access, and make source publicly accessible before claiming sponsor submission readiness.
+Source is pushed in small feature commits. An unauthenticated GitHub API read confirmed that AfterKey is now public. The last hosted Sites build remains restricted and does not follow local edits. The new signed CRE relay requires server hosting (`npm run build` then `npm start`); a static-only upload cannot provide it. Update hosting and judge access before claiming a live public submission is ready.
 
-No privileged-call or CRE simulations were run. ENS completion is limited to the verified configured scopes. No Uniswap or CRE end-to-end completion is claimed without their corresponding real execution evidence.
+No privileged-call or CRE simulations were run. ENS completion is scoped to its historical proof. CRE scheduled monitoring now has real execution proof. Uniswap transactions and the external-case / HTTP / approval-event lifecycle are not claimed complete without their own receipts and execution references.

@@ -1,10 +1,13 @@
 {
-  "checkedAt": "2026-11-06T03:39:45.381142+00:00",
-  "workflowId": "006f1d09b1acf95154e601b9f7e0ebcdd1cbafecf26af76e336d581173c63f76",
+  "checkedAt": "2026-11-06T05:20:56.146Z",
+  "workflowId": "00b083370fe2ae701fe30e89b363ba1e2071e3638e42bf8fc55c108ffd0420e5",
   "workflowStatus": "ACTIVE",
   "deploymentStatus": "ACTIVE",
-  "deployedAt": "2026-11-05T20:16:23Z",
-  "lastExecutedAt": null,
-  "configuredEnsTargets": 0,
-  "scopeSource": "ENS target count read from checked-in config.production.json. No ENS scope redeployment has been performed; the live workflow ID matches the recorded deployment."
+  "deployedAt": "2026-11-06T05:15:02Z",
+  "lastExecutedAt": "2026-11-06T05:20:11Z",
+  "executionId": "4a9f683b-50a0-4645-873d-d838400d21b6",
+  "executionVerified": true,
+  "configuredEnsTargets": 4,
+  "uniswapIncluded": true,
+  "scopeSource": "Actual CRE runtime output reconstructed and digest-checked from authenticated execution logs. See cre-execution-proof.json."
 }

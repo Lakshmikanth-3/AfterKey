@@ -1,12 +1,22 @@
 {
   "registry": "private",
   "workflowName": "afterkey-departure-verifier",
-  "workflowId": "006f1d09b1acf95154e601b9f7e0ebcdd1cbafecf26af76e336d581173c63f76",
+  "workflowId": "00b083370fe2ae701fe30e89b363ba1e2071e3638e42bf8fc55c108ffd0420e5",
   "registryOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
   "assetOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
   "authorizedTriggerAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
   "registrationStatus": "ACTIVE",
-  "executionVerified": false,
-  "binaryHash": "d65079e36567160fc15817d2c645ddb025ad7728e305fa9c70dc0bbb380f301c",
-  "configHash": "5ae3c7d97cbf4e81e61c6f2b05657c8d9b79457b1cee01772cf96f6107878064"
+  "executionVerified": true,
+  "binaryHash": "396b0522885e4bdbcb1d8c029767c380189e1a8e88b2c4fb061b4c23cdee31dc",
+  "configHash": "148145de8a1d2f28aab242d963a71a9b234edf090b893423ddfefeee19e34491",
+  "deployedAt": "2026-11-06T05:15:02Z",
+  "codeVersion": 2,
+  "wasmSha256": "130ad09d3f0cb36c47631ec71b9257e2a40c769b85bf78b4fbb9be5e5d2809d5",
+  "checkedAt": "2026-11-06T05:20:56.146Z",
+  "latestExecution": {
+    "executionId": "4a9f683b-50a0-4645-873d-d838400d21b6",
+    "status": "SUCCESS",
+    "trigger": "cron:monitor",
+    "block": "12074459"
+  }
 }

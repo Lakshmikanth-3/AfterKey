@@ -1,0 +1,26 @@
+import fs from 'node:fs';
+import {inspectName,verifyFactoryProxy,contract,dns} from '../src/ens/protocol';
+import {inspectReleasePublisher} from '../src/releases/ens-policy';
+import {readRelease} from '../src/releases/client';
+import {clientFor,DEFAULT_RPC,serialize,same} from '../src/engine';
+import {WORKSPACE_OWNER,WORKSPACE_SUBJECT} from '../src/workspace';
+import {ensAbi} from '../src/ens/abi';
+import {SET_DATA,resolverResource} from '../src/ens/roles';
+import deployment from '../cre/deployment.json';
+
+const rpc=process.env.SEPOLIA_RPC_URL||DEFAULT_RPC;
+const name=process.argv[2]||'afterkey-release.manager.eth';
+const gate=process.argv[3]||'0x47ae5aF5A9A2D0e90D2986861aD99f088270258F';
+const config={owner:WORKSPACE_OWNER,subject:WORKSPACE_SUBJECT,rpc,targets:[]};
+const identity=await inspectName(name,rpc),leaf=identity.entries.at(-1);
+if(!leaf||leaf.name!==identity.name)throw new Error('Exact registered release subname not found.');
+const registryImplementation=await verifyFactoryProxy(clientFor(rpc),leaf.registry,contract('UserRegistryImpl'),identity.block);
+const publisher=await inspectReleasePublisher(rpc,identity.resolver,config.owner,identity.block);
+const operatorCanPublish=await clientFor(rpc).readContract({address:identity.resolver,abi:ensAbi,functionName:'hasRoles',args:[resolverResource('data','afterkey.release'),SET_DATA,WORKSPACE_SUBJECT],blockNumber:identity.block});
+const state=await readRelease(config,gate);
+const checks={exactRegisteredName:leaf.name===name,nameOwnedByWorkspace:same(leaf.owner,config.owner),dedicatedResolver:same(leaf.resolver,identity.resolver),officialRegistry:!!registryImplementation,officialResolver:!!publisher.implementation,ownerCanPublish:publisher.canPublish,operatorCannotPublish:!operatorCanPublish,gateDnsMatches:state.dns===dns(name),gateResolverMatches:same(state.resolver,identity.resolver),leafIdentityValid:state.identityValid,candidateValid:!!state.digest&&state.issues.length===0,bothPositionsDeposited:state.consumers.length===2&&state.consumers.every(c=>c.deposited)};
+const progress={workflowBindingMatchesDeployment:state.workflowId.toLowerCase()==='0x'+deployment.workflowId.toLowerCase(),passingReportCurrent:state.checkedPassed&&state.checkedDigest===state.digest&&state.checkedEpoch===state.epoch&&state.checkedCoverage===state.coverage&&state.checkedUntil>state.now,configurationActive:!!state.digest&&state.activeDigest===state.digest};
+const output={checkedAt:new Date().toISOString(),method:'Read-only Sepolia ENS and release-gate verification; no wallet signatures or mutations',name,gate,identityBlock:identity.block,gateBlock:state.block,checks,progress,resolver:identity.resolver,registry:leaf.registry,registryImplementation,resolverImplementation:publisher.implementation,candidateDigest:state.digest,consumers:state.consumers,scope:'Configured name and consumers only. This is not a completed CRE report/activation/collection proof or a security audit.'};
+fs.writeFileSync('docs/ens-release-readiness.json',serialize(output)+'\n');
+console.log(serialize({checks,progress,proof:'docs/ens-release-readiness.json'}));
+if(Object.values(checks).some(v=>!v))process.exitCode=1;

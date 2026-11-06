@@ -12,6 +12,8 @@ import { DEFAULT_RPC, POSITION_MANAGER, scan, clientFor, same, short, serialize,
 import { ensWorkspace, bindEnsWorkspace } from './ens/ui';
 import type { SetupAction } from './ens/protocol';
 import creDeployment from '../cre/deployment.json';
+import { uniswapWorkspace, bindUniswapWorkspace } from './uniswap/ui';
+import { preparePositionAction, samePositionAction, type PositionAction } from './uniswap/positions';
 
 declare global { interface Window { ethereum?:WalletProvider } }
 const wallets=walletDiscovery(window,()=>window.ethereum);
@@ -27,7 +29,7 @@ if(!config.owner)config.owner=WORKSPACE_OWNER;
 if(!config.subject)config.subject=WORKSPACE_SUBJECT;
 if(config.scanUniswap===undefined)config.scanUniswap=false;
 let account:Address|undefined;
-let view:'ens'|'offboard'|'settings'|'history'='ens';
+let view:'ens'|'uniswap'|'offboard'|'settings'|'history'='ens';
 let busy=false,busyText='',error='',notice='';
 let before:Snapshot|undefined, current:Snapshot|undefined;
 let reviewed=false, verified=false, ownerProblems:string[]=[];
@@ -39,12 +41,12 @@ function download(name:string,data:unknown){const url=URL.createObjectURL(new Bl
 function report(){return evidenceReport({before,after:current,transactions,ownerProblems,verified});}
 function clearScan(){before=undefined;current=undefined;verified=false;reviewed=false;ownerProblems=[];selected.clear();transactions=[];}
 function render(){
-  app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['ens','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='ens'?'ENS identity':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?`${esc(selectedWallet?.name||'Wallet')} · ${short(account)}`:'Connect wallet'}</button></div><div class="shell"><main>
+  app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['ens','uniswap','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='ens'?'ENS identity':v==='uniswap'?'Uniswap':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?`${esc(selectedWallet?.name||'Wallet')} · ${short(account)}`:'Connect wallet'}</button></div><div class="shell"><main>
   ${error?`<div role="alert" class="banner danger">${icon('alert-triangle')}<span>${esc(error)}</span><button data-dismiss="error" aria-label="Dismiss error">${icon('x')}</button></div>`:''}
   ${notice?`<div role="status" class="banner">${icon('check')}<span>${esc(notice)}</span><button data-dismiss="notice" aria-label="Dismiss notification">${icon('x')}</button></div>`:''}
-  ${view==='ens'?ensWorkspace(ensContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
+  ${view==='ens'?ensWorkspace(ensContext()):view==='uniswap'?uniswapWorkspace(uniswapContext()):view==='settings'?settingsView():view==='history'?historyView():offboardView()}
   <footer><span>${icon('lock-keyhole')} Your keys stay in your wallet. Every transaction needs your signature.</span><div class="brand-strip"><a href="https://ens.domains" target="_blank" rel="noreferrer"><img src="/brands/ens.svg" alt="ENS"/><span>ENSv2</span></a><a href="https://chain.link/cross-chain/cre" target="_blank" rel="noreferrer"><img src="/brands/chainlink.svg" alt="Chainlink"/><span>CRE</span></a><a href="https://uniswap.org" target="_blank" rel="noreferrer"><img src="/brands/uniswap.svg" alt="Uniswap"/><span>Uniswap</span></a></div></footer></main></div>${busy?`<div class="working" role="status">${icon('loader-circle','spin')}<span>${esc(busyText)}</span></div>`:''}`;
-  createIcons({icons});bind();bindEnsWorkspace(ensContext());
+  createIcons({icons});bind();bindEnsWorkspace(ensContext());bindUniswapWorkspace(uniswapContext());
 }
 function offboardView(){
   const stage=verified?4:transactions.length?3:current?2:1;
@@ -144,6 +146,22 @@ function bind(){
   document.querySelectorAll<HTMLButtonElement>('[data-report]').forEach(b=>b.onclick=()=>{const r=storedReports()[Number(b.dataset.report)];if(r){if(r.before?.config)r.before.config.rpc='[not exported]';if(r.after?.config)r.after.config.rpc='[not exported]';download(`afterkey-report-${b.dataset.report}.json`,r);}});
 }
 function ensContext(){return {config,busy,task,render,setTargets:(targets:Config['targets'])=>{config.targets=targets;persist();clearScan();},offboard:()=>{view='offboard';render();},send:sendEnsAction,sendRecord};}
+function uniswapContext(){return {config,busy,task,render,send:sendPositionAction,offboard:()=>{config.scanUniswap=true;persist();clearScan();view='offboard';render();}};}
+async function sendPositionAction(action:PositionAction){
+  const signer=await ensureSigner(action.actor);
+  const fresh=await preparePositionAction(config,action.request);
+  if(!samePositionAction(action,fresh))throw new Error('Position state or operation changed. Prepare and review it again.');
+  // Revalidate the selected provider after RPC reads and immediately before opening its signature prompt.
+  await ensureSigner(action.actor);clearScan();
+  busyText=`Awaiting signature: ${action.label}`;render();
+  const hash=await signer.sendTransaction({to:fresh.to,data:fresh.data,account:fresh.actor,chain:sepolia});
+  const tx:EvidenceTransaction={label:fresh.label,hash,to:fresh.to,status:'pending'};transactions.push(tx);
+  busyText='Waiting for Uniswap confirmation';render();
+  const receipt=await clientFor(config.rpc).waitForTransactionReceipt({hash,confirmations:1});
+  tx.status=receipt.status==='success'?'confirmed':'failed';tx.blockNumber=receipt.blockNumber;tx.blockHash=receipt.blockHash;
+  if(receipt.status!=='success')throw new Error('Uniswap operation reverted. No further operation was submitted.');
+  return receipt;
+}
 async function sendRecord(reviewed:RecordWrite){
   if(!same(reviewed.actor,config.owner)&&!same(reviewed.actor,config.subject))throw new Error('Record signer must be the configured owner or departing operator.');
   await ensureSigner(reviewed.actor);

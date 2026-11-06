@@ -1,54 +1,30 @@
 # Validation record
 
-This page describes the current implementation. Earlier empty-wallet checks and initial deployment results remain available in Git history; they do not override the later evidence below.
+## Implementation checks
 
-## Local checks
+- `npm test`: **50 tests passed**, including independent approvals, ENS scopes, identity/financial preservation, actor-bound operations, wallet discovery, exact signed request digests, expiry, log framing, pinned-block recovery and Worker relay bounds.
+- `npm run build`: TypeScript plus browser/Worker compilation and built-artifact checks passed. The Worker serves emitted assets, rejects unknown paths, and returns HTTP 400 for unsigned CRE requests.
+- `npm run typecheck` and WASM compilation in `cre/` passed for the deployed workflow source.
+- Browser QA verified the actual two-position portfolio and reviewed delegation preparation. Actual user wallet signatures are recorded separately in the linked receipts.
 
-- `npm test`: **47 tests passed**. Coverage includes independent approval paths, ENS EAC scopes, owner/identity preservation, withdrawal bounds, owner-bound collection recipients, wallet discovery, request-signature validation, expiry and digest rejection, view-batch bounds, evidence-log framing and temporarily unavailable block reads.
-- `npm run build`: TypeScript and Vite production build passed after the block-read recovery fix.
-- `npm run typecheck` in `cre/`: passed for the deployed workflow source.
-- The deployed CRE source compiled to WASM. Its recorded binary/configuration hashes are in [deployment metadata](../cre/deployment.json).
-- Browser inspection verified discovery of positions **234145** and **234146** at block **12075445**, then prepared owner delegation for **234145** at block **12075448**. Browser preparation did not sign or submit that approval. Earlier checks verified exact CRE request preparation and recorded execution status.
-- Both the development relay and built server rejected an unsigned local request with HTTP 400. The built server served the application with HTTP 200.
+## Live evidence
 
-Unit fixtures test policy and encoding. They are not blockchain execution proof. No privileged-call or CRE simulations were used.
-
-## ENS live proof
-
-The real workspace is `treasury-agent.manager.eth` on Sepolia. Ten successful receipts cover namespace setup, scoped delegation, an operator-signed text update, broad delegation, key-only revocation and final broad-role revocation.
-
-The independent verifier checked 30 conditions against historical state and the actual final transaction. Between blocks **12074041** and **12074046**, the operator lost effective text-edit authority while the captured owner permissions, ownership, expiry, identity pointers, ETH address, record bundle and selected text value were retained.
-
-Evidence: [transaction receipts](transactions.md), [historical verification](ens-offboarding-verification.json).
-
-## Uniswap live proof
-
-Successful, canonical mint receipts at blocks **12075338** and **12075343** created positions **234145** and **234146**. Both are owned by the workspace owner and hold Sepolia Circle USDC/WETH, 0.3%, with full-range ticks. Each mint deposited **1 USDC** and **0.000038186831164543 WETH**. Four checks verified receipt canonicality, ownership, pair/range and mint events against live data at block **12075455**. Evidence: [mint verification](uniswap-mint-verification.json).
-
-Individual delegation at **12075485**, operator-signed collection to the owner at **12075498**, and portfolio delegation at **12075512** all have successful, canonical receipts. Collection returned zero USDC/WETH; ownership and liquidity remained unchanged. Evidence: [operator receipt verification](uniswap-operator-verification.json). Complete revocation and post-offboarding denial remain pending.
-
-The new RPC transport retries missing headers and temporarily unavailable pinned-block reads without switching to `latest`. Regression checks cover null-header fallback, bounded retries, preserving block parameters, and leaving permission failures, writes and pending receipts alone. Delegation preparation also succeeded in the live browser.
-
-## Chainlink live proof
-
-Workflow `00b083370fe2ae701fe30e89b363ba1e2071e3638e42bf8fc55c108ffd0420e5` was deployed ACTIVE with the actual four ENS resources and Uniswap scope. Scheduled execution `4a9f683b-50a0-4645-873d-d838400d21b6` succeeded at **10:50:11 IST on November 6, 2026**, reading Sepolia block **12074459**.
-
-The collector authenticated through the local CRE CLI, reconstructed digest-bound output from bounded log chunks, and passed eight checks for successful execution, current deployment, agreeing output, wallet pair and configured scope. The recorded result found no remaining modeled access in that scope.
-
-Evidence: [execution output and checks](cre-execution-proof.json), [deployment](../cre/deployment.json), [status](cre-live-status.json).
-
-Approval-event execution **e9a83e06-0f2c-463f-a26f-ab251c12eb53** independently detected the actual portfolio grant at **12075512**. Its complete output passed twelve checks, including the exact transaction/log reference, canonical receipt, matching block hash, configured ENS/Uniswap scope and surviving approval paths. Evidence: [approval-event verification](cre-approval-event-proof.json).
-
-External-case validation, HTTP authorization and historical comparison still need their own execution evidence. Monitoring does not prove that owner revocations were signed.
-
-## Remaining live and submission checks
-
-| Check | Next evidence |
+| Integration | Verified result |
 | --- | --- |
-| User-owned Uniswap lifecycle | Mints, delegation and operator collection verified; retain full-offboarding and denial evidence |
-| GitHub departure case | Completed, labeled issue and successful owner-authorized CRE execution |
-| CRE before/after comparison | Successful verification request with a genuine baseline block |
-| Hosted demo | Deploy the app with its relay server and verify judge access; a static-only build cannot provide the relay |
-| Uniswap submission form | Submit the public FEEDBACK.md link and retain confirmation |
+| ENSv2 | Ten successful setup/delegation/update/revocation receipts; [30 historical checks](ens-offboarding-verification.json) retain the owner's identity and control |
+| Uniswap mints | [Four checks](uniswap-mint-verification.json) verify NFTs 234145 and 234146, canonical receipts, ownership and pair/range |
+| Uniswap operator | [Action verification](uniswap-operator-verification.json) proves delegation, operator-signed collection to the fixed owner, and portfolio grant. Collection amounts were zero |
+| Uniswap offboarding | [14 checks](uniswap-offboarding-verification.json) verify narrow-only removal, surviving portfolio authority, final owner-signed revocation at 12075584, retained positions/ENS identity and operator preparation denial |
+| CRE scheduled monitoring | [Authenticated archived run](cre-scheduled-execution-proof.json), version 2, block 12074459 |
+| CRE approval event | [12 checks](cre-approval-event-proof.json), version 2, block 12075512, exact grant transaction/log reference |
+| CRE GitHub departure | [Authenticated successful run](cre-execution-proof.json), version 3, eight collector checks; [nine semantic checks](cre-departure-verification.json), baseline 12075512 to 12075653, zero findings and preservation passed |
 
-The repository is public and MIT-licensed. Source access, tests, receipts and hosted-demo access are separate facts. See [the current E2E status](E2E_STATUS.md) and [runbook](UNISWAP_CRE_RUNBOOK.md).
+Current workflow: `008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76`. Current verified execution: `f42d1d27-6bcf-4689-b290-d4d533f83729`. The current workflow metadata and its source/configuration hashes are in [deployment metadata](../cre/deployment.json). Older scheduled/event evidence retains its original deployment identity.
+
+The first HTTP departure execution failed on a disallowed explicit `User-Agent` header. Removing that header and redeploying produced the successful execution above. Four consensus outputs contained the same values in different object key orders; canonical comparison resolves that serialization difference without relaxing value checks.
+
+No privileged-call or CRE simulations were used. Preparation denial is a live permission check, not proof of a mined reverted write. CRE does not hold the owner key or sign revocations. Its result covers the declared resources at recorded blocks and is not an onchain attestation.
+
+## Submission checks still separate
+
+Hosted production deployment and judge access must be verified independently of local build success. Uniswap feedback confirmation, a demo video and ETHGlobal showcase submission are pending. The repository is public and MIT-licensed. See [current status](E2E_STATUS.md) and [showcase draft](SHOWCASE.md).

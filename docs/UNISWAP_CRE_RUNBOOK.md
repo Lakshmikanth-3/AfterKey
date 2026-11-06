@@ -86,4 +86,8 @@ To pause monitoring from `cre/`: `cre workflow pause . --target production`. To 
 
 References: [Uniswap deployments](https://developers.uniswap.org/docs/protocols/v3/deployments/v3-ethereum-deployments), [position-manager interface](https://github.com/Uniswap/v3-periphery/blob/main/contracts/interfaces/INonfungiblePositionManager.sol), [CRE trigger authentication](https://docs.chain.link/cre/guides/workflow/using-triggers/http-trigger/triggering-deployed-workflows), [Multicall3 deployments](https://github.com/mds1/multicall3/blob/main/deployments.json), [GitHub issues API](https://docs.github.com/en/rest/issues/issues#get-an-issue).
 
-The development server includes the signed CRE relay. For a built deployment use `npm run build` then `npm start` (optional port: `npm start -- 5174`). Deploy this server behind HTTPS for a shared demo; serving only `dist/` does not enable signed CRE requests.
+The development server includes the signed CRE relay. `npm run build` emits a Worker ESM artifact with bundled public assets and the signed API route. `npm start` serves that artifact locally (optional port: `npm start -- 5174`); Sites deploys the Worker behind HTTPS. A static-only upload cannot provide the signed relay.
+
+## Completed workspace proof
+
+This workspace has completed the core lifecycle; do not mint or grant again just to follow the guide. NFTs 234145 and 234146 remain with the owner. Final portfolio revocation is confirmed at **12075584**. [Fourteen checks](uniswap-offboarding-verification.json) verify absent modeled approvals, preserved state and operator preparation denial. [GitHub issue 2](https://github.com/Lakshmikanth-3/AfterKey/issues/2) and successful CRE execution **f42d1d27-6bcf-4689-b290-d4d533f83729** establish the external-case before/after flow. See [current output](cre-execution-proof.json) and [departure checks](cre-departure-verification.json).

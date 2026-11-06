@@ -8,13 +8,13 @@ import { validateCasePolicy } from './case-policy';
 import type { Workflow } from '@chainlink/cre-sdk';
 const eq=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
 type Request={eventId:string;event:'departure'|'recheck'|'verify';subject:string;beforeBlock?:string;issueNumber?:number};
-function result(runtime:Runtime<Config>,trigger:string,eventId:string,beforeBlock?:string,departureCase?:unknown){
+function result(runtime:Runtime<Config>,trigger:string,eventId:string,beforeBlock?:string,departureCase?:unknown,triggerContext?:unknown){
   const after=readState(runtime);
   if(beforeBlock!==undefined&&(typeof beforeBlock!=='string'||!/^\d+$/.test(beforeBlock)||BigInt(beforeBlock)<=0n||BigInt(beforeBlock)>=BigInt(after.block)))throw new Error('Baseline must be a positive Sepolia block before the current snapshot.');
   const before=beforeBlock?readState(runtime,BigInt(beforeBlock)):undefined;
   const changes=before?compareSnapshots(before,after):[];
   const permissionStateVerified=after.complete&&after.findings.length===0;
-  const output={schemaVersion:2,source:'Chainlink CRE',trigger,eventId,chainId:11155111,departureCase:departureCase??null,before:before??null,after,preservation:before?{checked:true,changes,passed:before.complete&&after.complete&&!changes.length}:{checked:false},permissionStateVerified,ownerSignedRevocationsVerified:false,status:!after.complete?'incomplete':changes.length?'assets_changed':after.findings.length?'access_remaining':before?'permissions_absent_assets_preserved':'permissions_absent'};
+  const output={schemaVersion:2,source:'Chainlink CRE',trigger,eventId,triggerContext:triggerContext??null,chainId:11155111,departureCase:departureCase??null,before:before??null,after,preservation:before?{checked:true,changes,passed:before.complete&&after.complete&&!changes.length}:{checked:false},permissionStateVerified,ownerSignedRevocationsVerified:false,status:!after.complete||(before&&!before.complete)?'incomplete':changes.length?'assets_changed':after.findings.length?'access_remaining':before?'permissions_absent_assets_preserved':'permissions_absent'};
   const encoded=JSON.stringify(output);runtime.log(encoded);return encoded;
 }
 function onHttp(runtime:Runtime<Config>,payload:HTTPPayload):string{
@@ -37,7 +37,8 @@ function onCron(runtime:Runtime<Config>,payload:CronPayload):string{
 function onApproval(runtime:Runtime<Config>,log:EVMLog):string{
   if(log.removed)throw new Error('Approval log was removed by a reorganization.');
   if(!eq(bytesToHex(log.address),POSITION_MANAGER)||!log.blockNumber)throw new Error('Unexpected approval event.');
-  return result(runtime,'evm:approval',`${bytesToHex(log.txHash)}:${log.index}`,undefined,{transactionHash:bytesToHex(log.txHash),eventBlock:String(protoBigIntToBigint(log.blockNumber))});
+  if(!log.topics[1]||!eq(bytesToHex(log.topics[1]),pad(runtime.config.owner as `0x${string}`)))throw new Error('Approval event belongs to another owner.');
+  return result(runtime,'evm:approval',`${bytesToHex(log.txHash)}:${log.index}`,undefined,undefined,{transactionHash:bytesToHex(log.txHash),eventBlock:String(protoBigIntToBigint(log.blockNumber))});
 }
 function initWorkflow(config:Config){
   for(const a of [config.owner,config.subject,config.authorizedEVMAddress])if(!isAddress(a)||eq(a,zeroAddress))throw new Error('Use valid nonzero workspace addresses.');

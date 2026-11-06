@@ -1,10 +1,11 @@
 import { EVMClient, getNetwork, encodeCallMsg, bytesToHex, blockNumber, protoBigIntToBigint, type Runtime } from '@chainlink/cre-sdk';
-import { encodeFunctionData, decodeFunctionResult, namehash, toHex, zeroAddress, type Address } from 'viem';
+import { encodeFunctionData, decodeFunctionResult, namehash, keccak256, stringToHex, toHex, zeroAddress, type Address } from 'viem';
 import { packetToBytes } from 'viem/ens';
 import { EAC_INTERFACE, REGISTRY_INTERFACE, RESOLVER_INTERFACE, SET_TEXT } from '../src/ens/roles';
 import { ensAbi, profileAbi } from '../src/ens/abi';
 import { POSITION_MANAGER, positionAbi, positionEconomics } from '../src/uniswap/contracts';
 import type { Config, PermissionSnapshot } from './model';
+import { ViewBatch, type ViewCall } from './batch';
 const eq=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
 export function evmClient(){const network=getNetwork({chainFamily:'evm',chainSelectorName:'ethereum-testnet-sepolia'});if(!network)throw new Error('Sepolia capability unavailable.');return new EVMClient(network.chainSelector.selector);}
 export function readState(runtime:Runtime<Config>,height?:bigint):PermissionSnapshot{
@@ -12,15 +13,35 @@ export function readState(runtime:Runtime<Config>,height?:bigint):PermissionSnap
   const header=evm.headerByNumber(runtime,height===undefined?{}:{blockNumber:blockNumber(height)}).result().header;
   if(!header?.blockNumber)throw new Error('Missing Sepolia block header.');
   const block=protoBigIntToBigint(header.blockNumber),owner=runtime.config.owner as Address,subject=runtime.config.subject as Address;
-  const cache=new Map<string,any>();
-  const read=(address:Address,fn:string,args:readonly unknown[],abi:typeof ensAbi|typeof positionAbi=ensAbi):any=>{
-    const key=JSON.stringify([address.toLowerCase(),fn,args],(_,v)=>typeof v==='bigint'?String(v):v);
-    if(!cache.has(key)){const data=encodeFunctionData({abi,functionName:fn,args} as never);const result=evm.callContract(runtime,{call:encodeCallMsg({from:zeroAddress,to:address,data}),blockNumber:blockNumber(block)}).result();cache.set(key,decodeFunctionResult({abi,functionName:fn,data:bytesToHex(result.data)} as never));}return cache.get(key);
-  };
+  const batch=new ViewBatch((to,data)=>bytesToHex(evm.callContract(runtime,{call:encodeCallMsg({from:zeroAddress,to,data}),blockNumber:blockNumber(block)}).result().data));
+  const call=(address:Address,fn:string,args:readonly unknown[],abi:typeof ensAbi|typeof positionAbi=ensAbi):ViewCall=>({address,fn,args,abi});
+  const read=(address:Address,fn:string,args:readonly unknown[],abi:typeof ensAbi|typeof positionAbi=ensAbi):any=>batch.read(call(address,fn,args,abi));
   const uniswapIncluded=runtime.config.scanUniswap!==false;
+  batch.warm([
+    ...(uniswapIncluded?[call(POSITION_MANAGER,'isApprovedForAll',[owner,subject],positionAbi),call(POSITION_MANAGER,'balanceOf',[owner],positionAbi)]:[]),
+    ...runtime.config.ensTargets.flatMap(t=>[call(t.address as Address,'supportsInterface',[EAC_INTERFACE]),call(t.address as Address,'supportsInterface',[t.kind==='registry'?REGISTRY_INTERFACE:RESOLVER_INTERFACE]),...(t.kind==='registry'?[call(t.address as Address,'getResource',[BigInt(t.resource)]),...(t.name?[call(t.address as Address,'getResource',[BigInt(keccak256(stringToHex(t.name.split('.')[0])))])]:[])]:[])])
+  ]);
   const uni=(fn:string,args:readonly unknown[])=>read(POSITION_MANAGER,fn,args,positionAbi);
   const operator=uniswapIncluded?uni('isApprovedForAll',[owner,subject]) as boolean:false;
   const total=uniswapIncluded?uni('balanceOf',[owner]) as bigint:0n,limit=BigInt(runtime.config.maxPositions);
+  batch.warm(Array.from({length:Number(total>limit?limit:total)},(_,i)=>call(POSITION_MANAGER,'tokenOfOwnerByIndex',[owner,BigInt(i)],positionAbi)));
+  batch.warm([
+    ...Array.from({length:Number(total>limit?limit:total)},(_,i)=>{const id=uni('tokenOfOwnerByIndex',[owner,BigInt(i)]);return ['getApproved','ownerOf','positions'].map(fn=>call(POSITION_MANAGER,fn,[id],positionAbi));}).flat(),
+    ...runtime.config.ensTargets.flatMap(t=>{
+      const a=t.address as Address,r=t.kind==='registry'?read(a,'getResource',[BigInt(t.resource)]):BigInt(t.resource);
+      const reads=[call(a,'roles',[0n,subject]),call(a,'roles',[r,subject]),call(a,'roles',[0n,owner]),call(a,'roles',[r,owner])];
+      if(t.kind==='registry'){
+        if(t.name&&r!==read(a,'getResource',[BigInt(keccak256(stringToHex(t.name.split('.')[0])))]))throw new Error('ENS name metadata does not match its current resource.');
+        reads.push(call(a,'getOwner',[r]),call(a,'isApprovedForAll',[owner,subject]));
+        if(t.name)reads.push(call(a,'getResolver',[t.name.split('.')[0]]),call(a,'getSubregistry',[t.name.split('.')[0]]),call(a,'getExpiry',[r]));
+      }else if(t.name&&t.recordType==='text'&&t.argument!==undefined){
+        const node=namehash(t.name),dns=toHex(packetToBytes(t.name));
+        reads.push(call(a,'getRecordId',[node]),call(a,'resolve',[dns,encodeFunctionData({abi:profileAbi,functionName:'text',args:[node,t.argument]})]),call(a,'resolve',[dns,encodeFunctionData({abi:profileAbi,functionName:'addr',args:[node]})]),call(a,'hasRoles',[r,SET_TEXT,subject]),call(a,'hasRoles',[r,SET_TEXT,owner]));
+      }
+      return reads;
+    })
+  ]);
+  batch.warm(runtime.config.ensTargets.filter(t=>t.kind==='registry').flatMap(t=>{const a=t.address as Address,r=read(a,'getResource',[BigInt(t.resource)]),o=read(a,'getOwner',[r]);return !eq(o,zeroAddress)&&!eq(o,owner)?[call(a,'isApprovedForAll',[o,subject])]:[];}));
   const findings:PermissionSnapshot['findings']=[],positions:PermissionSnapshot['positions']=[];
   if(operator)findings.push({protocol:'Uniswap v3',kind:'operator-wide',contract:POSITION_MANAGER});
   for(let i=0;i<Number(total>limit?limit:total);i++){

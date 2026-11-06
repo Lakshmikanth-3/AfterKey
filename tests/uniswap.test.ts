@@ -35,3 +35,12 @@ test('offboarding preservation detects principal changes even when NFT owner is 
   assert.deepEqual(economicChanges(a,{...a}),[]);
   assert.deepEqual(economicChanges(a,{...a,liquidity:99n}),['Position liquidity changed']);
 });
+
+test('reviewed operations expire when position economics or the portfolio membership changes',()=>{
+  const p=portfolio(),request={operation:'collect' as const,actor:owner,tokenId:'7'},a=buildPositionAction(p,request);
+  p.positions[0].tokensOwed0=1n;
+  assert.equal(samePositionAction(a,buildPositionAction(p,request)),false);
+  const q=portfolio(),r={operation:'revoke-portfolio' as const,actor:owner},grant=buildPositionAction(q,r);
+  q.positions.push({...q.positions[0],id:8n});q.count=2n;
+  assert.equal(samePositionAction(grant,buildPositionAction(q,r)),false);
+});

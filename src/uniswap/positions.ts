@@ -1,12 +1,13 @@
 import { encodeFunctionData, getAddress, isAddress, zeroAddress, type Address, type Hex, type Hash } from 'viem';
 import { clientFor, same, validateConfig, type Config } from '../engine';
-import { positionAbi, positionEconomics, POSITION_MANAGER, tokenAbi, type PositionEconomics } from './contracts';
+import { economicChanges, positionAbi, positionEconomics, POSITION_MANAGER, tokenAbi, type PositionEconomics } from './contracts';
+import { readTokenPresentation, type TokenPresentation } from './amounts';
 
-export type Position=PositionEconomics&{id:bigint;owner:Address;approved:Address;portfolioApproved:boolean;symbol0:string;symbol1:string;decimals0:number;decimals1:number};
+export type Position=PositionEconomics&{id:bigint;owner:Address;approved:Address;portfolioApproved:boolean;symbol0:string;symbol1:string;decimals0:number|null;decimals1:number|null};
 export type Portfolio={block:bigint;blockHash:Hash;owner:Address;subject:Address;operator:boolean;count:bigint;positions:Position[];complete:boolean};
 export type PositionOperation='delegate-position'|'delegate-portfolio'|'revoke-position'|'revoke-portfolio'|'collect'|'withdraw';
 export type PositionRequest={operation:PositionOperation;tokenId?:string;actor:string;liquidity?:string;amount0Min?:string;amount1Min?:string;deadline?:string};
-export type PositionAction={label:string;to:Address;data:Hex;actor:Address;request:PositionRequest;position?:Position;block:bigint;owner:Address;subject:Address;warning:string};
+export type PositionAction={label:string;to:Address;data:Hex;actor:Address;request:PositionRequest;position?:Position;portfolioIds?:bigint[];block:bigint;owner:Address;subject:Address;warning:string};
 export async function readPortfolio(config:Config):Promise<Portfolio>{
   validateConfig(config);
   const c=clientFor(config.rpc);
@@ -16,13 +17,9 @@ export async function readPortfolio(config:Config):Promise<Portfolio>{
   const read=(fn:string,args:readonly unknown[])=>c.readContract({address:POSITION_MANAGER,abi:positionAbi,functionName:fn,args,blockNumber:block} as never) as Promise<any>;
   const [count,operator]=await Promise.all([read('balanceOf',[owner]),read('isApprovedForAll',[owner,subject])]) as [bigint,boolean];
   const positions:Position[]=[];
-  const metadata=new Map<string,Promise<{symbol:string;decimals:number}>>();
+  const metadata=new Map<string,Promise<TokenPresentation>>();
   const token=(address:Address)=>{
-    if(!metadata.has(address.toLowerCase()))metadata.set(address.toLowerCase(),(async()=>{
-      // Token presentation may fail independently. Do not invent a symbol/decimals.
-      const [symbol,decimals]=await Promise.all([c.readContract({address,abi:tokenAbi,functionName:'symbol',blockNumber:block}).catch(()=>address.slice(0,8)),c.readContract({address,abi:tokenAbi,functionName:'decimals',blockNumber:block})]);
-      return {symbol,decimals};
-    })());
+    if(!metadata.has(address.toLowerCase()))metadata.set(address.toLowerCase(),readTokenPresentation(address,field=>c.readContract({address,abi:tokenAbi,functionName:field,blockNumber:block})));
     return metadata.get(address.toLowerCase())!;
   };
   for(let i=0;i<Number(count>50n?50n:count);i++){
@@ -80,9 +77,12 @@ export function buildPositionAction(portfolio:Portfolio,request:PositionRequest,
     }
     default:throw new Error('Unsupported position operation.');
   }
-  return {label,to:POSITION_MANAGER,data,actor,request:{...request},position:p,block:portfolio.block,owner,subject,warning};
+  return {label,to:POSITION_MANAGER,data,actor,request:{...request},position:p?{...p}:undefined,...(!p?{portfolioIds:portfolio.positions.map(q=>q.id).sort((a,b)=>a<b?-1:a>b?1:0)}:{}),block:portfolio.block,owner,subject,warning};
 }
 export async function preparePositionAction(config:Config,request:PositionRequest){return buildPositionAction(await readPortfolio(config),request);}
 export function samePositionAction(a:PositionAction,b:PositionAction):boolean{
-  return same(a.actor,b.actor)&&same(a.owner,b.owner)&&same(a.subject,b.subject)&&same(a.to,b.to)&&a.data===b.data&&a.position?.liquidity===b.position?.liquidity&&a.position?.approved===b.position?.approved&&a.position?.portfolioApproved===b.position?.portfolioApproved;
+  return same(a.actor,b.actor)&&same(a.owner,b.owner)&&same(a.subject,b.subject)&&same(a.to,b.to)&&a.data===b.data
+    &&a.position?.id===b.position?.id&&a.position?.approved===b.position?.approved&&a.position?.portfolioApproved===b.position?.portfolioApproved
+    &&(!a.position&&!b.position||!!a.position&&!!b.position&&!economicChanges(a.position,b.position).length)
+    &&JSON.stringify(a.portfolioIds?.map(String))===JSON.stringify(b.portfolioIds?.map(String));
 }

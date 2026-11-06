@@ -1,0 +1,18 @@
+{
+  "registry": "private",
+  "workflowName": "afterkey-departure-verifier",
+  "workflowId": "00660c7428115ba0da017a6055bce309075de035477b9af6bfda49fa684404b0",
+  "registryOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
+  "assetOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "authorizedTriggerAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "registrationStatus": "ACTIVE",
+  "executionVerified": false,
+  "binaryHash": "a3cb44f6672748019f06d5d6a50a70adac4fae81bdf9ea91754bac8849af870b",
+  "configHash": "44474b9cdecd57dd0226b93a53e705a24858581c90ffecb81f6663e5d08aa983",
+  "codeVersion": 5,
+  "wasmSha256": "e4253e54598278fc31222be6b190f8558b54573e4ecf93fc7c4ac8e545ab51ca",
+  "checkedAt": "2026-11-06T23:25:16.371Z",
+  "previousWorkflowId": "00eb41c82c93d32165ab2e27c34ef71dcbc033fee9520af19e1add15beff2acf",
+  "releaseGate": "0x47ae5aF5A9A2D0e90D2986861aD99f088270258F",
+  "completion": "Batched release verifier deployed ACTIVE; owner binding and actual report delivery pending."
+}

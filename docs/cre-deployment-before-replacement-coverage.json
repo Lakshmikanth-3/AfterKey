@@ -1,0 +1,18 @@
+{
+  "registry": "private",
+  "workflowName": "afterkey-departure-verifier",
+  "workflowId": "00995a8e43b33f54021e48cd0180eb2dadf4c21e3684b945920228a6ad8a44dc",
+  "registryOwner": "0x4aFeB2774F9B0a0F453Ec5b7000cCb5639eE6492",
+  "assetOwner": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "authorizedTriggerAddress": "0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5",
+  "registrationStatus": "ACTIVE",
+  "executionVerified": false,
+  "binaryHash": "d64d9138121d52d314c3054ea13ca12fdc31fd40a9de5237bda1bb287e50053d",
+  "configHash": "d04ef4e7674b86a217611a9356f16b88272700099df9a0721852312d59b9c397",
+  "codeVersion": 4,
+  "wasmSha256": "f16a18b728ef030fe8b09e9b0145c005af1f0ba5cccb4dc6199a9e9fd28b762d",
+  "checkedAt": "2026-11-06T22:33:10.4935284Z",
+  "previousWorkflowId": "008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76",
+  "releaseGate": "0x96100054C7ffec8B9a0a52d78e254C07E127196a",
+  "completion": "Workflow ACTIVE; gate binding and live release report remain pending."
+}

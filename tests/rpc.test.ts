@@ -62,3 +62,12 @@ test('permission reverts, unrelated failures, writes and pending receipts are no
   assert.equal(await transport.request({ method: 'eth_getTransactionReceipt', params: [`0x${'0'.repeat(64)}`] }), null);
   assert.equal(calls, 1);
 });
+test('rate-limited reads retry exact parameters; wallet submissions never retry',async()=>{
+  const requests:any[]=[];
+  const read=blockAwareTransport(custom({request:async args=>{requests.push(args);if(requests.length===1)throw {code:-32005,message:'Request exceeds defined limit.'};return '0x';}},{retryCount:0}),0)({chain:sepolia});
+  const args={method:'eth_call',params:[{to:'0x1111111111111111111111111111111111111111',data:'0x'},'0xb85243']};
+  assert.equal(await read.request(args as never),'0x');assert.equal(requests.length,2);assert.deepEqual(requests[0],requests[1]);
+  let writes=0;
+  const write=blockAwareTransport(custom({request:async()=>{writes++;throw {code:-32005,message:'Rate limit exceeded'};}},{retryCount:0}),0)({chain:sepolia});
+  await assert.rejects(write.request({method:'eth_sendTransaction',params:[]} as never));assert.equal(writes,1);
+});

@@ -2,9 +2,17 @@
 
 # AfterKey
 
-**Offboard the operator. Keep the identity.**
+**Review the change. Protect what depends on it.**
 
-AfterKey discovers surviving ENSv2 permissions for a departing wallet, prepares owner-reviewed revocations, and rereads live authorization state after confirmation. The default workflow centers ENSv2 registry hierarchy, Enhanced Access Control and Permissioned Resolvers. The Uniswap workspace adds delegated position management, while Chainlink CRE monitors and verifies departures independently.
+AfterKey reviews shared ENS configuration before an owner activates it for treasury workflows. ENSv2 stores the candidate, Chainlink CRE checks the exact version and registered consumers, and Uniswap LP contracts enforce the approved configuration. The existing offboarding tools remain available for recovery and permission cleanup.
+
+## Start here
+
+1. Run `npm run dev` in this repository and open **http://127.0.0.1:5173/?step=setup**.
+2. Use **Change review → Set up consumers** to deploy the release gate, then deploy, register and deposit the LP consumers with the owner wallet.
+3. Follow the [configuration release guide](docs/configuration-releases.md) to configure/deploy CRE, verify a candidate, activate it and collect using the approved version.
+
+**Current boundary:** the configuration-review extension is local and requires live deployment/report/transaction proof. The public Vercel app and historical evidence below cover the earlier offboarding workflow. Do not repeat ENS name registration or mint new positions just to start this extension.
 
 Live application: **https://afterkey.vercel.app**. Source: https://github.com/Lakshmikanth-3/AfterKey. The Vercel app is publicly accessible, includes the signed CRE relay, and reads real Sepolia state. The earlier Sites deployment remains private by the owner’s choice. [Deployment checks](docs/vercel-deployment-verification.json).
 

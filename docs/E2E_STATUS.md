@@ -1,5 +1,7 @@
 # End-to-end verification status
 
+> Historical status for the existing offboarding workflow. For the new ENS configuration-review extension, start with the [README](../README.md#start-here) and [configuration release guide](configuration-releases.md). The receipts below do not establish live execution of the new release gate.
+
 Verified on November 6, 2026. These are real Sepolia receipts and authenticated CRE executions. No privileged-call or CRE simulations were run.
 
 | Phase | Status | Evidence |

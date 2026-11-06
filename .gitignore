@@ -24,6 +24,3 @@ cre/.cre_build_tmp.*
 worker/assets.generated.ts
 .vercel/
 dist-vercel/
-
-.vercel
-.env*.local

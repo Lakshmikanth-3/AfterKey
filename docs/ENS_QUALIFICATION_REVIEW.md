@@ -85,3 +85,8 @@ The default repository branch did not match the documented deployed resolver mod
 - Why access survives shows reported contract-wide roles, resource roles and registry operator approval. Inconsistent effective authorization blocks a complete report; arbitrary custom inheritance is not exhaustively attributed.
 - A shared-bundle notice covers configured names only. Unknown aliases and unconfigured records remain outside coverage.
 - Follow [the real transaction runbook](ENS_DEMO_RUNBOOK.md). Two unchanged read-only snapshots are saved in `workspace-live-check.json`; signed offboarding remains unverified.
+
+
+## Final ENS proof update
+
+The user completed the final root revocation at block 12,074,044. An independent historical-chain verifier passed 30 checks against the before/after export and mined receipt. The configured ENS offboarding lifecycle is now demonstrated, including preserved owner control and captured identity data. See `ens-offboarding-verification.json` and `transactions.md`. Earlier setup-pending statements above describe earlier review stages. Public source access and judge-accessible hosting still require completion; Uniswap and CRE execution are separate.

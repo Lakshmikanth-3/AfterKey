@@ -17,11 +17,14 @@ Name: `treasury-agent.manager.eth`. Resolver: `0x6161ada4D10a529940B90b078B4F9A8
 | Operator updates context to revision 2 | 12073875 | [0xe72a0deeâ€¦](https://sepolia.etherscan.io/tx/0xe72a0dee421bcb5fbb886ab5041dcba2fd86f16988c31af7a3130ed2e6c80284) | success |
 | Grant broad text editor role | 12073926 | [0x4874b06câ€¦](https://sepolia.etherscan.io/tx/0x4874b06c9a5b12aa6b0b00d52e2ecf65b4d101c881a2671ca3e320a8f557dc50) | success |
 | Remove only key-specific role | 12073943 | [0x87b7182dâ€¦](https://sepolia.etherscan.io/tx/0x87b7182d610f61d0fdc9967c43947e564b9bdc72ad1d41a52722850e2a73242f) | success |
+| Revoke surviving broad text role | 12074044 | [0xbe002b4c…](https://sepolia.etherscan.io/tx/0xbe002b4c04dc64da5ab12fde4c449f25010bc78fc3044f86dd46c29849e7f241) | success |
 
 ## Current result
 
-At block 12073970, the key-specific text role is absent but the resolver-wide text role remains active. The operator can still edit `agent-context`; the owner can also edit it. The record contains `Treasury operations context â€” revision 2.`. **Final offboarding is not yet verified.**
+The final root revocation succeeded at block **12,074,044**. The independent evidence check compares block **12,074,041** with **12,074,046**. Operator root text permission changed from 16 to 0, key permission stayed 0, and effective editing changed from true to false. The owner's permissions, name ownership, expiry, captured pointers, ETH address, record bundle and `agent-context` value were retained. All 30 independent checks passed.
 
-No Uniswap position-management or revocation transaction is established by these ENS receipts. No successful Chainlink CRE execution is established by them either.
+**Configured ENS offboarding is verified.** This is a bounded result for the four configured ENS scopes at the recorded blocks, not universal loss of access.
 
-Machine-readable evidence: [e2e-live-audit.json](e2e-live-audit.json). Run `npx tsx scripts/audit-e2e.ts` to refresh that file. These are dated observations, not a guarantee of later chain state.
+Machine-readable final proof: [ens-offboarding-verification.json](ens-offboarding-verification.json). The earlier [e2e-live-audit.json](e2e-live-audit.json) deliberately preserves the pre-final-revocation observation. The original user export is not modified or copied into this repository; the verification result records its SHA-256 digest.
+
+Uniswap position-management/revocation and Chainlink execution remain unverified by this evidence.

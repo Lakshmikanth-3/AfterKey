@@ -1,10 +1,12 @@
 # End-to-end verification status
 
-## ENS: real lifecycle in progress
+## ENS: configured offboarding verified
 
-Nine real receipts establish resolver/registry deployment, hierarchy attachment, subname registration, scoped delegation, an operator-signed record update, broad delegation, and key-only revocation. See [transaction evidence](transactions.md).
+Ten real receipts establish namespace setup, scoped delegation, an operator-signed record update, broad delegation, key-only revocation and final root revocation. See [transaction evidence](transactions.md).
 
-The final root permission is still active at the last audit. In AfterKey, Add discovered scopes & review offboarding â†’ Scan access paths â†’ review Contract-wide ENS roles survive â†’ sign the reviewed root revocation as owner â†’ Recheck live permissions â†’ Export evidence. Verify owner permissions, ownership and captured records are retained. Then prepare an operator update again and observe live authorization denial without sending another transaction.
+The independent verifier checked canonical before/after block hashes, historical roles and authorization, name ownership, expiry, resolver/subregistry pointers, ETH address, selected text value, record bundle and the actual revocation calldata/receipt. All 30 checks passed. Owner control and captured identity data were retained, with zero remaining findings in the configured ENS scope. See [final verification](ens-offboarding-verification.json).
+
+The next user action is not another ENS grant or revoke. Save the export and move on to the real Uniswap position lifecycle and CRE execution phases. An optional operator preparation check can show the permission denial in the UI without submitting a transaction.
 
 ## Uniswap: code implemented, asset lifecycle unverified
 
@@ -20,4 +22,4 @@ The known configuration has no ENS targets. Export genuine ENS scope from AfterK
 
 Source is pushed to GitHub; the repository remains private. The last checked hosted build has restricted owner-only access and does not automatically follow local edits. Publish the current build, configure judge access, and make source publicly accessible before claiming sponsor submission readiness.
 
-No privileged-call or CRE simulations were run. No end-to-end completion is claimed until the corresponding real execution evidence exists.
+No privileged-call or CRE simulations were run. ENS completion is limited to the verified configured scopes. No Uniswap or CRE end-to-end completion is claimed without their corresponding real execution evidence.

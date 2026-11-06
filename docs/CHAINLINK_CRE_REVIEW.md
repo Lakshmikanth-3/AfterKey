@@ -2,11 +2,18 @@
 
 Reviewed on November 6, 2026 against the official [CRE overview](https://docs.chain.link/cre/overview), [EVM capabilities](https://docs.chain.link/cre/capabilities/evm-read-write), [deployed HTTP trigger guide](https://docs.chain.link/cre/guides/workflow/using-triggers/http-trigger/triggering-deployed-workflows), [CRE templates](https://github.com/smartcontractkit/cre-templates) and [CCIP overview](https://docs.chain.link/ccip/overview).
 
-## Result
+## Current qualification result
 
-AfterKey is a real deployed CRE integration, not a branded webhook or simulated workflow. The active workflow joins an external GitHub departure case to historical and current Sepolia authorization state, runs on a CRE DON, and has authenticated successful execution evidence. The owner still signs every revocation in the wallet; CRE independently verifies the outcome.
+Target **Best workflow with CRE**, not **Best use of CCIP 2.0**. The [official Mumbai prize page](https://ethglobal.com/events/mumbai/prizes/chainlink) lists these as separate prizes with separate requirements.
 
-The primary execution is `f42d1d27-6bcf-4689-b290-d4d533f83729` on workflow `008980863d19e8315fed5364f8e504f3b5f447d28f3c7de5a7be0073475edb76`. The hardened collector now requires all 18 deployment, scope and departure-outcome checks to pass before marking that proof verified.
+| CRE requirement | Evidence and current boundary |
+| --- | --- |
+| Blockchain plus external API/system | `cre/external-case.ts` joins the configured public GitHub issue with historical/current ENS and Uniswap Sepolia state. Historical successful execution `f42d1d27-6bcf-4689-b290-d4d533f83729` has [18 verified checks](cre-execution-proof.json). The new release-only trigger reads onchain data; it is not independently an external-API integration. |
+| Successful simulation or live deployment | Actual CRE network deployment is ACTIVE. Historical HTTP, cron and approval-event runs succeeded. No simulation is presented as a live execution. The new release-report path remains pending a passing onchain report. |
+| Meaningful orchestration | Departure verification joins GitHub approval with permissions and preservation. Release verification checks ENS candidate, policy and complete consumer custody before sending a signed gate report; the owner must separately activate. |
+| CCIP inside contracts causing a state change | Not implemented. There is no cross-chain source/destination workflow or CCIP sender/receiver contract. Do not submit AfterKey as CCIP-complete. |
+
+Earlier successful GitHub/chain evidence remains scoped to its recorded workflow ID and blocks. It is not proof that a newer binary delivered a release report. Vercel still needs the current local release UI and relay after live proof is complete. A screenshot saying ACCEPTED is not completion.
 
 ## Resource-to-code mapping
 
@@ -54,3 +61,30 @@ npm run proof:cre -- f42d1d27-6bcf-4689-b290-d4d533f83729
 ```
 
 The proof command requires the participant's authenticated CRE CLI session. No private key is stored in this repository.
+
+## Additional audit fixes
+
+- Release reads now reuse `ViewBatch`, enforce view/pure functions, reject partial results and split payloads below 4,400 bytes. Custody reads are batched, with an explicit capability-call budget. Regression checks cover two and sixteen consumers.
+- Release execution output uses hash-bound evidence frames below the 1 KB per-line logging limit. Conflicting, missing or tampered chunks fail verification.
+- `scripts/collect-cre-release-proof.ts` requires an authenticated successful release execution, expected gate/consumer coverage, canonical successful report receipt, matching `Checked` event, exact digest/epoch/coverage, valid-at-delivery timestamp, compiled gate runtime and custody at the observed block. Cron/departure output cannot substitute for release proof. Activation and collection remain separate.
+- GitHub approval now rejects issue content updated after closure. The configured approver must review and close an edited case again; malformed timestamps are rejected. The current issue 2 has identical valid update/closure timestamps.
+
+## Remaining risks and explicit limits
+
+- GitHub API fields are authenticated by TLS and CRE consensus, not a cryptographic HR identity or immutable external approval. Account compromise, stale approvals and policy changes remain organizational risks.
+- The relay is stateless. CRE gateway duplicate-JWT handling is the replay control during the five-minute authorization window. Asset writes still need owner approval; report replay cannot activate a different digest or epoch.
+- The release trigger itself uses ENS and chain state, while the separate departure trigger supplies the external GitHub integration. Do not pitch the release-only path as fetching GitHub approval.
+- Deployed gate policy checks leaf ENS identity, owner, resource, expiry and resolver; it does not prove every ancestor/root pointer on each collection. A separate contract revision is needed for that stronger claim.
+- A valid report authenticates the specific workflow and observation, not audited arbitrary consumer code, profitable LP management or agent behavior. Owner custody recovery is always trusted.
+- The new audited workflow must be bound by the owner and executed live before its current release-report proof can be marked complete. Do not repeat deployments of NFTs, resolver, gate or consumer contracts.
+
+## Reproduce
+
+- `npm test`
+- `npm --prefix cre run typecheck`
+- `cre workflow build . --target production` from `cre/`
+- `node --import tsx scripts/collect-cre-release-proof.ts <execution-uuid>` after a successful release execution
+
+Official sources: [service quotas](https://docs.chain.link/cre/service-quotas), [HTTP requests](https://docs.chain.link/cre/guides/workflow/using-http-client/get-request), [HTTP trigger authorization](https://docs.chain.link/cre/guides/workflow/using-triggers/http-trigger/triggering-deployed-workflows), [consumer report authentication](https://docs.chain.link/cre/guides/workflow/using-evm-client/onchain-write/building-consumer-contracts), [templates](https://github.com/smartcontractkit/cre-templates) and [CCIP](https://docs.chain.link/ccip).
+
+The intro videos are educational resources; required behavior is checked against versioned code, official docs, authenticated execution logs and canonical chain receipts. No claim is made that watching a video creates an integration.

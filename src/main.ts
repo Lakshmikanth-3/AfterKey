@@ -1,3 +1,4 @@
+import { evidenceReport, type EvidenceTransaction } from './evidence';
 import { walletDiscovery, selectWallet, type WalletProvider, type WalletChoice } from './wallet';
 import { accessEvidence } from './ens/evidence-ui';
 import { prepareRecordWrite, sameRecordWrite, type RecordWrite } from './ens/operator';
@@ -30,12 +31,12 @@ let view:'ens'|'offboard'|'settings'|'history'='ens';
 let busy=false,busyText='',error='',notice='';
 let before:Snapshot|undefined, current:Snapshot|undefined;
 let reviewed=false, verified=false, ownerProblems:string[]=[];
-let transactions:{label:string;hash:Hash;status:'pending'|'confirmed'|'failed'}[]=[];
+let transactions:EvidenceTransaction[]=[];
 let selected=new Set<string>();
 const storedReports=()=>{try{return JSON.parse(localStorage.getItem('afterkey.reports.v1')||'[]') as any[];}catch{return [];}};
 const persist=()=>localStorage.setItem('afterkey.config.v1',JSON.stringify(config));
 function download(name:string,data:unknown){const url=URL.createObjectURL(new Blob([serialize(data)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function report(){return {product:'AfterKey',version:1,chainId:sepolia.id,method:'Live permission reads after confirmed transactions. No privileged-call simulations.',createdAt:new Date().toISOString(),coverage:'Uniswap v3 position-manager approvals and explicitly configured ENSv2 contract/resources. Alternate wallets, signatures, unknown contracts and unconfigured resources are outside coverage.',before,after:current,transactions,ownerProblems,verified};}
+function report(){return evidenceReport({before,after:current,transactions,ownerProblems,verified});}
 function clearScan(){before=undefined;current=undefined;verified=false;reviewed=false;ownerProblems=[];selected.clear();transactions=[];}
 function render(){
   app.innerHTML=`<div class="topnav ${window.scrollY>50?'scrolled':''}"><a class="brand" href="#" aria-label="AfterKey home"><img src="/logo.svg" alt=""/><span>afterkey<span class="brand-dot">.</span></span></a><nav aria-label="Workspace navigation">${(['ens','offboard','history','settings'] as const).map(v=>`<button data-view="${v}" class="${view===v?'active':''}" ${busy?'disabled':''}>${v==='ens'?'ENS identity':v==='offboard'?'Offboarding':v==='history'?'Activity':'Connections'}</button>`).join('')}</nav><button class="button wallet-button" id="connect">${icon('wallet')}${account?`${esc(selectedWallet?.name||'Wallet')} · ${short(account)}`:'Connect wallet'}</button></div><div class="shell"><main>
@@ -112,8 +113,8 @@ async function execute(){
     if(!accounts[0]||!same(accounts[0],config.owner)||Number(await walletProvider().request({method:'eth_chainId'}))!==sepolia.id)throw new Error('Wallet account or network changed. Execution stopped.');
     // Send the reviewed calldata directly. No simulateContract or privileged-call probing.
     const hash=await signer.sendTransaction({to:finding.address,data:finding.data,account:getAddress(config.owner),chain:sepolia});
-    const tx={label:finding.title,hash,status:'pending' as 'pending'|'confirmed'|'failed'};transactions.push(tx);busyText=`Waiting for confirmation: ${finding.title}`;render();
-    const receipt=await client.waitForTransactionReceipt({hash,confirmations:1});tx.status=receipt.status==='success'?'confirmed':'failed';
+    const tx:EvidenceTransaction={label:finding.title,hash,status:'pending',to:finding.address,functionName:finding.fn};transactions.push(tx);busyText=`Waiting for confirmation: ${finding.title}`;render();
+    const receipt=await client.waitForTransactionReceipt({hash,confirmations:1});tx.blockNumber=receipt.blockNumber;tx.blockHash=receipt.blockHash;tx.status=receipt.status==='success'?'confirmed':'failed';
     if(receipt.status!=='success')throw new Error('Transaction reverted. Execution stopped; recheck current permissions.');
     const checkpoint=await scan(config);
     const changed=compareOwner(before,checkpoint);

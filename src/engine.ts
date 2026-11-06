@@ -66,7 +66,10 @@ export function orderFindings(findings: Finding[]): Finding[] {
 }
 export function deriveFindings(s: Omit<Snapshot,'findings'>, canRevoke: Record<string,boolean> = {}): Finding[] {
   const f: Finding[] = [];
-  const add = (item: Omit<Finding,'data'>) => f.push({...item, data: encodeFunctionData({abi:item.protocol === 'Uniswap v3' ? nftAbi : eacAbi,functionName:item.fn,args:item.args} as never)});
+  const add = (item: Omit<Finding,'data'>) => {
+    const {blockedReason,...finding}=item;
+    f.push({...finding,...(!item.executable&&blockedReason?{blockedReason}:{}),data:encodeFunctionData({abi:item.protocol === 'Uniswap v3' ? nftAbi : eacAbi,functionName:item.fn,args:item.args} as never)});
+  };
   if(s.operator) add({id:'uni:operator',protocol:'Uniswap v3',title:'Portfolio-wide operator access',detail:'Removing a single position approval leaves this permission active. It also covers future positions held in this position manager.',scope:`${s.positionCount} positions · current and future`,broad:true,address:POSITION_MANAGER,fn:'setApprovalForAll',args:[s.subject,false],executable:true});
   for(const p of s.positions) if(same(p.approved,s.subject)) add({id:`uni:${p.id}`,protocol:'Uniswap v3',title:`Position #${p.id} approval`,detail:'This wallet can manage this position through its individual NFT approval.',scope:`Position #${p.id}`,broad:false,address:POSITION_MANAGER,fn:'approve',args:[zeroAddress,p.id],executable:true});
   const roots = new Set<string>();

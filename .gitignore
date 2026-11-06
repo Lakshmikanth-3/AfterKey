@@ -24,3 +24,9 @@ cre/.cre_build_tmp.*
 worker/assets.generated.ts
 .vercel/
 dist-vercel/
+
+# Environment files may also be named AUDIO.ENV or project.env
+*.[eE][nN][vV]
+# Local intermediate setup snapshots
+docs/release-next-step.json
+docs/release-step-12079508.json

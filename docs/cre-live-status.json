@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-11-06T03:39:45.381142+00:00",
+  "workflowId": "006f1d09b1acf95154e601b9f7e0ebcdd1cbafecf26af76e336d581173c63f76",
+  "workflowStatus": "ACTIVE",
+  "deploymentStatus": "ACTIVE",
+  "deployedAt": "2026-11-05T20:16:23Z",
+  "lastExecutedAt": null,
+  "configuredEnsTargets": 0,
+  "scopeSource": "ENS target count read from checked-in config.production.json. No ENS scope redeployment has been performed; the live workflow ID matches the recorded deployment."
+}

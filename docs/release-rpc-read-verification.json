@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-11-06T23:20:42.446Z",
+  "reads": [
+    {
+      "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+      "block": "12079770",
+      "digest": "0x5b32aa6af927cc03ea347f0da9a6d5053ab42bc3bb3bd5d63284de3e64b21452",
+      "issues": [],
+      "workflow": "0x00eb41c82c93d32165ab2e27c34ef71dcbc033fee9520af19e1add15beff2acf",
+      "deposited": [
+        {
+          "tokenId": "234145",
+          "deposited": true
+        },
+        {
+          "tokenId": "234146",
+          "deposited": true
+        }
+      ]
+    },
+    {
+      "rpc": "https://sepolia.gateway.tenderly.co",
+      "block": "12079773",
+      "digest": "0x5b32aa6af927cc03ea347f0da9a6d5053ab42bc3bb3bd5d63284de3e64b21452",
+      "issues": [],
+      "workflow": "0x00eb41c82c93d32165ab2e27c34ef71dcbc033fee9520af19e1add15beff2acf",
+      "deposited": [
+        {
+          "tokenId": "234145",
+          "deposited": true
+        },
+        {
+          "tokenId": "234146",
+          "deposited": true
+        }
+      ]
+    },
+    {
+      "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+      "block": "12079773",
+      "digest": "0x5b32aa6af927cc03ea347f0da9a6d5053ab42bc3bb3bd5d63284de3e64b21452",
+      "issues": [],
+      "workflow": "0x00eb41c82c93d32165ab2e27c34ef71dcbc033fee9520af19e1add15beff2acf",
+      "deposited": [
+        {
+          "tokenId": "234145",
+          "deposited": true
+        },
+        {
+          "tokenId": "234146",
+          "deposited": true
+        }
+      ]
+    }
+  ]
+}

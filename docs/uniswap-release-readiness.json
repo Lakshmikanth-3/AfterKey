@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-11-06T23:50:23.391Z",
+  "block": "12079919",
+  "manager": "0x1238536071E1c677A632429e3655c799b22cDA52",
+  "gate": "0x47ae5aF5A9A2D0e90D2986861aD99f088270258F",
+  "positions": [
+    {
+      "address": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "tokenId": "234145",
+      "custodian": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "deposited": true,
+      "economics": {
+        "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+        "fee": 3000,
+        "tickLower": -887220,
+        "tickUpper": 887220,
+        "liquidity": "6179549430",
+        "tokensOwed0": "0",
+        "tokensOwed1": "0"
+      }
+    },
+    {
+      "address": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+      "tokenId": "234146",
+      "custodian": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+      "deposited": true,
+      "economics": {
+        "token0": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "token1": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+        "fee": 3000,
+        "tickLower": -887220,
+        "tickUpper": 887220,
+        "liquidity": "6179549430",
+        "tokensOwed0": "0",
+        "tokensOwed1": "0"
+      }
+    }
+  ],
+  "configurationActive": false,
+  "scope": "Read-only live positions/custody; not new consumer collection proof."
+}

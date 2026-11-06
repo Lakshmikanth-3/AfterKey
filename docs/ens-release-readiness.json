@@ -1,0 +1,47 @@
+{
+  "checkedAt": "2026-11-06T23:30:34.875Z",
+  "method": "Read-only Sepolia ENS and release-gate verification; no wallet signatures or mutations",
+  "name": "afterkey-release.manager.eth",
+  "gate": "0x47ae5aF5A9A2D0e90D2986861aD99f088270258F",
+  "identityBlock": "12079820",
+  "gateBlock": "12079821",
+  "checks": {
+    "exactRegisteredName": true,
+    "nameOwnedByWorkspace": true,
+    "dedicatedResolver": true,
+    "officialRegistry": true,
+    "officialResolver": true,
+    "ownerCanPublish": true,
+    "operatorCannotPublish": true,
+    "gateDnsMatches": true,
+    "gateResolverMatches": true,
+    "leafIdentityValid": true,
+    "candidateValid": true,
+    "bothPositionsDeposited": true
+  },
+  "progress": {
+    "workflowBindingMatchesDeployment": false,
+    "passingReportCurrent": false,
+    "configurationActive": false
+  },
+  "resolver": "0xd629d7De9c72684d27682Ed3C503283314906c24",
+  "registry": "0x26560685235D2d7861afF80866E8C1846d14420D",
+  "registryImplementation": "0x9BD8a88719068D09ecee662f36C0E3856708366a",
+  "resolverImplementation": "0x115eb53F0c60696633855F90b138178Fb40b2b2C",
+  "candidateDigest": "0x5b32aa6af927cc03ea347f0da9a6d5053ab42bc3bb3bd5d63284de3e64b21452",
+  "consumers": [
+    {
+      "address": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "tokenId": "234145",
+      "custodian": "0x5E8e5c0503527e8DCac763F992336a9Dc5465cDd",
+      "deposited": true
+    },
+    {
+      "address": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+      "tokenId": "234146",
+      "custodian": "0x65E74c5DFb833E9bC1798954da416b8D1aea4460",
+      "deposited": true
+    }
+  ],
+  "scope": "Configured name and consumers only. This is not a completed CRE report/activation/collection proof or a security audit."
+}

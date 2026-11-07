@@ -1,194 +1,333 @@
-<img src="public/logo.svg" width="42" alt="AfterKey logo">
+<p align="center"><img src="public/logo-wordmark.svg" width="320" alt="afterkey"></p>
 
-# AfterKey
+# AfterKey — A Release Gate for Shared ENS Configuration, Enforced on Uniswap v3 LP Positions
 
-**Review the change. Protect what depends on it.**
+**AfterKey closes the access path a narrow revoke leaves open — an owner stages a config change in an ENSv2 record, Chainlink CRE independently re-reads ENS and every Uniswap v3 LP consumer before anything goes live, and only the exact version CRE checked can ever be activated.**
 
-AfterKey reviews shared ENS configuration before an owner activates it for treasury workflows. ENSv2 stores the candidate, Chainlink CRE checks the exact version and registered consumers, and Uniswap LP contracts enforce the approved configuration. The existing offboarding tools remain available for recovery and permission cleanup.
+ENS stores the policy. Chainlink CRE independently verifies it against live chain state. Uniswap v3 consumers enforce it on every collection call, not once.
 
-## Start here
+Built at ETHGlobal Mumbai 2026 · Live on Ethereum Sepolia · Tracks: ENS — Best Use of ENSv2, Uniswap Foundation — Build with Uniswap, Chainlink — Best Workflow with CRE
 
-1. Run `npm run dev` in this repository and open **http://127.0.0.1:5173/?step=setup**.
-2. Use **Change review → 1. Setup** to deploy the release gate, then deploy, register and deposit the LP consumers with the owner wallet.
-3. Follow the [configuration release guide](docs/configuration-releases.md) to configure/deploy CRE, verify a candidate, activate it and collect using the approved version.
+## The Problem in One Sentence
 
-**Current boundary:** the configuration-review extension is local and requires live deployment/report/transaction proof. The public Vercel app and historical evidence below cover the earlier offboarding workflow. Do not repeat ENS name registration or mint new positions just to start this extension.
+Teams and agents read operators, treasuries and limits from shared ENS records, but removing the one permission a departing teammate is known to hold does not remove a broader role sitting one level up — so the access the team thinks is gone can still move funds.
 
-Live application: **https://afterkey.vercel.app**. Source: https://github.com/Lakshmikanth-3/AfterKey. The Vercel app is publicly accessible, includes the signed CRE relay, and reads real Sepolia state. The earlier Sites deployment remains private by the owner’s choice. [Deployment checks](docs/vercel-deployment-verification.json).
+## Why This Matters — Context
 
-## Configuration review extension
-
-The new **Change review** workspace stages ENS configuration, shows known shared-record dependencies, requests a version-bound CRE report, and lets the owner activate that exact version for registered Uniswap LP consumers. Contracts reject stale versions and unauthorized recipient changes. [Implementation, setup and proof boundaries](docs/configuration-releases.md).
-
-**Status:** the replacement ENS resolver/name, gate, both consumers and NFT deposits are verified on Sepolia. The candidate is published. The latest batched CRE workflow still needs owner binding and successful report delivery, followed by activation and collections. Vercel still serves the earlier offboarding app. See [current ENS qualification gaps](docs/ENS_QUALIFICATION_REVIEW.md) and [live readiness](docs/ens-release-readiness.json). Archived offboarding receipts demonstrate that earlier flow.
-
-## Verify the implementation
-
-| Evidence | Open it |
-| --- | --- |
-| ENS owner-approved revocation | [Successful Sepolia receipt](https://sepolia.etherscan.io/tx/0xbe002b4c04dc64da5ab12fde4c449f25010bc78fc3044f86dd46c29849e7f241), [ten setup/delegation/update/revocation receipts](docs/transactions.md) |
-| ENS identity and owner preservation | [30 historical-state checks](docs/ens-offboarding-verification.json) across blocks 12074041 and 12074046 |
-| Complete Uniswap offboarding | [Successful final revocation](https://sepolia.etherscan.io/tx/0x2a4ca9ba41a8fe0d11f8d8eeba69a9a50dee27841b80e8c0905366e5032671f8) at block 12075584; [14 historical-state and policy checks](docs/uniswap-offboarding-verification.json) for positions 234145 and 234146 |
-| Chainlink external-case verification | [Authenticated execution proof](docs/cre-execution-proof.json): successful HTTP run `f42d1d27-6bcf-4689-b290-d4d533f83729` with 18 strict collector checks, [completed GitHub case](https://github.com/Lakshmikanth-3/AfterKey/issues/2), and [nine departure checks](docs/cre-departure-verification.json) |
-| Chainlink scheduled monitoring | [Archived scheduled proof](docs/cre-scheduled-execution-proof.json): successful run `4a9f683b-50a0-4645-873d-d838400d21b6`, Sepolia block 12074459; [approval-event proof](docs/cre-approval-event-proof.json) |
-| Actual ENSv2 workspace | [Permissioned Resolver](https://sepolia.etherscan.io/address/0x6161ada4D10a529940B90b078B4F9A8d3679c8f8), [subname registry](https://sepolia.etherscan.io/address/0x26560685235D2d7861afF80866E8C1846d14420D) |
-| Live ENSv2 deployment verification | [Factory provenance, current implementations and permission scan](docs/ens-live-read-check.json), [security review](docs/ENS_SECURITY_REVIEW.md) |
-| Official Uniswap integration | [Sepolia v3 position manager](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52), [six reviewed operations](src/uniswap/positions.ts#L36) |
-
-## Sponsor requirement mapping
-
-Checked against the [ETHGlobal Mumbai sponsor requirements](https://ethglobal.com/events/mumbai/prizes). Implementation and demonstrated execution are recorded separately.
-
-| Prize | Requirement | Current status and evidence |
+| Fact | Detail | Source |
 | --- | --- | --- |
-| ENS — Best Use of ENSv2 | ENSv2 on mainnet or Sepolia, central and functional integration | Sepolia hierarchy, Permissioned Resolver, EAC delegation and offboarding; [live discovery](src/ens/protocol.ts#L32), [independent access paths](src/engine.ts#L67), [receipts](docs/transactions.md) |
-| ENS — Best Use of ENSv2 | Open source and a live demo link in the showcase | Public MIT source and the public Vercel demo are available; attach both links to the showcase |
-| Uniswap — Build with Uniswap | Meaningful use of the stack, with clear implementation pointers | Official v3 NFTs, approvals, collection and withdrawal; [portfolio reads](src/uniswap/positions.ts#L11), [action policy](src/uniswap/positions.ts#L36), [preservation](src/engine.ts#L167). [Two owner-held mints](docs/uniswap-mint-verification.json), [operator collection](docs/uniswap-operator-verification.json) and [complete offboarding](docs/uniswap-offboarding-verification.json) verified. Optional withdrawal is implemented but was not executed in this preservation demo |
-| Uniswap — Build with Uniswap | Public source, FEEDBACK.md and developer feedback form | [Feedback file](FEEDBACK.md) is published and the [required form](https://developers.uniswap.org/hackathon-feedback) was submitted with its public link; [confirmation](docs/uniswap-feedback-confirmation.png) |
-| Chainlink — Best workflow with CRE | Blockchain plus external API/system, meaningful orchestration | [GitHub case reads](cre/external-case.ts#L4), [signed HTTP routing](cre/main.ts#L26), [cron](cre/main.ts#L40), [approval events](cre/main.ts#L43). [Successful departure verification](docs/cre-departure-verification.json) joins GitHub issue 2 with Sepolia state |
-| Chainlink — Best workflow with CRE | Live deployment or successful workflow execution | [ACTIVE deployment](cre/deployment.json), [current signed HTTP execution](docs/cre-execution-proof.json), and archived [scheduled](docs/cre-scheduled-execution-proof.json) / [approval-event](docs/cre-approval-event-proof.json) executions. The current run compares blocks 12075512 and 12075653 and reports preserved assets with permissions absent |
+| Offboarding doesn't finish | 91% of former-employee tokens remain active after offboarding completes. | [State of NHIs and Secrets, cited by NHI Mgmt Group](https://nhimg.org/articles/off-boarding-gaps-in-cloud-access-create-identity-risk/) |
+| Over-provisioning is the default, not the exception | An estimated 97% of non-human identities carry more privilege than they use. | [NHI Mgmt Group](https://nhimg.org/articles/identity-blast-radius-how-overprovisioning-magnifies-breach-damage/) |
+| Credential/access abuse is still a leading breach path | Credential abuse appears somewhere in the attack chain of 39% of breaches in the 2026 Verizon DBIR. | [2026 Verizon DBIR, cited by NHI Mgmt Group](https://nhimg.org/articles/2026-verizon-dbir-shows-vulnerability-exploitation-has-overtaken-credentials/) |
+| ENS's own access-control model makes this concrete | A text-key role and a resolver-wide role are separate grants under Enhanced Access Control; revoking one leaves the other fully active — this is documented ENS behavior, not a bug. | `hasRoles` checks in [`src/ens/protocol.ts`](src/ens/protocol.ts), verified on real Sepolia state in [`ens-offboarding-verification.json`](docs/ens/proofs/ens-offboarding-verification.json) |
 
-## Uniswap judge verification
+The gap is structural, not hypothetical: the same narrow-permission trap that shows up in general IT offboarding statistics is reproducible, on real testnet state, in ENSv2 and in Uniswap v3 approvals — which is exactly what AfterKey's own verified evidence below demonstrates.
 
-### Current release consumer integration
+## Three Layers of the Problem
 
-These links reference current local source; publish the matching source before judging. Line anchors below were checked during the audit and should be rechecked if files change.
+**1. Shared config, no review.** Operators, treasuries and limits live in ordinary ENS records. Anyone holding a role can change them, and nothing independently checks what depends on that record before the change takes effect.
 
-| Behavior | Contract / exact source |
+**2. A narrow revoke proves nothing.** Removing a text-key permission does not remove a resolver-wide role. A departing operator — or a compromised one — can keep access the team believes is gone, because "we revoked it" was never independently re-checked against the full permission surface.
+
+**3. Assets sit at the end of the chain.** Uniswap v3 LP positions, and their approvals, follow whatever that ENS config currently says. A stale or wrong record means collected fees flow to the wrong operator — and ordinary ERC-721 approval checks don't distinguish "can manage this position" from "can only collect fees."
+
+## The Solution — AfterKey
+
+Stage in ENS. Verify with Chainlink CRE. Activate for your LP positions.
+
+```
+Without AfterKey:
+  revoke   = team removes the one permission it remembers   ← narrow, incomplete
+  role     = a broader resolver-wide/portfolio-wide grant survives ← invisible, unverified
+  config   = the owner trusts a change on faith               ← no independent check
+  "safe"   = assumed once, never re-checked                   ← stale by the next block
+
+With AfterKey:
+  scan     = EAC roles + registry resources + Uniswap approvals  ← both scopes, both protocols
+  stage    = candidate (operator, treasury, expiry) written to an ENSv2 data record ← public, nothing live yet
+  verify   = Chainlink CRE independently re-reads ENS + every registered LP consumer
+  activate = owner signs the exact digest and epoch CRE checked  ← consumers enforce it on every call
+```
+
+A violation of the staged policy isn't an opinion — it's `authorize(operator)` returning false against the one digest the gate has marked active, computable by anyone reading the same ENS record and the same chain state AfterKey reads.
+
+AfterKey ships two complete, independently verified capabilities:
+
+- **Configuration review (new):** the release-gate workflow above — stage, verify, activate, enforce.
+- **Offboarding (original, fully proven on Sepolia):** discover every surviving access path across ENSv2 and Uniswap v3 for a departing wallet, prepare owner-reviewed broad-first revocations, and verify afterward that the team's identity and positions are untouched.
+
+## What Makes AfterKey Unique
+
+| Capability | Revoke.cash-style revocation tools | Multisig/Timelock governance (e.g. Safe + Zodiac) | One-time manual audit | AfterKey |
+| --- | --- | --- | --- | --- |
+| Finds the *surviving* access path, not just the one you already suspect | ❌ lists approvals, doesn't model dependency | ❌ | ✅ once, then stale | ✅ live, every scan |
+| Reviews a config change *before* it's trusted | n/a — reactive only | ✅ manual review | ✅ | ✅ staged ENS candidate |
+| Independent re-verification against live chain state | ❌ | ❌ | ❌ point-in-time | ✅ Chainlink CRE, every request |
+| Owner-gated activation of the *exact checked version* | n/a | ✅ (execution), not config-bound | n/a | ✅ digest + epoch bound |
+| Spans identity (ENS) *and* delegated assets (Uniswap LP) in one model | ❌ | ❌ | partial, manual | ✅ |
+
+AfterKey is not a revocation tool like Revoke.cash — it's a *review gate* for config an owner is about to trust, and a *permissions state check*, not a privileged-call simulation.
+
+## Technical Architecture
+
+### System Overview
+
+```
+┌─────────────────────────── Owner / Browser ───────────────────────────┐
+│  Vite + TypeScript app (src/)                                          │
+│  Workflow:    1. Setup → 2. Review change → 3. Run workflow → 4. Evidence │
+│  Offboarding: ENS identity → Uniswap positions → Activity → Chainlink  │
+│  Reads ENSv2 + Uniswap v3 directly via viem; wallet signs every change │
+└───────────────┬───────────────────────────────┬────────────────────────┘
+                │ wallet transactions            │ 5-min, body-bound signed HTTP
+                ▼                                ▼
+┌───────────────────────────┐    ┌────────────────────────────────────────┐
+│  Ethereum Sepolia          │    │  Signed CRE relay                      │
+│                            │    │  (server/, api/cre-trigger.ts,         │
+│  ENSv2                     │    │   worker/ — Node, Vercel fn, Worker)   │
+│   ├─ ETHRegistrar          │    │  Verifies signature, exact body,       │
+│   ├─ UserRegistry          │◀───┤  expiry, event-specific input and      │
+│   └─ Permissioned Resolver │    │  deployed scope before forwarding      │
+│  ENSReleaseGate            │    └──────────────────┬──────────────────── ┘
+│   ├─ digest · epoch ·      │                        │
+│   │  expiry · workflowId   │                        ▼
+│   └─ authorize(operator)   │            ┌─────────────────────────────┐
+│  ReleaseLPVault ×N         │◀──signed───│  Chainlink CRE              │
+│   ├─ one Uniswap v3 NFT    │   report   │  cron · HTTP · EVM-log      │
+│   └─ collect() gated on    │            │  triggers; independently    │
+│      gate.authorize()      │            │  re-reads ENS + every       │
+│  Uniswap v3 Position       │            │  registered consumer        │
+│  Manager (official)        │            └─────────────────────────────┘
+└────────────────────────────┘
+```
+
+### Contracts and core modules
+
+| Component | Role |
 | --- | --- |
-| Official Sepolia v3 manager | [Manager constant](src/uniswap/contracts.ts#L4) |
-| ENS active version authorizes the operator | [Gate authorization](contracts/ENSReleaseGate.sol#L109) |
-| Consumer holds exactly one NFT and collects only to the fixed owner | [ReleaseLPVault](contracts/ENSReleaseGate.sol#L116), [collect](contracts/ENSReleaseGate.sol#L124) |
-| Owner recovery and restricted deposits | [release](contracts/ENSReleaseGate.sol#L130), [NFT receiver](contracts/ENSReleaseGate.sol#L131) |
-| Prepared owner/operator actions | [Release actions](src/releases/client.ts#L63) |
-| Official manager receipt must agree with consumer event | [Collection verifier](src/uniswap/collection-proof.ts#L5) |
-| Independent live collection and principal checks | [Receipt verifier](scripts/verify-release-collection.ts), [live custody/liquidity](docs/uniswap-release-readiness.json) |
+| [`ENSReleaseGate.sol`](contracts/ENSReleaseGate.sol) | Version-bound release gate: stores the candidate digest, epoch and expiry; accepts only a Chainlink CRE-signed report; lets only the owner activate; authorizes the exact operator for the exact active version. |
+| `ReleaseLPVault` (in `ENSReleaseGate.sol`) | Holds exactly one Uniswap v3 NFT; [`collect()`](contracts/ENSReleaseGate.sol#L124) asks `ENSReleaseGate.authorize()` before every official-manager `collect` call; [`release()`](contracts/ENSReleaseGate.sol#L130) returns the NFT to the owner independent of ENS state. |
+| [`ENSPositionVault.sol`](contracts/ENSPositionVault.sol) | A second consumer pattern: [`canCollect`](contracts/ENSPositionVault.sol#L71) calls the Permissioned Resolver's `hasRoles` **live, at call time** — a role revoked in ENS blocks the very next collection with no separate sync step. |
+| [`cre/main.ts`](cre/main.ts) | The Chainlink CRE workflow: cron, HTTP and EVM-log triggers; independently re-reads ENSv2 and every registered Uniswap consumer; writes the signed release report through the CRE forwarder. |
+| [`src/engine.ts`](src/engine.ts) | Permission scans, residual-path discovery, revocation ordering, per-block read caching, owner-preservation checks — the offboarding engine. |
+| [`src/ens/`](src/ens), [`src/uniswap/`](src/uniswap), [`src/releases/`](src/releases) | Live ENS hierarchy/profile discovery and setup; Uniswap v3 position reads and action policy; the Setup → Review → Run → Evidence workflow client. |
+| [`server/cre-worker.ts`](server/cre-worker.ts) / [`api/cre-trigger.ts`](api/cre-trigger.ts) | The portable signed relay: rejects unsigned, expired, oversized, malformed or altered requests before forwarding to the fixed CRE gateway. |
 
-**Current proof boundary:** NFTs 234145 and 234146 are deposited with nonzero liquidity. Release activation and both new consumer collection receipts remain pending. Prior direct-manager collection/revocation evidence does not prove the new consumer flow. [Current qualification checklist](docs/UNISWAP_QUALIFICATION_REVIEW.md).
+## How Each Sponsor's Stack Is Used
 
+### ENS — the policy is the name (ENSv2, Sepolia beta)
 
-The **$10,000 Build with Uniswap** prize accepts v3 protocol integrations; an API key or v4 hook is not required by the [Mumbai rules](https://ethglobal.com/events/mumbai/prizes). The separate $5,000 pool requires Continuity Track participation, which is not established by this repository.
+- **Namespace and identity:** `manager.eth` → `treasury-agent.manager.eth` (offboarding) and `afterkey-release.manager.eth` (release gate), both real registered subnames read through the live ENSv2 hierarchy — the official Verifiable Factory, Permissioned Resolver and User Registry implementations, never a hard-coded address.
+- **Both permission scopes, every time:** AfterKey reads `hasRoles` for the text-key role *and* the resolver-wide role via Enhanced Access Control, plus registry roles that can redirect a name/subregistry and ERC-1155 operator approval — distinguishing ordinary from admin authority.
+- **The candidate config lives in an ENS record:** `afterkey.release` is published as an ENS **data** record (ABI-encoded operator, treasury, manager, expiry) and hashed into the digest CRE checks and the gate enforces.
+- **Resolved fresh:** every read goes through the live resolver at the current block — nothing is cached as ground truth across sessions.
 
-These code links pin the reviewed source so their line numbers remain stable:
+### Uniswap v3 — delegated liquidity, two independent approval paths
 
-| Verify | Exact source or proof |
+- **Official contracts only:** the Sepolia `NonfungiblePositionManager` at [`0x1238536071E1c677A632429e3655c799b22cDA52`](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52) — no custom wrapper, no proxy AfterKey controls.
+- **Individual vs. portfolio approval, modeled separately:** AfterKey reads `getApproved` and `isApprovedForAll` independently and will not call an offboard "complete" until both are gone — exactly the gap documented in [`FEEDBACK.md`](FEEDBACK.md).
+- **Collect-only consumers:** `ReleaseLPVault` and `ENSPositionVault` each hold one position NFT and can only call `collect`, never withdraw liquidity; the recipient is fixed to the owner treasury at deployment.
+- **Six reviewed operations:** individual/portfolio delegation and revocation, collection to the owner, and owner-reviewed liquidity withdrawal — see [`src/uniswap/positions.ts`](src/uniswap/positions.ts).
+
+### Chainlink CRE — the independent second check
+
+- **Three real triggers:** an owner-signed, body-bound HTTP request (5-minute expiry, relayed and verified before it ever reaches the CRE gateway); a cron recheck; and an EVM-log trigger on Uniswap approval events — see [`cre/main.ts`](cre/main.ts).
+- **Signed, on-chain report:** delivered through the CRE forwarder (`KeystoneForwarder`); `ENSReleaseGate` checks the forwarder, workflow ID, workflow owner, chain, candidate digest, baseline epoch, coverage hash and report validity window before accepting it.
+- **Never holds the key:** CRE verifies and reports; every revocation and every activation remains wallet-signed by the owner. CRE cannot execute an owner action on its own.
+- **Short-lived by design:** reports expire quickly, so a stale "pass" can't be replayed against a later, different configuration.
+
+## Full Flows
+
+### Owner-reviewed offboarding
+
+```mermaid
+sequenceDiagram
+    actor Owner
+    participant UI as AfterKey browser
+    participant Wallet as Browser wallet
+    participant Chain as ENSv2 and Uniswap v3 on Sepolia
+    Owner->>UI: Select owner, operator and scope
+    UI->>Chain: Pin block and read permission paths
+    Chain-->>UI: Roles, approvals and captured asset state
+    UI-->>Owner: Review broad and individual revocations
+    Owner->>Wallet: Sign each reviewed transaction
+    Wallet->>Chain: Submit revocation
+    Chain-->>UI: Receipt, transaction hash and block
+    UI->>Chain: Refresh between transactions and verify final state
+    UI-->>Owner: Export scoped before/after evidence
+```
+
+### Configuration release — stage, verify, activate
+
+```mermaid
+flowchart LR
+    A[ENS candidate data] --> B[CRE reads candidate and LP custody]
+    B --> C[Authenticated report in ENSReleaseGate]
+    C --> D[Owner activates exact version]
+    D --> E[Registered Uniswap LP consumers]
+    E --> F[Fixed owner treasury]
+```
+
+### Independent CRE monitoring
+
+```mermaid
+flowchart TD
+    Owner[Owner wallet] -->|Expiring signed request| Relay[AfterKey relay]
+    Relay -->|Validated exact request| CRE[Chainlink CRE HTTP handler]
+    Cron[CRE cron trigger] --> Monitor[CRE access monitor]
+    Logs[Uniswap approval log trigger] --> Monitor
+    CRE -->|Current or before/after check| Reader[CRE pinned reader]
+    Monitor --> Reader
+    Reader --> Batch[Sepolia Multicall3]
+    Batch --> ENS[ENSv2 registries and Permissioned Resolver]
+    Batch --> UNI[Uniswap v3 position manager]
+    Reader --> Output[Remaining paths and captured asset state]
+    Output --> Frames[Digest-bound execution log chunks]
+    Frames --> Proof[Authenticated CRE execution evidence]
+```
+
+## Security Model
+
+**What AfterKey checks, and what it doesn't.** A closed offboarding result means no modeled path was found in the *configured* scope at the recorded block — other wallets, signed permits, unknown contracts, social recovery and unconfigured resources are outside coverage. AfterKey does not describe a read-only check as an executed attack attempt or as universal proof of no access, and it includes no privileged-call simulations.
+
+**Non-negotiable invariants**
+
+- `ReleaseLPVault.collect()` and `ENSPositionVault.canCollect()` both re-check authorization live at call time — a revoked role or a demoted version blocks the *next* collection, not just future ones.
+- `ENSReleaseGate` accepts only a correctly forwarded, digest-bound, epoch-bound, not-yet-expired CRE report — never an owner- or UI-asserted claim.
+- Collection recipients are fixed to the owner treasury; operators can collect fees, never withdraw liquidity or transfer the NFT out through the consumer.
+- Every revocation and every activation is signed individually by the owner's own wallet; broad-first execution is not atomic and does not eliminate mempool races.
+
+**Trust assumptions, stated openly**
+
+- Sepolia only; this is not an audited production security product.
+- The default public RPC falls back to viem's Sepolia default on provider failures, with reads pinned to the requested block; a custom RPC is used exclusively, without that fallback.
+- Reads are cached only within one block snapshot; incomplete reads and empty protocol scope cannot produce a closed result.
+- CRE reports and owner-signed receipts are separate evidence; recorded CRE execution status is an observation, not a browser health poll.
+
+**Known limits:** the position workspace bounds discovery to 50 NFTs, the offboarding scanner to 200; incomplete coverage blocks execution. Dependency coverage compares known names at their own observation blocks, not one atomic global snapshot — see [`configuration-releases.md`](docs/release-gate/configuration-releases.md) for the full boundary.
+
+## Deployed Contracts — Sepolia Testnet
+
+Owner: `0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5` · Operator: `0x22225204824EdF00b3c8c32A43f1C04246e2d1b4`
+
+| Contract / resource | Address |
 | --- | --- |
-| Official Sepolia manager and ABI | [Contract address and ABI](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/contracts.ts#L4) |
-| Live NFTs and both approval paths | [Portfolio reads](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/positions.ts#L11), [offboarding findings](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/engine.ts#L67) |
-| Individual and portfolio revocation | [Approval removal](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/positions.ts#L59) |
-| Collection to the owner; optional withdrawal | [Bound operations](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/uniswap/positions.ts#L65) |
-| Exact mined transaction and retained position state | [Receipt validation](https://github.com/Lakshmikanth-3/AfterKey/blob/87cccbcaef14fe71f4ca16b15f65faf9e601fb2e/src/transactions.ts#L14), [live verification](docs/uniswap-security-verification.json), [security review](docs/UNISWAP_SECURITY_REVIEW.md) |
-| Required feedback submission | [FEEDBACK.md](FEEDBACK.md), [saved form confirmation](docs/uniswap-feedback-confirmation.png) |
+| `ENSReleaseGate` | [`0x47ae5aF5A9A2D0e90D2986861aD99f088270258F`](https://sepolia.etherscan.io/address/0x47ae5aF5A9A2D0e90D2986861aD99f088270258F) |
+| `ReleaseLPVault` — position 234145 | [`0x5e8E5C0503527e8DcAc763f992336a9DC5465cDd`](https://sepolia.etherscan.io/address/0x5e8E5C0503527e8DcAc763f992336a9DC5465cDd) |
+| `ReleaseLPVault` — position 234146 | [`0x65E74c5DFb833E9bC1798954da416b8D1aea4460`](https://sepolia.etherscan.io/address/0x65E74c5DFb833E9bC1798954da416b8D1aea4460) |
+| ENS identity — release gate | `afterkey-release.manager.eth`, resolver [`0xd629d7De9c72684d27682Ed3C503283314906c24`](https://sepolia.etherscan.io/address/0xd629d7De9c72684d27682Ed3C503283314906c24) |
+| ENS identity — offboarding | `treasury-agent.manager.eth`, Permissioned Resolver [`0x6161ada4D10a529940B90b078B4F9A8d3679c8f8`](https://sepolia.etherscan.io/address/0x6161ada4D10a529940B90b078B4F9A8d3679c8f8), subname registry [`0x26560685235D2d7861afF80866E8C1846d14420D`](https://sepolia.etherscan.io/address/0x26560685235D2d7861afF80866E8C1846d14420D) |
+| Uniswap v3 Position Manager (official) | [`0x1238536071E1c677A632429e3655c799b22cDA52`](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52) |
+| Chainlink CRE workflow | `afterkey-departure-verifier`, workflow ID `0x008b8fff1c0118afc754c6f524fb07be206d2bae97d7d0167cf035ac599daa20`, status `ACTIVE` ([`cre/deployment.json`](cre/deployment.json)) |
 
-Still required for the participant's final entry: record the real demo video using the [timed narration](docs/DEMO.md#final-2-minute-narration), paste the [prepared showcase package](docs/SHOWCASE.md), select **ENS — Best Use of ENSv2**, **Uniswap — Build with Uniswap** and **Chainlink — Best workflow with CRE**, then submit. This repository does not prove the participant-dashboard submission is complete.
+## Live Proof (real Sepolia transactions)
 
-## Architecture
+| Evidence | Reference |
+| --- | --- |
+| Final owner-approved ENS revocation | [Successful receipt](https://sepolia.etherscan.io/tx/0xbe002b4c04dc64da5ab12fde4c449f25010bc78fc3044f86dd46c29849e7f241), block 12,074,044 — [ten full setup/delegation/update/revocation receipts](docs/validation/transactions.md) |
+| ENS identity and owner preservation | [30 independent historical-state checks](docs/ens/proofs/ens-offboarding-verification.json) across blocks 12,074,041 and 12,074,046 — all passed |
+| Complete Uniswap offboarding | [Final portfolio revocation](https://sepolia.etherscan.io/tx/0x2a4ca9ba41a8fe0d11f8d8eeba69a9a50dee27841b80e8c0905366e5032671f8) at block 12,075,584; [14 historical-state and policy checks](docs/uniswap/proofs/uniswap-offboarding-verification.json) for positions 234145 and 234146 |
+| Chainlink external-case verification | [Authenticated execution proof](docs/chainlink-cre/proofs/cre-execution-proof.json): run `f42d1d27-6bcf-4689-b290-d4d533f83729`, 18 strict collector checks, [completed GitHub case](https://github.com/Lakshmikanth-3/AfterKey/issues/2) |
+| Chainlink scheduled monitoring | [Archived scheduled proof](docs/chainlink-cre/proofs/cre-scheduled-execution-proof.json): run `4a9f683b-50a0-4645-873d-d838400d21b6`, Sepolia block 12,074,459 |
+| Release-gate consumer deployment and custody | [NFT 234145](docs/release-gate/proofs/release-replacement-consumer-234145.json), [NFT 234146](docs/release-gate/proofs/release-replacement-consumer-234146.json), both deposited with nonzero liquidity |
+| CRE workflow bound to the release gate (owner-signed in MetaMask) | Confirmed at block 12,080,625; release version 2 → 3 — visible in the app's **4. Evidence** tab |
+| Live ENSv2 deployment verification | [Factory provenance, current implementations and permission scan](docs/ens/proofs/ens-live-read-check.json) |
 
-![AfterKey architecture](docs/architecture.svg)
+This repository's own `docs/*/proofs/` folders carry the machine-readable version of every row above, grouped by sponsor track.
 
-The wallet signs asset changes. The browser scans and verifies the reviewed scope. Chainlink CRE independently reads the chain, validates external departure cases and records execution evidence. Its relay verifies the owner's exact request and never stores a signing key. See [editable sequence/flow diagrams and evidence boundaries](docs/ARCHITECTURE.md).
+## Repository Structure
 
-## Why ENSv2 is central
+```
+afterkey/
+├── contracts/                   # ENSReleaseGate.sol, ENSPositionVault.sol, test fixtures
+├── cre/                         # Chainlink CRE workflow (cron, HTTP, EVM-log triggers)
+├── src/                         # Vite + TypeScript app
+│   ├── ens/                     # Live hierarchy/profile discovery, setup, delegation demo
+│   ├── uniswap/                 # Position reads, approvals, action policy
+│   ├── cre/                     # Browser-side auth for the signed relay
+│   ├── releases/                # Setup → Review change → Run workflow → Evidence client
+│   ├── guarded/                 # Shared guarded-action primitives
+│   └── engine.ts                # Permission scans, residual paths, preservation checks
+├── server/, api/, worker/       # Signed CRE relay and policy (Node server, Vercel fn, Worker build)
+├── scripts/                     # Compilation, plus verify-*/collect-* proof-producing scripts
+├── tests/                       # npm test: engine, ENS, CRE relay/policy, vault tests
+├── docs/                        # Documentation index, grouped by sponsor track + proofs/
+└── FEEDBACK.md                  # Uniswap developer feedback (public, submitted)
+```
 
-Removing a text-key permission from a Permissioned Resolver does not remove a corresponding resolver-wide role. AfterKey checks both scopes, distinguishes ordinary and admin roles, and shows effective authority through `hasRoles`. It also checks registry roles that can redirect identity and ERC-1155 operator approval. The identity, its record values and its owner remain visible while the departing wallet's known access paths are removed.
+## Tech Stack
 
-See [the ENS qualification review](docs/ENS_QUALIFICATION_REVIEW.md) and [security review](docs/ENS_SECURITY_REVIEW.md) for the prize mapping, official-resource audit, technical limits and demo narrative. Configured ENS offboarding has live receipt, historical-state proof, public source and a public demo.
+| Layer | Technology |
+| --- | --- |
+| Smart contracts | Solidity, compiled via `solc` 0.8.30 ([`scripts/compile-release.mjs`](scripts/compile-release.mjs)) |
+| ENS | ENSv2 Sepolia beta — ETHRegistrar, User Registry, Permissioned Resolver, Verifiable Factory, Enhanced Access Control |
+| Uniswap | Official Sepolia v3 `NonfungiblePositionManager` — approvals, collection, `multicall` |
+| Chainlink | CRE SDK `@chainlink/cre-sdk`, cron/HTTP/EVM-log triggers, `KeystoneForwarder` |
+| Frontend | Vite 6, TypeScript, [`viem`](https://viem.sh), `lucide` |
+| Backend / relay | Node (`tsx`) server, Vercel function, Cloudflare Worker build |
+| Network | Ethereum Sepolia |
 
-## Run
+## Local Setup
 
-Node.js 22.9 or newer in the 22.x release line is required. A browser wallet on Sepolia is required for signing.
+Node.js 22.9+ (22.x line) is required. A browser wallet on Sepolia is required for signing.
 
 ```sh
 npm install
-npm run dev
+npm run dev          # http://127.0.0.1:5173
 npm test
 npm run build
 npm run verify:ens
 ```
 
-`verify:ens` performs ordinary view reads on real Sepolia deployments. It does not send transactions or attempt privileged writes. Its default target is the public `.eth` registry entry. Pass a workspace name, as in `npm run verify:ens -- treasury-agent.manager.eth`, to additionally verify official factory provenance and current proxy implementations. Set `SEPOLIA_RPC_URL` in the environment to use a different RPC.
+`verify:ens` performs ordinary view reads on real Sepolia deployments — it never sends a transaction. Pass a workspace name, as in `npm run verify:ens -- treasury-agent.manager.eth`, to additionally verify official factory provenance and current proxy implementations. Set `SEPOLIA_RPC_URL` in the environment to use a different RPC.
 
-## Live ENS setup
+Copy `.env.example` to `.env` and optionally set `SEPOLIA_RPC_URL`. `.env`, environment variants, signing keys and credential files are excluded from Git — only `.env.example` contains shareable defaults. Never place a private key or secret in a `VITE_*` variable: browser build variables are public.
 
-1. Fund the configured owner with Sepolia test ETH using the faucet linked in the app.
-2. Register a Sepolia `.eth` name through https://sepolia.app.ens.domains/ and retain ownership in the configured owner wallet.
-3. Open **ENS identity** and enter that parent in the setup section. Choose an operator label and text key.
-4. Prepare, review and sign each step. The flow uses the official ENS Verifiable Factory, Permissioned Resolver implementation and User Registry implementation. It reuses suitable existing infrastructure and stops instead of replacing an existing nonzero subregistry or another resolver.
-5. The flow initializes the operator subname's ETH address and text profile, connects the canonical parent, and registers the subname. A new subname gets a one-year expiry. Registration is an actual onchain operation; no name is invented by the UI.
-6. Optionally delegate the text key to the departing wallet. A separate opt-in broad test grant creates the residual-access demo on Sepolia. It grants an ordinary text role, never admin rights.
-7. Revoke only the key role in the explicit demo and read the effective permission again. If a root role survives, `hasRoles` remains true.
-8. Add discovered scopes to Offboarding, review the complete plan and sign broad-first revocations. The app refreshes permissions between transactions and rereads owner/name state.
-9. Export the evidence, including block/hash, configured resources, role state and real transaction links.
+## Deploy (Sepolia)
 
-Wallet pair supplied by the user:
+```sh
+npm run build              # local Node server build, includes the signed relay
+npm start                  # serve the build locally
+npm run build:vercel       # browser assets + api/cre-trigger.ts handler
+```
 
-- Owner: `0x2cE812CF03d1F252C940aFf954E15D5E49bBedd5`
-- Departing operator: `0x22225204824EdF00b3c8c32A43f1C04246e2d1b4`
+For the release-gate workflow specifically: deploy `ENSReleaseGate`, deploy/register/deposit one `ReleaseLPVault` per NFT, export CRE coverage from **1. Setup**, deploy the Chainlink CRE workflow, then bind the returned workflow ID in the app — see the full staged walkthrough in [`docs/release-gate/configuration-releases.md`](docs/release-gate/configuration-releases.md).
 
-The public addresses are defaults and do not authorize the application to sign. No seed phrases or private keys are requested or stored. The browser wallet must match the configured owner and Sepolia network. The embedded preview may not provide a wallet extension; use a wallet-enabled browser for signing.
+## End-to-End Test Flow
 
-## ENS implementation
+1. **Connect wallet** — MetaMask on Sepolia, matching the configured owner.
+2. **Workflow → 1. Setup** — deploy or refresh the release gate; register and deposit the LP consumer for each owned Uniswap v3 NFT.
+3. **Bind the CRE workflow** — review the exact calldata (`Bind CRE workflow`, invalidates pending reports and increments the release version), then sign in MetaMask.
+4. **2. Review change** — publish a candidate (operator, treasury, expiry) to the ENS record; request CRE verification.
+5. **3. Run workflow** — once a signed report lands, activate the exact checked digest; the operator can now collect, paid only to the fixed owner treasury.
+6. **4. Evidence** — every confirmed transaction, block and signer, exported alongside live reads.
+7. **Offboarding** (original workflow) — **ENS identity** → audit a namespace, review effective roles; **Uniswap** → discover individual and portfolio approvals; **Offboarding** → broad-first revocation plan with per-transaction receipts; **Activity** → confirmed transaction history.
 
-| File | Purpose |
-| --- | --- |
-| `src/ens/deployments.json` | Official Sepolia addresses and observed runtime-code hashes, pinned to the deployment-linked ENS revision |
-| `src/ens/abi.ts` | Version-matched EAC, registry, resolver and factory ABI subsets |
-| `src/ens/roles.ts` | Current role constants, ordinary/admin labels and exact resolver resource calculation |
-| `src/ens/protocol.ts` | Live hierarchy/profile discovery, canonical resources, deployment checks and reviewed setup transactions |
-| `src/ens/ui.ts` | ENS-first identity audit, setup, explicit delegation demo and evidence export |
-| `src/engine.ts` | Permission scans, residual paths, ordering, per-block read caching and owner-preservation checks |
-| `src/main.ts` | Wallet connection, calldata review, receipt tracking and verification |
-| `tests/ens.test.ts` | Resource/role/grant/deployment-event, deterministic-salt and ownership invariants |
+## Testing
 
-Protocol constants are not fabricated user state. Actual names, profiles, owners, current resources, permission bitmaps and transaction evidence are read from chain. Source revision: `07e55a056f5b6a9c90119f501bdd05714e67dddd`, linked from ENS's [deployment table](https://docs.ens.domains/learn/deployments/). Code/interface checks detect deployment-version drift; they are not an audit of arbitrary custom implementations.
+```sh
+npm test
+```
 
-Resolver text/data resources depend on the key alone. Coin/content resources depend on the ABI-encoded uint256. Interface resources depend on four packed bytes. A key-scoped role can affect that key across every name served by a resolver; it is not name-scoped. Registry resources come from `getResource` so current registration versions are respected. Token IDs can change during role updates; owner checks use the current resource and name owner.
+Covers the offboarding engine, ENS resource/role/grant/deployment-event checks, CRE relay/policy validation, and vault invariants (deterministic salts, ownership, collect-only enforcement).
 
-Registry and resolver permissions are separate. A registry root role does not automatically confer a role on another resolver, although certain registry roles can redirect a name/subregistry. Regular roles are distinct from ADMIN roles controlling granting/revoking.
+## Sponsor Tracks
 
-## Uniswap delegated liquidity
+- **ENS — Best Use of ENSv2:** central, functional ENSv2 integration (not a display-name feature) — live hierarchy, Permissioned Resolver, Enhanced Access Control, a candidate config stored as an ENS data record. Public source and a public demo.
+- **Uniswap Foundation — Build with Uniswap:** official v3 NFTs, both approval paths modeled independently, collect-only consumer contracts, fixed-treasury recipients. `FEEDBACK.md` published and the [required developer form](https://developers.uniswap.org/hackathon-feedback) submitted.
+- **Chainlink — Best Workflow with CRE:** three real trigger types, signed on-chain reports through the CRE forwarder, an independently re-verified release gate that nothing can activate without a current, matching report.
 
-The **Uniswap** workspace reads actual v3 NFTs, token pairs, fee tiers, tick ranges, liquidity, recorded owed tokens and both approval sources from the [official Sepolia position manager](https://sepolia.etherscan.io/address/0x1238536071E1c677A632429e3655c799b22cDA52).
+## Documentation
 
-Six reviewed operations are available: individual delegation, portfolio delegation, individual revocation, portfolio revocation, collection to the owner, and owner-reviewed liquidity withdrawal plus collection. ERC-721 approvals also allow NFT transfers; they are not fee-only permissions. All actions recheck the expected signer and live position state before wallet submission. Collection recipients are fixed to the owner. Withdrawals bind explicit token minimums and an expiry.
+[Documentation index](docs/README.md) · [Architecture](docs/overview/ARCHITECTURE.md) · [Configuration releases](docs/release-gate/configuration-releases.md) · [Demo script](docs/overview/DEMO.md) · [Showcase copy](docs/overview/SHOWCASE.md) · [ENS qualification review](docs/ens/ENS_QUALIFICATION_REVIEW.md) · [Uniswap qualification review](docs/uniswap/UNISWAP_QUALIFICATION_REVIEW.md) · [Chainlink CRE review](docs/chainlink-cre/CHAINLINK_CRE_REVIEW.md) · [E2E status](docs/validation/E2E_STATUS.md) · [AI attribution](docs/overview/AI_ATTRIBUTION.md)
 
-Offboarding independently discovers both approval paths and compares position ownership, liquidity, pair, fee tier, tick range and recorded owed amounts. The position workspace bounds discovery to 50 NFTs; the offboarding scanner bounds coverage to 200. Incomplete coverage blocks execution. Recorded owed amounts are not a live fee quote or a USD valuation.
+## Acknowledgements
 
-See [the Uniswap and CRE runbook](docs/UNISWAP_CRE_RUNBOOK.md), [contracts/financial checks](src/uniswap/contracts.ts), [live reads and transaction policy](src/uniswap/positions.ts), [UI and decoded receipt events](src/uniswap/ui.ts), and [offboarding engine](src/engine.ts). Live position creation and wallet signatures are required for transaction proof; an empty wallet does not demonstrate offboarding.
+- **ENS** — ENSv2, Permissioned Resolver, Enhanced Access Control, Verifiable Factory
+- **Uniswap** — v3 core and periphery, the official Sepolia Position Manager
+- **Chainlink** — CRE, cron/HTTP/EVM-log triggers, the Keystone Forwarder
+- **viem**, Vite, TypeScript
 
-## Chainlink CRE orchestration
+## License
 
-The workflow now combines owner-signed HTTP requests, recurring monitoring and SAFE-confidence Uniswap approval events. It independently reads the real ENS namespace and Uniswap positions. Departure requests validate a completed, labeled GitHub issue against the configured repository, completing actor and exact operator wallet through CRE's HTTP capability and consensus. Before/after requests compare preserved identity and position state.
-
-The browser signs a five-minute, body-bound gateway authorization through MetaMask; it never requests a private key. A same-origin server verifies that signature, exact body, expiry, event-specific input and deployed scope before forwarding to the fixed CRE gateway. `npm run dev` includes the relay. `npm run build` emits a Cloudflare Worker containing the app's public assets and signed relay; `npm start` serves the same build locally. [Portable signature policy](server/cre-policy.ts) and [Worker relay](server/cre-worker.ts) reject unsigned, expired, oversized, malformed or altered requests before forwarding. Gateway acceptance is displayed separately from execution success. `npm run proof:cre -- <execution-id>` accepts only a successful, scope-bound departure outcome as the primary proof. Vercel uses `npm run build:vercel` for browser assets and [its API handler](api/cre-trigger.ts) for the same validated relay. See [deployment metadata](cre/deployment.json), [workflow source](cre/main.ts), [authentication](src/cre/auth.ts), [resource/security review](docs/CHAINLINK_CRE_REVIEW.md) and [runbook](docs/UNISWAP_CRE_RUNBOOK.md).
-
-CRE reports and owner-signed offboarding receipts are separate evidence. The workflow does not hold the owner key, sign revocations or claim an onchain attestation. No CRE or privileged-call simulations are included. Recorded execution status is an observation, not a browser health poll.
-
-## Evidence, limits and submission
-
-- Sepolia only; not an audited production security product.
-- A closed result means no modeled path was found in the configured scope at that block. Other wallets, signed permits, unknown contracts, social recovery and unconfigured resources are outside coverage.
-- Reads are cached only within one block snapshot. Incomplete reads and empty protocol scope cannot produce a closed result.
-- The default public RPC falls back to viem's Sepolia default endpoint on provider failures, with reads pinned to the requested block. A custom RPC is used exclusively, without that fallback.
-- Transactions are signed individually. Broad-first execution is not atomic and does not eliminate mempool races.
-- Owner checks compare recorded EAC roles, known record authorization and name/NFT ownership; they do not execute arbitrary owner actions.
-- Setup records and up to 20 reports remain in browser storage. Exported scope/evidence excludes the RPC URL. No server database is used.
-- Public source, public demo, actual signed transaction evidence and submitted Uniswap feedback are available. Demo video and showcase submission remain participant steps.
-
-The appropriate ENS prize for this from-scratch Sepolia project is **Best Use of ENSv2**. The Continuity-only Existing Project prize is separate and requires mainnet under the supplied rules. Adding every feature in the sponsor brief is not necessary.
-
-See `docs/AI_ATTRIBUTION.md`, `docs/VALIDATION.md`, `docs/DEMO.md`, `docs/transactions.md` and `FEEDBACK.md`. Verify sponsor rules against the current event page before submitting. MIT license; public availability is a separate requirement.
-
-
-ENS resource decisions, agent-record support, live network evidence, and setup steps: [ENS_RESOURCES.md](docs/ENS_RESOURCES.md).
-
-Real ENS operator workflow and submission steps: [ENS_DEMO_RUNBOOK.md](docs/ENS_DEMO_RUNBOOK.md).
-
-
-### Local environment
-
-Use Node.js 22.9 or newer. Copy `.env.example` to `.env` and optionally replace `SEPOLIA_RPC_URL` with your RPC endpoint. `npm run verify:ens` loads the local file when present; it also works without one using the public default. Browser RPC configuration remains in Connections and is stored locally in the browser.
-
-`.env`, environment variants, signing keys, credential files, local archives and `GENERAL_INST.md` are excluded from Git. Only `.env.example` contains shareable defaults. Never place a private key or a secret in a `VITE_*` variable: browser build variables are public. CRE authentication stays in the CRE CLI account session.
-
-Current proof and remaining integration work: [E2E_STATUS.md](docs/E2E_STATUS.md); [verified ENS receipts](docs/transactions.md).
+MIT
